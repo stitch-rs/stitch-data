@@ -3,9 +3,9 @@
   <PropertyGroup>
     <PackageId>CBP.Core</PackageId>
     <Version>1.0.0-alpha</Version>
-    <Authors>Egor (Ulquiorra)</Authors>
+    <Authors>ulquiorracode</Authors>
     <Description>Core interfaces and types for Compact Binary Protocol</Description>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
     <PackageTags>binary;serialization;protocol;performance</PackageTags>
   </PropertyGroup>
 
