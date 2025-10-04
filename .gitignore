@@ -1,0 +1,23 @@
+## .NET ##
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/*.csproj.user
+
+## Build ##
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+nupkg/
+
+## IDE ##
+.vscode/
+.idea/
+*.sln.iml
+
+## Output ##
+/packages/
+/.localhistory/
