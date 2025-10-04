@@ -1,4 +1,6 @@
-namespace CBP;
+using CBP.Enums;
+
+namespace CBP.Configuration.Abstractions;
 
 /// <summary>
 /// Configuration options for CBP serialization

@@ -1,4 +1,4 @@
-namespace CBP;
+namespace CBP.Enums;
 
 /// <summary>
 /// Defines the serialization strategy and optimization goals

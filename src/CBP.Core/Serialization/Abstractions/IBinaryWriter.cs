@@ -1,4 +1,4 @@
-namespace CBP;
+namespace CBP.Serialization.Abstractions;
 
 /// <summary>
 /// Provides methods for writing primitive types and structures in compact binary format

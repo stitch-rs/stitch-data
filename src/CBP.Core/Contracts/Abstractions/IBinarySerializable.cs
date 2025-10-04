@@ -1,4 +1,6 @@
-namespace CBP;
+using CBP.Serialization.Abstractions;
+
+namespace CBP.Contracts.Abstractions;
 
 /// <summary>
 /// Represents a type that can be serialized to and from binary format

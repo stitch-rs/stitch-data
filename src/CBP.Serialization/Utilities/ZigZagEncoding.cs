@@ -1,6 +1,6 @@
 using System;
 
-namespace CBP;
+namespace CBP.Utilities;
 
 /// <summary>
 /// Provides ZigZag encoding/decoding for efficient negative integer serialization

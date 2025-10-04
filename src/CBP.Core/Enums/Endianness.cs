@@ -1,4 +1,4 @@
-namespace CBP;
+namespace CBP.Enums;
 
 /// <summary>
 /// Byte order for binary data

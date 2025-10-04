@@ -1,6 +1,7 @@
 using System;
+using CBP.Enums;
 
-namespace CBP;
+namespace CBP.Attributes.Abstractions;
 
 /// <summary>
 /// Specifies field metadata for binary serialization

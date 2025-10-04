@@ -1,4 +1,4 @@
-namespace CBP;
+namespace CBP.Enums;
 
 /// <summary>
 /// Field-specific serialization optimization hints

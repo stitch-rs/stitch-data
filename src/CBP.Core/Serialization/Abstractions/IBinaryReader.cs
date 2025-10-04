@@ -1,4 +1,4 @@
-namespace CBP;
+namespace CBP.Serialization.Abstractions;
 
 /// <summary>
 /// Provides methods for reading primitive types and structures from compact binary format
