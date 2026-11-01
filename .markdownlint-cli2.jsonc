@@ -1,0 +1,11 @@
+{
+  "config": {
+    "default": true,
+    "MD013": { "line_length": 80 }
+  },
+  "ignores": [
+    "_legacy_csharp/**",
+    "protocol.md",
+    "target/**"
+  ]
+}
