@@ -515,7 +515,10 @@ pub struct CbpReferenceSnapshotBatch;
 
 impl CbpReferenceSnapshotBatch {
     /// Encodes a slice of `PlayerSnapshot` into `out_frame`.
-    pub fn encode(snapshots: &[PlayerSnapshot], out_frame: &mut [u8]) -> Result<usize, StitchError> {
+    pub fn encode(
+        snapshots: &[PlayerSnapshot],
+        out_frame: &mut [u8],
+    ) -> Result<usize, StitchError> {
         let mut payload = vec![0u8; snapshots.len() * 48 + 32];
         let mut offset = 0;
 
