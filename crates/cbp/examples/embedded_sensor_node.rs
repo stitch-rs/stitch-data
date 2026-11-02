@@ -12,11 +12,11 @@ use cbp::prelude::*;
 #[derive(CbpRecord, Debug, Clone, Copy, PartialEq)]
 #[repr(C)]
 pub struct SensorTelemetry {
-    #[cbp(delta)]
+    #[cbp(varint)]
     pub sequence: u32,
-    #[cbp(gorilla)]
+    #[cbp(raw)]
     pub temperature_c: f32,
-    #[cbp(gorilla)]
+    #[cbp(raw)]
     pub humidity_pct: f32,
     #[cbp(zigzag)]
     pub accel_x: i16,

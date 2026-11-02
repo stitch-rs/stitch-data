@@ -12,11 +12,7 @@ pub enum FieldCodec {
     Varint,
     /// Signed ZigZag variable-length integer.
     ZigZag,
-    /// Difference delta encoding.
-    Delta,
-    /// Lossless IEEE-754 XOR floating point compression (Gorilla).
-    Gorilla,
-    /// Bounded integer bit-packing with explicit width (1 to 32 bits).
+    /// Bounded integer bit-packing with explicit width (1 to 64 bits).
     BitPack(u8),
 }
 
@@ -25,37 +21,83 @@ pub trait CbpRecord: Sized {
     /// 64-bit compile-time schema fingerprint computed from struct identifier and field definitions.
     const SCHEMA_HASH: u64;
 
-    /// Encodes a single record into `dst`. Returns the number of bytes written.
-    fn encode_record(&self, dst: &mut [u8]) -> Result<usize, CbpError>;
+    /// Encodes a single record into `dst` using the default Balanced optimization profile.
+    /// Returns the number of bytes written.
+    #[inline]
+    fn encode_record(&self, dst: &mut [u8]) -> Result<usize, CbpError> {
+        self.encode_record_profile(OptimizationProfile::Balanced, dst)
+    }
 
-    /// Decodes a single record from `src`. Returns `(record, bytes_consumed)`.
-    fn decode_record(src: &[u8]) -> Result<(Self, usize), CbpError>;
+    /// Decodes a single record from `src` using the default Balanced optimization profile.
+    /// Returns `(record, bytes_consumed)`.
+    #[inline]
+    fn decode_record(src: &[u8]) -> Result<(Self, usize), CbpError> {
+        Self::decode_record_profile(src, OptimizationProfile::Balanced)
+    }
 
-    /// Encodes a batch of records into a columnar compressed payload in `dst`.
+    /// Encodes a single record into `dst` dispatched according to the specified `OptimizationProfile`.
     ///
-    /// Transposes fields into columnar streams and compresses each column using its optimal transform.
-    /// Default implementation falls back to sequential record encoding.
+    /// - `OptimizationProfile::Direct`: Serializes fields as raw uncompressed little-endian POD bytes.
+    /// - `OptimizationProfile::Realtime` / `Balanced` / `MaxDensity`: Applies variable-length and bit-packed codecs.
+    fn encode_record_profile(
+        &self,
+        profile: OptimizationProfile,
+        dst: &mut [u8],
+    ) -> Result<usize, CbpError>;
+
+    /// Decodes a single record from `src` dispatched according to the specified `OptimizationProfile`.
+    fn decode_record_profile(
+        src: &[u8],
+        profile: OptimizationProfile,
+    ) -> Result<(Self, usize), CbpError>;
+
+    /// Encodes a batch of records into a payload in `dst` with the default profile.
+    #[inline]
     fn encode_batch(records: &[Self], dst: &mut [u8]) -> Result<usize, CbpError> {
+        Self::encode_batch_profile(records, OptimizationProfile::Balanced, dst)
+    }
+
+    /// Encodes a batch of records into a payload in `dst` with the given optimization profile.
+    fn encode_batch_profile(
+        records: &[Self],
+        profile: OptimizationProfile,
+        dst: &mut [u8],
+    ) -> Result<usize, CbpError> {
+        if dst.len() < 9 {
+            return Err(CbpError::UnexpectedEof {
+                required: 9,
+                available: dst.len(),
+            });
+        }
         let mut offset = 0;
         let count_len = crate::varint::encode_prefix_varint(records.len() as u64, dst);
         offset += count_len;
 
         for record in records {
-            let written = record.encode_record(&mut dst[offset..])?;
+            let written = record.encode_record_profile(profile, &mut dst[offset..])?;
             offset += written;
         }
 
         Ok(offset)
     }
 
-    /// Decodes a batch of records from a columnar or sequential stream in `src` into `dst`.
-    /// Returns the number of records decoded.
+    /// Decodes a batch of records from a stream in `src` into `dst` with the default profile.
+    #[inline]
     fn decode_batch(src: &[u8], dst: &mut [Self]) -> Result<usize, CbpError> {
+        Self::decode_batch_profile(src, OptimizationProfile::Balanced, dst)
+    }
+
+    /// Decodes a batch of records from a stream in `src` into `dst` with the given optimization profile.
+    fn decode_batch_profile(
+        src: &[u8],
+        profile: OptimizationProfile,
+        dst: &mut [Self],
+    ) -> Result<usize, CbpError> {
         let mut offset = 0;
         let (count, count_len) = crate::varint::decode_prefix_varint(src)?;
         offset += count_len;
 
-        let total = count as usize;
+        let total = usize::try_from(count).map_err(|_| CbpError::PayloadDecodeError)?;
         if dst.len() < total {
             return Err(CbpError::UnexpectedEof {
                 required: total,
@@ -64,7 +106,7 @@ pub trait CbpRecord: Sized {
         }
 
         for item in dst[..total].iter_mut() {
-            let (record, consumed) = Self::decode_record(&src[offset..])?;
+            let (record, consumed) = Self::decode_record_profile(&src[offset..], profile)?;
             *item = record;
             offset += consumed;
         }
@@ -79,7 +121,7 @@ pub trait CbpRecord: Sized {
         scratch: &mut [u8],
         dst: &mut [u8],
     ) -> Result<usize, CbpError> {
-        let payload_len = self.encode_record(scratch)?;
+        let payload_len = self.encode_record_profile(profile, scratch)?;
         let header = FrameHeader {
             profile,
             flags: FrameFlags {
@@ -94,6 +136,8 @@ pub trait CbpRecord: Sized {
     }
 
     /// Unpacks a single record from a framed CBP envelope, verifying schema fingerprint and CRC32.
+    ///
+    /// Dispatches parsing using `header.profile` and rejects trailing unconsumed bytes.
     fn unpack_from_frame(src: &[u8]) -> Result<Self, CbpError> {
         let (header, payload) = unpack_frame(src)?;
         if header.flags.has_schema_hash
@@ -105,7 +149,10 @@ pub trait CbpRecord: Sized {
                 actual,
             });
         }
-        let (record, _) = Self::decode_record(payload)?;
+        let (record, consumed) = Self::decode_record_profile(payload, header.profile)?;
+        if consumed != payload.len() {
+            return Err(CbpError::PayloadDecodeError);
+        }
         Ok(record)
     }
 }

@@ -1,3 +1,5 @@
+[workspace]
+
 [package]
 name = "cbp-cargo-fuzz"
 version = "0.0.0"

@@ -10,6 +10,38 @@ pub const CBP_MAGIC: u8 = 0xCB;
 /// Version 1 identifier.
 pub const CBP_VERSION_1: u8 = 0x01;
 
+/// Maximum permitted payload length for a single CBP frame (64 MiB).
+/// Protects against malicious allocation attacks and length overflow vulnerabilities.
+pub const MAX_FRAME_PAYLOAD_LEN: usize = 64 * 1024 * 1024;
+
+/// Maximum possible header size in bytes:
+/// 1B (Magic) + 1B (Version) + 1B (Flags) + 9B (Max PrefixVarint u64) + 8B (SchemaHash) = 20B.
+pub const MAX_HEADER_SIZE: usize = 20;
+
+/// Maximum total wire frame length:
+/// MAX_HEADER_SIZE + MAX_FRAME_PAYLOAD_LEN + 4B (CRC32).
+pub const MAX_FRAME_TOTAL_LEN: usize = MAX_HEADER_SIZE + MAX_FRAME_PAYLOAD_LEN + 4;
+
+/// Helper function to safely calculate total frame length: `header_len + payload_len + 4`.
+/// Returns `Err(CbpError::FrameTooLarge)` or `Err(CbpError::PayloadDecodeError)` on overflow.
+#[inline]
+pub fn checked_frame_total_len(header_len: usize, payload_len: usize) -> Result<usize, CbpError> {
+    if payload_len > MAX_FRAME_PAYLOAD_LEN {
+        return Err(CbpError::FrameTooLarge {
+            size: payload_len as u64,
+            limit: MAX_FRAME_PAYLOAD_LEN,
+        });
+    }
+
+    let with_payload = header_len
+        .checked_add(payload_len)
+        .ok_or(CbpError::PayloadDecodeError)?;
+    let total = with_payload
+        .checked_add(4)
+        .ok_or(CbpError::PayloadDecodeError)?;
+    Ok(total)
+}
+
 /// Layered optimization profiles.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -92,9 +124,17 @@ pub struct FrameHeader {
 impl FrameHeader {
     /// Serializes this frame header into `buf`. Returns bytes written.
     pub fn write_into(&self, buf: &mut [u8]) -> Result<usize, CbpError> {
-        if buf.len() < 3 {
+        let has_schema = self.schema_hash.is_some();
+        let mut flags = self.flags;
+        flags.has_schema_hash = has_schema;
+
+        let varint_len = crate::varint::prefix_varint_len(self.payload_len as u64);
+        let schema_len = if has_schema { 8 } else { 0 };
+        let required_header_len = 3 + varint_len + schema_len;
+
+        if buf.len() < required_header_len {
             return Err(CbpError::UnexpectedEof {
-                required: 3,
+                required: required_header_len,
                 available: buf.len(),
             });
         }
@@ -103,29 +143,14 @@ impl FrameHeader {
         buf[1] = CBP_VERSION_1;
 
         let profile_bits = (self.profile as u8) & 0b11;
-        let flags_bits = (self.flags.to_bits() & 0b1111) << 2;
+        let flags_bits = (flags.to_bits() & 0b1111) << 2;
         buf[2] = profile_bits | flags_bits;
 
         let mut offset = 3;
+        let written_varint = encode_prefix_varint(self.payload_len as u64, &mut buf[offset..]);
+        offset += written_varint;
 
-        // Encode payload length via PrefixVarint
-        if buf.len() < offset + 9 {
-            return Err(CbpError::UnexpectedEof {
-                required: offset + 9,
-                available: buf.len(),
-            });
-        }
-        let varint_len = encode_prefix_varint(self.payload_len as u64, &mut buf[offset..]);
-        offset += varint_len;
-
-        // Encode optional schema fingerprint
         if let Some(hash) = self.schema_hash {
-            if buf.len() < offset + 8 {
-                return Err(CbpError::UnexpectedEof {
-                    required: offset + 8,
-                    available: buf.len(),
-                });
-            }
             buf[offset..offset + 8].copy_from_slice(&hash.to_le_bytes());
             offset += 8;
         }
@@ -150,12 +175,35 @@ impl FrameHeader {
         }
 
         let byte2 = buf[2];
+        // Enforce reserved bits 6..7 are strictly zero
+        if (byte2 & 0b1100_0000) != 0 {
+            return Err(CbpError::InvalidHeaderFlags(byte2));
+        }
+
         let profile = OptimizationProfile::from_bits(byte2 & 0b11);
-        let flags = FrameFlags::from_bits((byte2 >> 2) & 0b1111);
+        let flag_bits = (byte2 >> 2) & 0b1111;
+        // Verify reserved flag bit 3 (bit 5 of byte 2) is zero
+        if (flag_bits & 0b1000) != 0 {
+            return Err(CbpError::InvalidHeaderFlags(byte2));
+        }
+        let flags = FrameFlags::from_bits(flag_bits);
 
         let mut offset = 3;
-        let (payload_len, varint_len) = decode_prefix_varint(&buf[offset..])?;
+        let (raw_payload_len, varint_len) = decode_prefix_varint(&buf[offset..])?;
         offset += varint_len;
+
+        let payload_len =
+            usize::try_from(raw_payload_len).map_err(|_| CbpError::FrameTooLarge {
+                size: raw_payload_len,
+                limit: MAX_FRAME_PAYLOAD_LEN,
+            })?;
+
+        if payload_len > MAX_FRAME_PAYLOAD_LEN {
+            return Err(CbpError::FrameTooLarge {
+                size: raw_payload_len,
+                limit: MAX_FRAME_PAYLOAD_LEN,
+            });
+        }
 
         let mut schema_hash = None;
         if flags.has_schema_hash {
@@ -175,7 +223,7 @@ impl FrameHeader {
             Self {
                 profile,
                 flags,
-                payload_len: payload_len as usize,
+                payload_len,
                 schema_hash,
             },
             offset,
@@ -189,8 +237,25 @@ pub fn pack_frame(
     payload: &[u8],
     out_buf: &mut [u8],
 ) -> Result<usize, CbpError> {
-    let header_len = header.write_into(out_buf)?;
-    let total_len = header_len + payload.len() + 4;
+    if payload.len() > MAX_FRAME_PAYLOAD_LEN {
+        return Err(CbpError::FrameTooLarge {
+            size: payload.len() as u64,
+            limit: MAX_FRAME_PAYLOAD_LEN,
+        });
+    }
+
+    let mut effective_header = header.clone();
+    effective_header.payload_len = payload.len();
+    effective_header.flags.has_schema_hash = effective_header.schema_hash.is_some();
+
+    let varint_len = crate::varint::prefix_varint_len(payload.len() as u64);
+    let schema_len = if effective_header.schema_hash.is_some() {
+        8
+    } else {
+        0
+    };
+    let header_len = 3 + varint_len + schema_len;
+    let total_len = checked_frame_total_len(header_len, payload.len())?;
 
     if out_buf.len() < total_len {
         return Err(CbpError::UnexpectedEof {
@@ -198,6 +263,9 @@ pub fn pack_frame(
             available: out_buf.len(),
         });
     }
+
+    let written_header_len = effective_header.write_into(out_buf)?;
+    debug_assert_eq!(written_header_len, header_len);
 
     out_buf[header_len..header_len + payload.len()].copy_from_slice(payload);
 
@@ -210,7 +278,7 @@ pub fn pack_frame(
 /// Unpacks and validates a CBP frame from `buf`. Returns `(FrameHeader, payload_slice)`.
 pub fn unpack_frame(buf: &[u8]) -> Result<(FrameHeader, &[u8]), CbpError> {
     let (header, header_len) = FrameHeader::parse(buf)?;
-    let expected_total = header_len + header.payload_len + 4;
+    let expected_total = checked_frame_total_len(header_len, header.payload_len)?;
 
     if buf.len() < expected_total {
         return Err(CbpError::UnexpectedEof {
@@ -233,11 +301,6 @@ pub fn unpack_frame(buf: &[u8]) -> Result<(FrameHeader, &[u8]), CbpError> {
 
     Ok((header, payload))
 }
-
-/// Maximum possible serialized length of a CBP Frame Header (20 bytes).
-/// 1B (Magic) + 1B (Version) + 1B (Profile/Flags) + 9B (Max PrefixVarint) + 8B (Schema Hash) = 20B.
-/// 24 bytes ensures 8-byte alignment padding.
-pub const MAX_HEADER_SIZE: usize = 24;
 
 /// A zero-allocation, scatter-gather vectored representation of a serialized CBP frame.
 ///
@@ -280,7 +343,10 @@ impl<'a> VectoredFrame<'a> {
     /// Returns the total wire length of the frame in bytes (`header_len + payload.len() + 4`).
     #[inline]
     pub fn total_len(&self) -> usize {
-        self.header_len + self.payload.len() + 4
+        self.header_len
+            .checked_add(self.payload.len())
+            .and_then(|v| v.checked_add(4))
+            .expect("VectoredFrame total length overflow")
     }
 
     /// Returns the 3 scatter-gather byte slices `[Header, Payload, CRC32]`.
@@ -330,10 +396,19 @@ pub fn pack_frame_vectored<'a>(
     header: &FrameHeader,
     payload: &'a [u8],
 ) -> Result<VectoredFrame<'a>, CbpError> {
+    if payload.len() > MAX_FRAME_PAYLOAD_LEN {
+        return Err(CbpError::FrameTooLarge {
+            size: payload.len() as u64,
+            limit: MAX_FRAME_PAYLOAD_LEN,
+        });
+    }
+
     let mut header_buf = [0u8; MAX_HEADER_SIZE];
     let mut effective_header = header.clone();
     effective_header.payload_len = payload.len();
     let header_len = effective_header.write_into(&mut header_buf)?;
+
+    let _ = checked_frame_total_len(header_len, payload.len())?;
 
     let crc = crate::crc::crc32_castagnoli_slices(&[&header_buf[..header_len], payload]);
 
@@ -406,7 +481,7 @@ impl<'a> FrameReader<'a> {
         }
 
         let (header, header_len) = FrameHeader::parse(remaining)?;
-        let expected_total = header_len + header.payload_len + 4;
+        let expected_total = checked_frame_total_len(header_len, header.payload_len)?;
 
         if remaining.len() < expected_total {
             return Err(CbpError::UnexpectedEof {
@@ -626,5 +701,86 @@ mod tests {
 
         let res = unpack_frame(&storage[..total]);
         assert!(matches!(res, Err(CbpError::ChecksumMismatch { .. })));
+    }
+
+    #[test]
+    fn test_frame_header_reserved_bits_rejected() {
+        let mut buf = [0u8; 32];
+        buf[0] = CBP_MAGIC;
+        buf[1] = CBP_VERSION_1;
+        // Set reserved bit 6 in byte2 (0b0100_0000)
+        buf[2] = 0b0100_0000;
+        let res = FrameHeader::parse(&buf);
+        assert_eq!(res, Err(CbpError::InvalidHeaderFlags(0b0100_0000)));
+
+        // Set reserved bit 7 in byte2 (0b1000_0000)
+        buf[2] = 0b1000_0000;
+        let res2 = FrameHeader::parse(&buf);
+        assert_eq!(res2, Err(CbpError::InvalidHeaderFlags(0b1000_0000)));
+
+        // Set reserved flag bit 3 (bit 5 in byte2, 0b0010_0000)
+        buf[2] = 0b0010_0000;
+        let res3 = FrameHeader::parse(&buf);
+        assert_eq!(res3, Err(CbpError::InvalidHeaderFlags(0b0010_0000)));
+    }
+
+    #[test]
+    fn test_frame_schema_flag_and_hash_normalization() {
+        let payload = b"Schema flag normalization test";
+        // Case 1: has_schema_hash: false, but schema_hash: Some(0x1234)
+        // pack_frame/write_into must normalize has_schema_hash to true and preserve the schema hash
+        let header1 = FrameHeader {
+            profile: OptimizationProfile::Realtime,
+            flags: FrameFlags {
+                is_compressed: false,
+                is_chunked: false,
+                has_schema_hash: false,
+            },
+            payload_len: payload.len(),
+            schema_hash: Some(0x1234),
+        };
+        let mut buf1 = [0u8; 128];
+        let total1 = pack_frame(&header1, payload, &mut buf1).unwrap();
+        let (unpacked1, _) = unpack_frame(&buf1[..total1]).unwrap();
+        assert!(unpacked1.flags.has_schema_hash);
+        assert_eq!(unpacked1.schema_hash, Some(0x1234));
+
+        // Case 2: has_schema_hash: true, but schema_hash: None
+        // pack_frame/write_into must normalize has_schema_hash to false
+        let header2 = FrameHeader {
+            profile: OptimizationProfile::Realtime,
+            flags: FrameFlags {
+                is_compressed: false,
+                is_chunked: false,
+                has_schema_hash: true,
+            },
+            payload_len: payload.len(),
+            schema_hash: None,
+        };
+        let mut buf2 = [0u8; 128];
+        let total2 = pack_frame(&header2, payload, &mut buf2).unwrap();
+        let (unpacked2, _) = unpack_frame(&buf2[..total2]).unwrap();
+        assert!(!unpacked2.flags.has_schema_hash);
+        assert_eq!(unpacked2.schema_hash, None);
+    }
+
+    #[test]
+    fn test_minimal_empty_frame_roundtrip() {
+        let header = FrameHeader {
+            profile: OptimizationProfile::Direct,
+            flags: FrameFlags::default(),
+            payload_len: 0,
+            schema_hash: None,
+        };
+        let mut buf = [0u8; 32];
+        let total = pack_frame(&header, &[], &mut buf).unwrap();
+        // 3 bytes (Magic, Version, Flags) + 1 byte (PrefixVarint 0) + 0 bytes payload + 4 bytes CRC = 8 bytes
+        assert_eq!(total, 8);
+
+        let (unpacked, payload) = unpack_frame(&buf[..total]).unwrap();
+        assert_eq!(unpacked.payload_len, 0);
+        assert_eq!(payload.len(), 0);
+        assert!(!unpacked.flags.has_schema_hash);
+        assert_eq!(unpacked.schema_hash, None);
     }
 }

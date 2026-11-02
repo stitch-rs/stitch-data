@@ -236,6 +236,7 @@ fn bench_streaming_and_resync(c: &mut Criterion) {
     let frame_len = pack_frame(&header, &payload, &mut noisy_stream[256..]).unwrap();
     let stream_slice = &noisy_stream[..256 + frame_len];
 
+    group.throughput(Throughput::Bytes((256 + frame_len) as u64));
     group.bench_function("resync_frame/after_256B_noise", |b| {
         b.iter(|| {
             let (skipped, frame) = resync_frame(black_box(stream_slice)).unwrap();

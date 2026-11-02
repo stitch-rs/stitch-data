@@ -118,11 +118,13 @@ fn test_adversarial_bit_flip_crc_rejection() {
                 result.is_err(),
                 "Corrupted frame (byte {byte_idx}, bit {bit_idx}) must fail"
             );
-            // It must be either ChecksumMismatch, InvalidMagic, or UnexpectedEof
+            // It must be either ChecksumMismatch, InvalidMagic, InvalidHeaderFlags, FrameTooLarge or UnexpectedEof
             match result.unwrap_err() {
                 CbpError::ChecksumMismatch { .. }
                 | CbpError::InvalidMagic(_)
                 | CbpError::UnsupportedVersion(_)
+                | CbpError::InvalidHeaderFlags(_)
+                | CbpError::FrameTooLarge { .. }
                 | CbpError::UnexpectedEof { .. }
                 | CbpError::MalformedVarint => {}
                 other => panic!("Unexpected error on flipped bit: {other:?}"),
@@ -142,10 +144,14 @@ fn test_adversarial_huge_payload_length_dos_defense() {
     let vlen = encode_prefix_varint(1 << 30, &mut fake_frame[3..]);
     assert!(vlen > 0);
 
-    // Unpack must immediately return UnexpectedEof without allocating memory
+    // Unpack must immediately return FrameTooLarge or UnexpectedEof without allocating memory
     let res = unpack_frame(&fake_frame);
     assert!(res.is_err());
     match res.unwrap_err() {
+        CbpError::FrameTooLarge { size, limit } => {
+            assert_eq!(size, 1 << 30);
+            assert_eq!(limit, 64 * 1024 * 1024);
+        }
         CbpError::UnexpectedEof {
             required,
             available,
@@ -153,7 +159,7 @@ fn test_adversarial_huge_payload_length_dos_defense() {
             assert!(required > 1 << 30);
             assert_eq!(available, fake_frame.len());
         }
-        other => panic!("Expected UnexpectedEof with huge required size, got: {other:?}"),
+        other => panic!("Expected FrameTooLarge or UnexpectedEof, got: {other:?}"),
     }
 }
 

@@ -61,9 +61,9 @@ impl Lcg {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, CbpRecord)]
 #[repr(C)]
 pub struct Ipv4Interval {
-    #[cbp(delta)]
+    #[cbp(varint)]
     pub ip_from: u32,
-    #[cbp(delta)]
+    #[cbp(varint)]
     pub ip_to: u32,
     #[cbp(bits = 6)]
     pub profile_id: u32,

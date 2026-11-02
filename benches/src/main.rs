@@ -282,8 +282,8 @@ fn main() {
         );
         std::process::exit(2);
     }
-    // Note: consumed_bytes is verified against payload bounds; exact match is tracked under Core Issue CBP-01
-    assert!(consumed_bytes >= written);
+    // Exact match of consumed wire bytes verified
+    assert_eq!(consumed_bytes, written);
     assert_eq!(decomp_dst, test_stream);
     println!("  [PASS] DecompressionPipeline::decompress_u32: 0 heap allocations");
 

@@ -33,9 +33,14 @@ impl BitPacker {
         let bit_width = Self::required_bit_width(slice);
         dst[0] = bit_width;
 
-        let total_bits = slice.len() * (bit_width as usize);
+        let total_bits = slice
+            .len()
+            .checked_mul(bit_width as usize)
+            .ok_or(CbpError::PayloadDecodeError)?;
         let packed_bytes = total_bits.div_ceil(8);
-        let total_required = 1 + packed_bytes;
+        let total_required = 1usize
+            .checked_add(packed_bytes)
+            .ok_or(CbpError::PayloadDecodeError)?;
 
         if dst.len() < total_required {
             return Err(CbpError::UnexpectedEof {
@@ -158,9 +163,14 @@ impl BitPacker {
             return Err(CbpError::InvalidBitWidth(bit_width));
         }
 
-        let total_bits = dst.len() * (bit_width as usize);
+        let total_bits = dst
+            .len()
+            .checked_mul(bit_width as usize)
+            .ok_or(CbpError::PayloadDecodeError)?;
         let packed_bytes = total_bits.div_ceil(8);
-        let total_required = 1 + packed_bytes;
+        let total_required = 1usize
+            .checked_add(packed_bytes)
+            .ok_or(CbpError::PayloadDecodeError)?;
 
         if src.len() < total_required {
             return Err(CbpError::UnexpectedEof {

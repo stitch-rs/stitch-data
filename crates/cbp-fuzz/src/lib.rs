@@ -14,7 +14,7 @@ pub struct FuzzRecord {
     pub id: u32,
     #[cbp(zigzag)]
     pub delta_x: i32,
-    #[cbp(gorilla)]
+    #[cbp(raw)]
     pub coord_y: f32,
     #[cbp(bits = 6)]
     pub tag: u8,

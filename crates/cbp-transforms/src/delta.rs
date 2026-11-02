@@ -3,6 +3,8 @@
 //! Provides utilities to delta-encode sequential integers relative to an explicit baseline
 //! or relative to the preceding item.
 
+use cbp_core::error::CbpError;
+
 /// Applies delta encoding in-place on a slice of unsigned 32-bit integers,
 /// with deltas relative to `slice[0]`: `[x0, x1 - x0, x2 - x1, ...]`.
 /// The baseline `slice[0]` is retained as an absolute value.
@@ -60,26 +62,46 @@ pub fn delta_decode_u32(slice: &mut [u32]) {
 /// Applies delta encoding where all elements (including the first) are relative to an external baseline:
 /// `dst[i] = src[i] - baseline`.
 #[inline]
-pub fn delta_encode_with_base_u32(src: &[u32], baseline: u32, dst: &mut [u32]) {
-    assert!(dst.len() >= src.len());
+pub fn delta_encode_with_base_u32(
+    src: &[u32],
+    baseline: u32,
+    dst: &mut [u32],
+) -> Result<(), CbpError> {
+    if dst.len() < src.len() {
+        return Err(CbpError::UnexpectedEof {
+            required: src.len(),
+            available: dst.len(),
+        });
+    }
     if src.is_empty() {
-        return;
+        return Ok(());
     }
     dst[..src.len()].copy_from_slice(src);
     delta_encode_u32(&mut dst[..src.len()]);
     dst[0] = src[0].wrapping_sub(baseline);
+    Ok(())
 }
 
 /// Inverts delta encoding relative to an external baseline.
 #[inline]
-pub fn delta_decode_with_base_u32(src: &[u32], baseline: u32, dst: &mut [u32]) {
-    assert!(dst.len() >= src.len());
+pub fn delta_decode_with_base_u32(
+    src: &[u32],
+    baseline: u32,
+    dst: &mut [u32],
+) -> Result<(), CbpError> {
+    if dst.len() < src.len() {
+        return Err(CbpError::UnexpectedEof {
+            required: src.len(),
+            available: dst.len(),
+        });
+    }
     if src.is_empty() {
-        return;
+        return Ok(());
     }
     dst[..src.len()].copy_from_slice(src);
     dst[0] = baseline.wrapping_add(src[0]);
     delta_decode_u32(&mut dst[..src.len()]);
+    Ok(())
 }
 
 /// Stateless transformer for delta encoding.
@@ -88,18 +110,30 @@ pub struct DeltaTransformer;
 impl DeltaTransformer {
     /// Encodes delta sequence into a separate destination slice.
     #[inline]
-    pub fn encode(src: &[u32], dst: &mut [u32]) {
-        assert!(dst.len() >= src.len());
+    pub fn encode(src: &[u32], dst: &mut [u32]) -> Result<(), CbpError> {
+        if dst.len() < src.len() {
+            return Err(CbpError::UnexpectedEof {
+                required: src.len(),
+                available: dst.len(),
+            });
+        }
         dst[..src.len()].copy_from_slice(src);
         delta_encode_u32(&mut dst[..src.len()]);
+        Ok(())
     }
 
     /// Decodes delta sequence into a separate destination slice.
     #[inline]
-    pub fn decode(src: &[u32], dst: &mut [u32]) {
-        assert!(dst.len() >= src.len());
+    pub fn decode(src: &[u32], dst: &mut [u32]) -> Result<(), CbpError> {
+        if dst.len() < src.len() {
+            return Err(CbpError::UnexpectedEof {
+                required: src.len(),
+                available: dst.len(),
+            });
+        }
         dst[..src.len()].copy_from_slice(src);
         delta_decode_u32(&mut dst[..src.len()]);
+        Ok(())
     }
 }
 
@@ -152,11 +186,11 @@ mod tests {
         let baseline = 1000u32;
 
         let mut encoded = [0u32; 4];
-        delta_encode_with_base_u32(&original, baseline, &mut encoded);
+        delta_encode_with_base_u32(&original, baseline, &mut encoded).unwrap();
         assert_eq!(encoded, [2, 3, 2, 3]);
 
         let mut decoded = [0u32; 4];
-        delta_decode_with_base_u32(&encoded, baseline, &mut decoded);
+        delta_decode_with_base_u32(&encoded, baseline, &mut decoded).unwrap();
         assert_eq!(decoded, original);
     }
 

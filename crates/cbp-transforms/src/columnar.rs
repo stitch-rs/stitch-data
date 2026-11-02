@@ -1,8 +1,8 @@
-//! Columnar chunk building and batch serialization for `CbpRecord`.
+//! Record chunk building and batch serialization for `CbpRecord`.
 //!
 //! Provides cache-conscious batching mechanisms that buffer records in
-//! Array-of-Structs (AoS) format and flush columnar compressed CBP frames
-//! (Structure-of-Arrays) when target cache-line budgets are reached.
+//! Array-of-Structs (AoS) format and flush framed, profile-optimized CBP packets
+//! when target cache-line budgets are reached.
 
 use core::mem::MaybeUninit;
 
@@ -10,16 +10,19 @@ use cbp_core::error::CbpError;
 use cbp_core::frame::{FrameFlags, FrameHeader, OptimizationProfile, pack_frame};
 use cbp_core::record::CbpRecord;
 
-/// A fixed-capacity, cache-conscious columnar block builder that buffers records in
-/// Array-of-Structs (AoS) format and flushes columnar compressed CBP frames.
-pub struct ColumnarBlockBuilder<T: CbpRecord, const CAPACITY: usize = 256> {
+/// A fixed-capacity, cache-conscious batch builder that buffers records in
+/// Array-of-Structs (AoS) format and flushes profile-optimized CBP frames.
+pub struct RecordBatchBuilder<T: CbpRecord, const CAPACITY: usize = 256> {
     records: [MaybeUninit<T>; CAPACITY],
     count: usize,
     profile: OptimizationProfile,
 }
 
-impl<T: CbpRecord, const CAPACITY: usize> ColumnarBlockBuilder<T, CAPACITY> {
-    /// Creates a new `ColumnarBlockBuilder` with the specified optimization profile.
+/// Backward-compatible type alias for `RecordBatchBuilder`.
+pub type ColumnarBlockBuilder<T, const CAPACITY: usize = 256> = RecordBatchBuilder<T, CAPACITY>;
+
+impl<T: CbpRecord, const CAPACITY: usize> RecordBatchBuilder<T, CAPACITY> {
+    /// Creates a new `RecordBatchBuilder` with the specified optimization profile.
     pub const fn new(profile: OptimizationProfile) -> Self {
         // SAFETY: An uninitialized array of MaybeUninit is valid.
         let records: [MaybeUninit<T>; CAPACITY] = unsafe { MaybeUninit::uninit().assume_init() };
@@ -69,7 +72,7 @@ impl<T: CbpRecord, const CAPACITY: usize> ColumnarBlockBuilder<T, CAPACITY> {
         unsafe { core::slice::from_raw_parts(self.records.as_ptr() as *const T, self.count) }
     }
 
-    /// Flushes all buffered records into a framed columnar CBP packet in `dst`.
+    /// Flushes all buffered records into a framed CBP packet in `dst`.
     ///
     /// - `scratch`: Pre-allocated buffer for payload compression.
     /// - `dst`: Pre-allocated buffer for the final framed output packet.
@@ -81,7 +84,7 @@ impl<T: CbpRecord, const CAPACITY: usize> ColumnarBlockBuilder<T, CAPACITY> {
         }
 
         let slice = self.as_slice();
-        let payload_len = T::encode_batch(slice, scratch)?;
+        let payload_len = T::encode_batch_profile(slice, self.profile, scratch)?;
 
         let header = FrameHeader {
             profile: self.profile,
@@ -116,7 +119,7 @@ impl<T: CbpRecord, const CAPACITY: usize> ColumnarBlockBuilder<T, CAPACITY> {
     }
 }
 
-impl<T: CbpRecord, const CAPACITY: usize> Drop for ColumnarBlockBuilder<T, CAPACITY> {
+impl<T: CbpRecord, const CAPACITY: usize> Drop for RecordBatchBuilder<T, CAPACITY> {
     fn drop(&mut self) {
         self.clear();
     }
@@ -135,13 +138,20 @@ mod tests {
     impl CbpRecord for DummyRecord {
         const SCHEMA_HASH: u64 = 0x1234_5678_9ABC_DEF0;
 
-        fn encode_record(&self, dst: &mut [u8]) -> Result<usize, CbpError> {
+        fn encode_record_profile(
+            &self,
+            _profile: OptimizationProfile,
+            dst: &mut [u8],
+        ) -> Result<usize, CbpError> {
             dst[0..4].copy_from_slice(&self.id.to_le_bytes());
             dst[4..6].copy_from_slice(&self.val.to_le_bytes());
             Ok(6)
         }
 
-        fn decode_record(src: &[u8]) -> Result<(Self, usize), CbpError> {
+        fn decode_record_profile(
+            src: &[u8],
+            _profile: OptimizationProfile,
+        ) -> Result<(Self, usize), CbpError> {
             let id = u32::from_le_bytes(src[0..4].try_into().unwrap());
             let val = u16::from_le_bytes(src[4..6].try_into().unwrap());
             Ok((Self { id, val }, 6))

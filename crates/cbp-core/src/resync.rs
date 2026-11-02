@@ -118,7 +118,17 @@ pub fn resync_frame<'a>(buf: &'a [u8]) -> Option<(usize, FrameView<'a>)> {
             }
         };
 
-        let total_frame_len = header_len + header.payload_len + 4;
+        let total_frame_len =
+            match crate::frame::checked_frame_total_len(header_len, header.payload_len) {
+                Ok(len) => len,
+                Err(_) => {
+                    // Forged magic with impossible payload length (> MAX_FRAME_PAYLOAD_LEN).
+                    // Do NOT stall waiting for gigabytes; advance cursor and continue scanning!
+                    offset += 1;
+                    continue;
+                }
+            };
+
         if candidate.len() < total_frame_len {
             // Partial frame at the tail of buffer; wait for more data from stream
             return None;
@@ -204,8 +214,9 @@ impl StreamResyncParser {
             && buf[0] == CBP_MAGIC
             && buf[1] == CBP_VERSION_1
             && let Ok((header, header_len)) = FrameHeader::parse(buf)
+            && let Ok(total_frame_len) =
+                crate::frame::checked_frame_total_len(header_len, header.payload_len)
         {
-            let total_frame_len = header_len + header.payload_len + 4;
             if buf.len() >= total_frame_len {
                 let payload = &buf[header_len..header_len + header.payload_len];
                 let expected_crc = u32::from_le_bytes(
@@ -372,5 +383,35 @@ mod tests {
         assert_eq!(stats.frames_decoded, 2);
         assert_eq!(stats.bytes_discarded, 30);
         assert_eq!(stats.resync_events, 2);
+    }
+
+    #[test]
+    fn test_resync_forged_magic_huge_length_never_stalls() {
+        let valid_payload = b"Valid Payload";
+        let hdr = FrameHeader {
+            profile: OptimizationProfile::Direct,
+            flags: FrameFlags::default(),
+            payload_len: valid_payload.len(),
+            schema_hash: None,
+        };
+        let mut valid_buf = [0u8; 64];
+        let valid_len = pack_frame(&hdr, valid_payload, &mut valid_buf).unwrap();
+
+        let mut stream = [0u8; 128];
+        stream[0] = CBP_MAGIC;
+        stream[1] = CBP_VERSION_1;
+        stream[2] = 0x00;
+        let _ = crate::varint::encode_prefix_varint(100 * 1024 * 1024, &mut stream[3..]);
+        stream[15..15 + valid_len].copy_from_slice(&valid_buf[..valid_len]);
+
+        let mut parser = StreamResyncParser::new();
+        let res = parser.parse_next(&stream[..15 + valid_len]);
+        assert!(
+            res.is_some(),
+            "Parser must not stall on forged huge payload"
+        );
+        let (consumed, frame) = res.unwrap();
+        assert_eq!(frame.payload, valid_payload);
+        assert_eq!(consumed, 15 + valid_len);
     }
 }

@@ -75,7 +75,7 @@ Upon observing `Magic == 0xCB` and `Version == 0x01`:
 | `[0]` **Magic** | 1 Byte | `0xCB` | CBP protocol identifier. |
 | `[1]` **Version** | 1 Byte | `0x01` | Protocol wire specification version 1. |
 | `[2]` **Profile/Flags** | 1 Byte | Bitfield | Bits 0..1: Profile, Bits 2..5: Flags, Bits 6..7: Reserved (0). |
-| `[3..]` **PayloadLength** | 1..9 B | `PrefixVarint` | Uncompressed payload size in bytes. |
+| `[3..]` **PayloadLength** | 1..9 B | `PrefixVarint` | Uncompressed payload size in bytes. Upper bound is strictly capped at `MAX_FRAME_PAYLOAD_LEN` = 64 MiB (67,108,864 bytes); frames exceeding this bound MUST be rejected with `CbpError::FrameTooLarge`. |
 | `[..]` **SchemaHash** | 0 or 8 B | Little-Endian `u64` | Present if and only if `Flags.has_schema_hash == 1`. |
 <!-- markdownlint-enable MD013 -->
 
@@ -117,8 +117,14 @@ The frame concludes with a mandatory 4-byte integrity checksum:
 
 ## 3. Layered Optimization Profiles (-O0 .. -O3)
 
-CBP defines 4 standard operational profiles. The receiver dispatches each frame
-to a monomorphic `stitch-core` traversal pipeline based on the 2-bit header:
+CBP defines 4 operational profiles for streaming pipelines (`CompressionPipeline`),
+alongside dual-profile dispatch for individual records (`CbpRecord`):
+
+- Streaming pipelines in `cbp-transforms` execute monomorphic compile-time
+  traversal across all 4 profiles (`-O0` through `-O3`).
+- Single-record serialization via `CbpRecord` dispatches between `-O0 Direct`
+  (zero-copy uncompressed POD byte layout) and `-O1..-O3 Compact` (branchless
+  PrefixVarint, ZigZag, and sub-byte bit packing).
 
 ### 3.1 Profile Direct (`-O0`)
 
@@ -148,9 +154,9 @@ to a monomorphic `stitch-core` traversal pipeline based on the 2-bit header:
 
 - **Objective**: Approaching the Shannon entropy limit for archival storage.
 - **Wire Layout**:
-  - Columnar Struct-of-Arrays (SoA) transposition.
   - Dynamic entropy competition: selects minimum representation between
-    RLE, Delta+BitPack, and Gorilla Float per columnar block.
+    RLE, Delta+BitPack, and Gorilla Float per block in `CompressionPipeline`.
+  - True Columnar Struct-of-Arrays (SoA) transposition is scheduled for v0.3.0.
 - **Throughput**: Verified at **1.84 GiB/s**; 3.97x denser than raw AoS.
 
 ---
@@ -301,12 +307,14 @@ $$\text{CbpError::SchemaMismatch}\{\text{expected}, \text{actual}\}$$
 
 No unverified payload bytes are decoded when schemas diverge.
 
-### 6.3 Columnar Block Builder (`ColumnarBlockBuilder`)
+### 6.3 Record Batch Builder (`RecordBatchBuilder` / `ColumnarBlockBuilder`)
 
-`ColumnarBlockBuilder<T: CbpRecord, const CAPACITY: usize>` buffers records in
+`RecordBatchBuilder<T: CbpRecord, const CAPACITY: usize>` (aliased as
+`ColumnarBlockBuilder` for backward compatibility) buffers records in
 an inline stack array `[MaybeUninit<T>; CAPACITY]` with $O(1)$ push. Upon
 reaching capacity, `flush(&mut scratch, &mut dst)` serializes all records
-into an optimized columnar CBP frame with zero dynamic heap allocations.
+into a framed, profile-optimized CBP packet with zero dynamic heap allocations.
+(True Struct-of-Arrays (SoA) column transposition is specified for v0.3.0).
 
 ---
 

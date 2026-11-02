@@ -13,7 +13,8 @@ pub use cbp_core::{
 
 pub use cbp_transforms::{
     BitPacker, ColumnarBlockBuilder, CompressionPipeline, DecompressionPipeline, DeltaTransformer,
-    GorillaCompressor, RleTransformer, bitpack, columnar, delta, float, pipeline, rle,
+    GorillaCompressor, RecordBatchBuilder, RleTransformer, bitpack, columnar, delta, float,
+    pipeline, rle,
 };
 
 #[cfg(feature = "derive")]
@@ -41,7 +42,7 @@ pub mod prelude {
     };
 
     pub use cbp_transforms::bitpack::BitPacker;
-    pub use cbp_transforms::columnar::ColumnarBlockBuilder;
+    pub use cbp_transforms::columnar::{ColumnarBlockBuilder, RecordBatchBuilder};
     pub use cbp_transforms::delta::{
         DeltaTransformer, delta_decode_i32, delta_decode_u32, delta_decode_with_base_u32,
         delta_encode_i32, delta_encode_u32, delta_encode_with_base_u32,

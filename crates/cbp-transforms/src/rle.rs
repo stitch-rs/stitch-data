@@ -63,7 +63,9 @@ impl RleTransformer {
     }
 
     /// Decodes an RLE sequence into a destination slice.
-    pub fn decode_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    ///
+    /// Returns `(elements_decoded, bytes_consumed)`.
+    pub fn decode_u32_ext(src: &[u8], dst: &mut [u32]) -> Result<(usize, usize), CbpError> {
         if src.len() < 4 {
             return Err(CbpError::UnexpectedEof {
                 required: 4,
@@ -71,8 +73,15 @@ impl RleTransformer {
             });
         }
 
-        let pairs_count = u32::from_le_bytes(src[..4].try_into().unwrap()) as usize;
-        let expected_bytes = 4 + pairs_count * 6;
+        let raw_pairs = u32::from_le_bytes(src[..4].try_into().unwrap());
+        let pairs_count = usize::try_from(raw_pairs).map_err(|_| CbpError::PayloadDecodeError)?;
+        let pairs_bytes = pairs_count
+            .checked_mul(6)
+            .ok_or(CbpError::PayloadDecodeError)?;
+        let expected_bytes = 4usize
+            .checked_add(pairs_bytes)
+            .ok_or(CbpError::PayloadDecodeError)?;
+
         if src.len() < expected_bytes {
             return Err(CbpError::UnexpectedEof {
                 required: expected_bytes,
@@ -97,7 +106,13 @@ impl RleTransformer {
             }
         }
 
-        Ok(dst_idx)
+        Ok((dst_idx, offset))
+    }
+
+    /// Decodes an RLE sequence into a destination slice. Returns elements decoded.
+    #[inline]
+    pub fn decode_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+        Self::decode_u32_ext(src, dst).map(|(elements, _bytes)| elements)
     }
 }
 

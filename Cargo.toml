@@ -8,11 +8,14 @@ members = [
     "crates/cbp-fuzz",
     "benches",
 ]
+exclude = [
+    "fuzz",
+]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 license = "MIT OR Apache-2.0"
 authors = ["GoldSrc Architecture Team"]
 repository = "https://github.com/ulquiorracode/compact-binary-protocol"
@@ -23,7 +26,7 @@ cbp-transforms = { path = "crates/cbp-transforms", default-features = false }
 cbp-derive = { path = "crates/cbp-derive" }
 cbp = { path = "crates/cbp", default-features = false }
 
-stitch-core = { git = "https://github.com/ulquiorracode/stitch-rs.git", branch = "dev", default-features = false }
+stitch-core = { git = "https://github.com/ulquiorracode/stitch-rs.git", rev = "89de13aedcc61e13af97ccb8cc07f543080071ad", default-features = false }
 zerocopy = { version = "0.8", default-features = false, features = ["derive"] }
 criterion = { version = "0.8", default-features = false }
 prost = { version = "0.13", default-features = false, features = ["prost-derive"] }

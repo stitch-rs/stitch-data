@@ -508,8 +508,8 @@ impl DecompressionPipeline {
                 Ok(1 + consumed)
             }
             0x02 => {
-                let consumed = RleTransformer::decode_u32(&src[1..], dst)?;
-                Ok(1 + consumed)
+                let (_elements, bytes_consumed) = RleTransformer::decode_u32_ext(&src[1..], dst)?;
+                Ok(1 + bytes_consumed)
             }
             _ => Err(CbpError::PayloadDecodeError),
         }

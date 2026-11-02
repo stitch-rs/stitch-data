@@ -25,7 +25,7 @@ pub struct PlayerSnapshot {
     #[cbp(bits = 6)]
     pub weapon_id: u8,
     pub flags: u8,
-    #[cbp(delta)]
+    #[cbp(varint)]
     pub tick: u32,
 }
 

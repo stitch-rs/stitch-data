@@ -38,6 +38,13 @@ pub enum CbpError {
     },
     /// General payload decoding or unpacking failure.
     PayloadDecodeError,
+    /// Frame payload length exceeds maximum permitted limit.
+    FrameTooLarge {
+        /// Specified payload length in bytes.
+        size: u64,
+        /// Maximum permitted payload length in bytes.
+        limit: usize,
+    },
 }
 
 impl fmt::Display for CbpError {
@@ -70,6 +77,12 @@ impl fmt::Display for CbpError {
                 )
             }
             Self::PayloadDecodeError => write!(f, "payload decode error"),
+            Self::FrameTooLarge { size, limit } => {
+                write!(
+                    f,
+                    "frame payload size {size} bytes exceeds maximum limit of {limit} bytes"
+                )
+            }
         }
     }
 }

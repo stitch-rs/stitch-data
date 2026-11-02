@@ -14,7 +14,7 @@ pub mod rle;
 pub mod simd;
 
 pub use bitpack::BitPacker;
-pub use columnar::ColumnarBlockBuilder;
+pub use columnar::{ColumnarBlockBuilder, RecordBatchBuilder};
 pub use delta::DeltaTransformer;
 pub use float::GorillaCompressor;
 pub use pipeline::{CompressionPipeline, DecompressionPipeline};

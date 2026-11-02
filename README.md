@@ -37,13 +37,14 @@ high-throughput, and extreme entropy density.
   - Fast-forward stream resynchronization (`find_magic` at 35.4 GiB/s, recovers
     from noise in 27 ns).
 - **Zero-Cost Derive Macros & Schema Fingerprinting**:
-  - `#[derive(CbpRecord)]` with field routing attributes (`#[cbp(delta)]`,
-    `#[cbp(varint)]`, `#[cbp(zigzag)]`, `#[cbp(gorilla)]`, `#[cbp(raw)]`,
-    `#[cbp(bits = N)]`).
+  - `#[derive(CbpRecord)]` with field routing attributes (`#[cbp(varint)]`,
+    `#[cbp(zigzag)]`, `#[cbp(raw)]`, `#[cbp(bits = N)]`) and multi-profile dispatch
+    (`-O0 Direct` uncompressed memcpy vs `-O2 Balanced` bit-packed compression).
   - 64-bit compile-time schema fingerprinting (`SCHEMA_HASH: u64`) and fail-fast
     validation (`CbpError::SchemaMismatch`).
-  - `ColumnarBlockBuilder<T, CAPACITY>` for stack-allocated batching with zero
-    heap allocations (encode in 8.71 ns, 2.19x faster than Protobuf).
+  - `RecordBatchBuilder<T, CAPACITY>` (aliased as `ColumnarBlockBuilder`) for
+    stack-allocated batching with zero heap allocations (encode in 8.71 ns, 2.19x
+    faster than Protobuf).
 - **Pure `#![no_std]`**: Built for embedded systems, kernels, and bare-metal
   environments.
 
@@ -54,7 +55,7 @@ high-throughput, and extreme entropy density.
   pack/unpack logic.
 - **`crates/cbp-transforms`**: Monomorphic transform pipelines (Delta, BitPack,
   RLE, Gorilla Float) with AVX2 SIMD acceleration powered by `stitch-core`, and
-  `ColumnarBlockBuilder`.
+  `RecordBatchBuilder`.
 - **`crates/cbp-derive`**: Procedural derive macro `#[derive(CbpRecord)]` with
   field attribute routing and compile-time schema hashing.
 - **`crates/cbp`**: High-performance ergonomic facade.
@@ -138,7 +139,7 @@ Runnable reference implementations demonstrating real-world integration:
 
 - **Real-Time UDP Game Telemetry**: Run
   `cargo run -p cbp --example udp_game_telemetry` (64 players @ 128Hz,
-  columnar batching, and stream noise recovery).
+  high-throughput framed batching, and stream noise recovery).
 - **Constrained Embedded IoT Sensor Node**: Run
   `cargo run -p cbp --example embedded_sensor_node` (stack-only 128-byte budget,
   zero dynamic heap allocations, `#![no_std]`).

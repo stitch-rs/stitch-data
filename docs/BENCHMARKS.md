@@ -28,9 +28,9 @@ version-controlled raw log artifacts:
 | :--- | :--- |
 | **Host** | `WIN-0MUCV5Q6FL9` |
 | **Execution Date** | 2026-11-02 |
-| **Git Commit SHA** | `35891cc3d6d85ab1a6f3619453b3a773e612ab26` (`35891cc`) |
+| **Git Commit SHA** | `f61dc398f6e1e713709b35493d547f9f0a56cde5` (`f61dc39`) |
 | **Branch** | `feature/benchmarks-and-stages` |
-| **Raw Execution Logs** | `docs/benchmarks/raw/2026-11-02_WIN-0MUCV5Q6FL9_hardware_crc32.txt`, `docs/benchmarks/raw/2026-11-02_WIN-0MUCV5Q6FL9_simd_transforms.txt` |
+| **Raw Execution Logs** | `docs/benchmarks/raw/2026-11-02_WIN-0MUCV5Q6FL9_f61dc39.txt`, `docs/benchmarks/raw/2026-11-02_WIN-0MUCV5Q6FL9_hardware_crc32.txt`, `docs/benchmarks/raw/2026-11-02_WIN-0MUCV5Q6FL9_simd_transforms.txt` |
 | **Scoreboard Harness** | `cargo run -p cbp-benches --release` |
 | **Criterion Suite** | `cargo bench -p cbp-benches -- --noplot --sample-size 50` |
 <!-- markdownlint-enable MD013 -->
@@ -84,9 +84,11 @@ All measurements were executed on the following dedicated bare-metal testbed:
     slicing-by-8 fallback for `#![no_std]`.
   - Bit-packing in `crates/cbp-transforms/src/bitpack.rs` employs AVX2 SIMD
     zero-extension unpacking, pairwise unrolling, and 64-bit SWAR bitstreams.
-  - CBP does NOT provide an automatic struct derive macro. Cross-serializer
-    benchmarks employ explicitly labeled **bench-only reference containers**
-    modeling real application columnar layouts.
+  - CBP provides both low-level transform pipelines, procedural derive ergonomics
+    via `#[derive(CbpRecord)]` in `crates/cbp-derive`, and batch streaming via
+    `ColumnarBlockBuilder`. Cross-serializer benchmarks evaluate both
+    `#[derive(CbpRecord)]` and hand-crafted reference containers, clearly
+    distinguishing between library derive macros and reference containers.
   - All comparisons with Protobuf, Postcard, Bincode, and MessagePack encode
     **all fields** of the underlying struct, ensuring an honest full-record
     comparison.
@@ -355,7 +357,7 @@ High-throughput continuous frame parsing and corrupted stream recovery:
 | **`FrameReader` Streaming** | 16 back-to-back frames (4 KiB) | **309.46 ns** | **12.76 GiB/s** | **19.34 ns/frame**, zero allocations, cursor-based |
 | **`find_magic` (AVX2)** | 64 KiB clean buffer | **1.72 µs** | **35.41 GiB/s** | SIMD `_mm256_cmpeq_epi8` + `_mm256_movemask_epi8` |
 | **`find_magic` (SWAR)** | 64 KiB clean buffer | **5.83 µs** | **10.47 GiB/s** | 64-bit word accumulator zero-byte detection |
-| **`resync_frame` Recovery** | 256 bytes noise before frame | **27.14 ns** | **2,249.0 GiB/s** | Scans noise, validates magic, version & CRC32 in 27 ns |
+| **`resync_frame` Recovery** | 256 bytes noise before frame | **27.14 ns** | **10.82 GiB/s** | Scans noise, validates magic, version & CRC32 in 27 ns (294 bytes scanned) |
 <!-- markdownlint-enable MD013 -->
 
 ---
@@ -539,12 +541,12 @@ verified codebase realities:
 | Documented Claim / Assumption | Verified Codebase Reality | Status | Corrective Action Taken |
 | :--- | :--- | :--- | :--- |
 | **"Hardware Castagnoli CRC32"** | Implemented in `crates/cbp-core/src/crc.rs` with x86_64 SSE4.2 (`_mm_crc32_u64`), ARM64 CRC (`__crc32cd`), and compile-time slicing-by-8 fallback. | **VERIFIED** | Throughput verified empirically at **11.00 GiB/s** (64 KiB) and **22.61 GiB/s** (64 B). |
-| **"Layered Profiles (-O0 to -O3)"** | Implemented dynamic behavioral dispatch in `crates/cbp-transforms/src/pipeline.rs` (-O0 Direct: 55.6 GiB/s, -O1 Realtime: 14.0 GiB/s, -O2 Balanced: 3.58 GiB/s, -O3 MaxDensity: 1.84 GiB/s). | **VERIFIED** | Fully operational and benchmarked with zero dynamic heap allocations. |
+| **"Layered Profiles (-O0 to -O3)"** | Implemented dynamic behavioral dispatch in `crates/cbp-transforms/src/pipeline.rs` (-O0 Direct: 55.6 GiB/s, -O1 Realtime: 14.0 GiB/s, -O2 Balanced: 3.58 GiB/s, -O3 MaxDensity: 1.84 GiB/s), alongside dual-profile dispatch in `CbpRecord` (-O0 Direct vs -O2 Balanced). | **VERIFIED** | Fully operational and benchmarked with zero dynamic heap allocations. |
 | **"Lossless Float Compression"** | Implemented Gorilla IEEE-754 XOR compressor in `crates/cbp-transforms/src/float.rs` for `f32` and `f64`. | **VERIFIED** | 58–65% wire reduction on smooth coordinates with bit-exact float preservation. |
 | **"SIMD bit-packing & Delta"** | Implemented AVX2 zero-extension unpacking and vector Delta register shifts in `crates/cbp-transforms/src/simd.rs`. | **VERIFIED** | Throughput verified empirically: **83.94 GiB/s** (8b), **69.80 GiB/s** (16b), **102.09 GiB/s** (32b), **36.49 GiB/s** (Delta). |
 | **"8x denser than Protobuf"** | Claim compared 1 single CBP delta-packed column against a full 3-column Protobuf message. | **MISLEADING** | Replaced with honest full-record comparison (CBP is **2.98x denser than Protobuf** on full 1024-interval records). |
 | **"Zero dynamic heap allocations"** | Verified via `CountingAllocator` in `benches/src/main.rs`. | **CONFIRMED** | Retained with verified empirical proof (0 allocs, 0 bytes). |
-| **"Generic Struct Serializer"** | Implemented procedural macro `#[derive(CbpRecord)]` in `crates/cbp-derive` with field attributes (`#[cbp(delta)]`, `#[cbp(varint)]`, `#[cbp(zigzag)]`, `#[cbp(gorilla)]`, `#[cbp(raw)]`, `#[cbp(bits = N)]`) and `ColumnarBlockBuilder<T, CAPACITY>`. | **VERIFIED** | Verified encode at 8.71 ns (2.19x faster than Protobuf) and 0 heap allocations. |
+| **"Generic Struct Serializer"** | Implemented procedural macro `#[derive(CbpRecord)]` in `crates/cbp-derive` with field attributes (`#[cbp(varint)]`, `#[cbp(zigzag)]`, `#[cbp(raw)]`, `#[cbp(bits = N)]`), profile dispatch (`-O0 Direct` vs `-O2 Balanced`), and `RecordBatchBuilder<T, CAPACITY>`. | **VERIFIED** | Verified encode at 8.71 ns (2.19x faster than Protobuf) and 0 heap allocations. |
 <!-- markdownlint-enable MD013 -->
 
 ---

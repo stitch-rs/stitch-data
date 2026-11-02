@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     stream resynchronization, and FNV-1a 64-bit schema fingerprinting.
   - Production reference example: Real-time UDP Multiplayer Game Telemetry
     (`examples/udp_game_telemetry.rs`) simulating 64 players at 128Hz with
-    `ColumnarBlockBuilder`, vectored framing, and stream noise recovery.
+    `RecordBatchBuilder`, vectored framing, and stream noise recovery.
   - Production reference example: Constrained Embedded IoT / Sensor Node
     (`examples/embedded_sensor_node.rs`) demonstrating stack-only 128-byte
     encoding with zero heap allocations and schema integrity validation.
@@ -39,14 +39,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Developer Experience, Codec Layer & Macros (Category 4)**:
   - Procedural derive macro `#[derive(CbpRecord)]` in new workspace member
     `crates/cbp-derive`.
-  - Field routing attributes (`#[cbp(delta)]`, `#[cbp(varint)]`,
-    `#[cbp(zigzag)]`, `#[cbp(gorilla)]`, `#[cbp(raw)]`, `#[cbp(bits = N)]`,
-    `#[cbp(codec = ...)]`).
+  - Field routing attributes (`#[cbp(varint)]`, `#[cbp(zigzag)]`,
+    `#[cbp(raw)]`, `#[cbp(bits = N)]`, `#[cbp(codec = ...)]`) with sub-byte
+    bitstream packing and dual-profile dispatch (-O0 Direct vs -O2 Balanced).
   - Compile-time 64-bit schema fingerprinting (`SCHEMA_HASH: u64`) using FNV-1a
     with fail-fast validation (`CbpError::SchemaMismatch`).
-  - Cache-conscious `ColumnarBlockBuilder<T: CbpRecord, const CAPACITY: usize>`
-    in `crates/cbp-transforms/src/columnar.rs` providing inline stack batching
-    with $O(1)$ push and zero-allocation flushing.
+  - Cache-conscious `RecordBatchBuilder<T: CbpRecord, const CAPACITY: usize>`
+    (aliased as `ColumnarBlockBuilder`) in `crates/cbp-transforms/src/columnar.rs`
+    providing inline stack batching with $O(1)$ push and zero-allocation flushing.
   - Benchmarked performance: single-record encode in **8.71 ns** (**2.57 GiB/s**,
     2.19x faster than Protobuf prost and 4.92x faster than Bincode); batch 64
     snapshots in **726.69 ns** (2.08x faster than Protobuf prost) with
