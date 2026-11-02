@@ -166,3 +166,37 @@ fn test_columnar_dict_and_rle_codecs() {
     assert_eq!(dec_rle_count, 12);
     assert_eq!(decoded_repeated, repeated);
 }
+
+#[derive(Debug, PartialEq, Clone, Default, Record)]
+struct AdvancedTelemetryBatchRecord {
+    #[stitch(column = "rle")]
+    pub state_flags: u32,
+    #[stitch(column = "dict")]
+    pub category_id: u32,
+    #[stitch(column = "gorilla")]
+    pub sensor_reading: f32,
+}
+
+#[test]
+fn test_derive_record_with_explicit_columnar_attributes() {
+    let mut batch = Vec::new();
+    for i in 0..100 {
+        batch.push(AdvancedTelemetryBatchRecord {
+            state_flags: if i < 50 { 1 } else { 2 },
+            category_id: (i % 3) * 10,
+            sensor_reading: 24.5 + (i as f32 * 0.1),
+        });
+    }
+
+    let mut buf = [0u8; 4096];
+    let written = AdvancedTelemetryBatchRecord::encode_columnar_batch(&batch, &mut buf).unwrap();
+    assert!(written > 0);
+    // Raw AoS would be 100 * (4 + 4 + 4) = 1200 bytes. Columnar RLE+Dict+Gorilla is significantly more compact.
+    assert!(written < 600);
+
+    let mut decoded = vec![AdvancedTelemetryBatchRecord::default(); 100];
+    let count =
+        AdvancedTelemetryBatchRecord::decode_columnar_batch(&buf[..written], &mut decoded).unwrap();
+    assert_eq!(count, 100);
+    assert_eq!(batch, decoded);
+}

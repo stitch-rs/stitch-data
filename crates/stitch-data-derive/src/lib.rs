@@ -17,6 +17,16 @@ const fn fnv1a_64(data: &[u8]) -> u64 {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ColumnStrategy {
+    Auto,
+    Dict,
+    Rle,
+    Gorilla,
+    Raw,
+    Adaptive,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum CodecKind {
     Raw,
     Varint,
@@ -24,10 +34,12 @@ enum CodecKind {
     BitPack(u8),
 }
 
+#[derive(Clone)]
 struct FieldInfo<'a> {
     name: &'a syn::Ident,
     ty: &'a syn::Type,
     codec: CodecKind,
+    column: ColumnStrategy,
 }
 
 enum Segment<'a> {
@@ -75,6 +87,7 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
 
         // Parse attributes
         let mut codec = infer_default_codec(field_type);
+        let mut column = ColumnStrategy::Auto;
         for attr in &field.attrs {
             if (attr.path().is_ident("stitch") || attr.path().is_ident("cbp"))
                 && let Ok(meta_list) = attr.meta.require_list()
@@ -133,6 +146,25 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
                             }
                         }
                         Ok(())
+                    } else if meta.path.is_ident("column") {
+                        let value: Lit = meta.value()?.parse()?;
+                        if let Lit::Str(str_lit) = value {
+                            let val = str_lit.value();
+                            match val.as_str() {
+                                "dict" => column = ColumnStrategy::Dict,
+                                "rle" => column = ColumnStrategy::Rle,
+                                "gorilla" => column = ColumnStrategy::Gorilla,
+                                "adaptive" => column = ColumnStrategy::Adaptive,
+                                "raw" => column = ColumnStrategy::Raw,
+                                other => {
+                                    parse_err = Some(syn::Error::new_spanned(
+                                        &str_lit,
+                                        format!("Unknown columnar strategy '{other}': expected 'dict', 'rle', 'gorilla', 'adaptive', or 'raw'"),
+                                    ));
+                                }
+                            }
+                        }
+                        Ok(())
                     } else if meta.path.is_ident("codec") {
                         let expr: Expr = meta.value()?.parse()?;
                         let expr_str = quote!(#expr).to_string();
@@ -167,6 +199,7 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
             name: field_name,
             ty: field_type,
             codec,
+            column,
         });
     }
 
@@ -198,7 +231,7 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
     let mut encode_columnar_stmts = Vec::new();
     let mut decode_columnar_stmts = Vec::new();
     for field in &parsed_fields {
-        let (enc, dec) = generate_columnar_field(field.name, field.ty);
+        let (enc, dec) = generate_columnar_field(field.name, field.ty, field.column);
         encode_columnar_stmts.push(enc);
         decode_columnar_stmts.push(dec);
     }
@@ -353,22 +386,14 @@ fn group_into_segments<'a>(fields: &'a [FieldInfo<'a>]) -> Vec<Segment<'a>> {
     for field in fields {
         match field.codec {
             CodecKind::BitPack(_) => {
-                current_bitpack.push(FieldInfo {
-                    name: field.name,
-                    ty: field.ty,
-                    codec: field.codec,
-                });
+                current_bitpack.push(field.clone());
             }
             _ => {
                 if !current_bitpack.is_empty() {
                     let run = std::mem::take(&mut current_bitpack);
                     segments.push(Segment::Bitstream(run));
                 }
-                segments.push(Segment::Single(FieldInfo {
-                    name: field.name,
-                    ty: field.ty,
-                    codec: field.codec,
-                }));
+                segments.push(Segment::Single(field.clone()));
             }
         }
     }
@@ -711,8 +736,143 @@ fn generate_direct_field(
 fn generate_columnar_field(
     name: &syn::Ident,
     ty: &syn::Type,
+    column: ColumnStrategy,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let ty_clean = type_to_schema_str(ty);
+
+    match column {
+        ColumnStrategy::Dict => {
+            let enc = quote! {
+                {
+                    let mut col = [0u32; 256];
+                    for (i, r) in chunk.iter().enumerate() {
+                        col[i] = r.#name as u32;
+                    }
+                    let mut col_buf = [0u8; 1024 + 64];
+                    let col_len = ::stitch_data::columnar::encode_dict_column(
+                        &col[..row_count],
+                        &mut col_buf,
+                    )?;
+                    writer.write_column(
+                        ::stitch_data::columnar::ColumnCodecTag::Dictionary,
+                        &col_buf[..col_len],
+                    )?;
+                }
+            };
+            let dec = quote! {
+                {
+                    let (_tag, col_payload) = reader.next_column()?;
+                    let mut col = [0u32; 256];
+                    ::stitch_data::columnar::decode_dict_column(col_payload, &mut col[..block_rows])?;
+                    for (i, r) in target.iter_mut().enumerate() {
+                        r.#name = col[i] as #ty;
+                    }
+                }
+            };
+            return (enc, dec);
+        }
+        ColumnStrategy::Rle => {
+            let enc = quote! {
+                {
+                    let mut col = [0u32; 256];
+                    for (i, r) in chunk.iter().enumerate() {
+                        col[i] = r.#name as u32;
+                    }
+                    let mut col_buf = [0u8; 1024 + 64];
+                    let col_len = ::stitch_data::columnar::encode_rle_column(
+                        &col[..row_count],
+                        &mut col_buf,
+                    )?;
+                    writer.write_column(
+                        ::stitch_data::columnar::ColumnCodecTag::Rle,
+                        &col_buf[..col_len],
+                    )?;
+                }
+            };
+            let dec = quote! {
+                {
+                    let (_tag, col_payload) = reader.next_column()?;
+                    let mut col = [0u32; 256];
+                    ::stitch_data::columnar::decode_rle_column(col_payload, &mut col[..block_rows])?;
+                    for (i, r) in target.iter_mut().enumerate() {
+                        r.#name = col[i] as #ty;
+                    }
+                }
+            };
+            return (enc, dec);
+        }
+        ColumnStrategy::Gorilla => {
+            let enc = quote! {
+                {
+                    let mut col = [0.0f32; 256];
+                    for (i, r) in chunk.iter().enumerate() {
+                        col[i] = r.#name as f32;
+                    }
+                    let mut col_buf = [0u8; 1024 + 64];
+                    let col_len = ::stitch_data::columnar::encode_f32_column(
+                        &col[..row_count],
+                        &mut col_buf,
+                    )?;
+                    writer.write_column(
+                        ::stitch_data::columnar::ColumnCodecTag::GorillaF32,
+                        &col_buf[..col_len],
+                    )?;
+                }
+            };
+            let dec = quote! {
+                {
+                    let (_tag, col_payload) = reader.next_column()?;
+                    let mut col = [0.0f32; 256];
+                    ::stitch_data::columnar::decode_f32_column(col_payload, &mut col[..block_rows])?;
+                    for (i, r) in target.iter_mut().enumerate() {
+                        r.#name = col[i] as #ty;
+                    }
+                }
+            };
+            return (enc, dec);
+        }
+        ColumnStrategy::Raw => {
+            let enc = quote! {
+                {
+                    let item_size = ::core::mem::size_of::<#ty>();
+                    let mut col_buf = [0u8; 256 * 8 + 64];
+                    let mut offset = 0usize;
+                    for r in chunk {
+                        let bytes = r.#name.to_le_bytes();
+                        col_buf[offset..offset + bytes.len()].copy_from_slice(&bytes);
+                        offset += bytes.len();
+                    }
+                    writer.write_column(
+                        ::stitch_data::columnar::ColumnCodecTag::Raw,
+                        &col_buf[..offset],
+                    )?;
+                }
+            };
+            let dec = quote! {
+                {
+                    let (_tag, col_payload) = reader.next_column()?;
+                    let item_size = ::core::mem::size_of::<#ty>();
+                    for (i, r) in target.iter_mut().enumerate() {
+                        let start = i * item_size;
+                        let end = start + item_size;
+                        if col_payload.len() < end {
+                            return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                                required: end,
+                                available: col_payload.len(),
+                            });
+                        }
+                        let bytes = col_payload[start..end]
+                            .try_into()
+                            .map_err(|_| ::stitch_data::error::CbpError::PayloadDecodeError)?;
+                        r.#name = <#ty>::from_le_bytes(bytes);
+                    }
+                }
+            };
+            return (enc, dec);
+        }
+        ColumnStrategy::Auto | ColumnStrategy::Adaptive => {}
+    }
+
     match ty_clean.as_str() {
         "bool" => {
             let enc = quote! {
