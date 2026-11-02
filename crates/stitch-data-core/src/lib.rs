@@ -11,6 +11,8 @@ pub mod error;
 pub mod frame;
 pub mod record;
 pub mod resync;
+pub mod schema;
+
 pub mod simd;
 pub mod varint;
 pub mod zigzag;
@@ -26,5 +28,8 @@ pub use frame::{
 };
 pub use record::{ColumnCodec, FieldCodec, Record};
 pub use resync::{ResyncStats, StreamResyncParser, find_magic, find_magic_swar, resync_frame};
+pub use schema::{
+    CompatibilityResult, FieldDescriptor, SchemaCompatibilityVerifier, SchemaDefinition,
+};
 pub use varint::{decode_prefix_varint, encode_prefix_varint};
 pub use zigzag::{decode_zigzag32, decode_zigzag64, encode_zigzag32, encode_zigzag64};
