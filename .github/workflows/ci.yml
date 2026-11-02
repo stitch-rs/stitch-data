@@ -50,3 +50,19 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo check -p cbp-core --no-default-features
       - run: cargo check -p cbp-transforms --no-default-features
+      - run: cargo check -p cbp --no-default-features
+
+  bench_smoke:
+    name: Benchmark, Fuzz & Example Gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build benchmarks
+        run: cargo bench -p cbp-benches --no-run
+      - name: Run scoreboard and invariant verification
+        run: cargo run -p cbp-benches --release
+      - name: Run adversarial fuzzing suite (100k iterations)
+        run: cargo test -p cbp-fuzz --release
+      - name: Verify production reference examples
+        run: cargo test --examples

@@ -1,0 +1,1684 @@
+================================================================================
+CBP EMPIRICAL BENCHMARK RAW EXECUTION LOG
+================================================================================
+Host: WIN-0MUCV5Q6FL9
+Date: 2026-11-02
+Commit SHA: 35891cc3d6d85ab1a6f3619453b3a773e612ab26
+Branch: feature/benchmarks-and-stages
+OS: Microsoft Windows 11 Pro 64-bit
+CPU: 11th Gen Intel(R) Core(TM) i9-11900H @ 2.50GHz (8C/16T, MaxClock 2.496 GHz)
+Caches: L1d 32KB/core, L2 1.25MB/core (10MB total), L3 24MB shared
+Rust Toolchain: rustc 1.99.1 (58cf8f9c3 2026-10-13) x86_64-pc-windows-msvc (LLVM 23.1.1)
+Power Scheme: High Performance (8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c)
+================================================================================
+
+===============================================================================
+
+    COMPACT BINARY PROTOCOL (CBP) SIZE & ROUNDTRIP VERIFICATION HARNESS       
+
+===============================================================================
+
+
+
+>>> [1/3] Verifying Exact Roundtrip Invariants...
+
+  [PASS] CbpReferenceIntervalContainer roundtrip (1,024 records)
+
+  [PASS] CbpReferenceSnapshot roundtrip (1 record, 24 bytes raw)
+
+  [PASS] CbpReferenceSnapshotBatch roundtrip (64 records)
+
+
+
+>>> [2/3] Verifying Zero Dynamic Heap Allocations on Hot Paths...
+
+  [PASS] CompressionPipeline::compress_u32: 0 heap allocations (389 bytes written)
+
+  [PASS] DecompressionPipeline::decompress_u32: 0 heap allocations
+
+  [PASS] pack_frame: 0 heap allocations
+
+  [PASS] unpack_frame: 0 heap allocations
+
+  [PASS] CbpReferenceIntervalContainer::encode: 0 heap allocations
+
+  [PASS] CbpReferenceIntervalContainer::decode: 0 heap allocations
+
+
+
+>>> [3/3] Generating Wire Density Scoreboards...
+
+
+
+===============================================================================
+
+  SCENARIO A: 1,024 IP INTERVALS (12,288 BYTES RAW AoS) SCOREBOARD             
+
+===============================================================================
+
+Format / Serializer                 |  Wire Size |      % Raw | Ratio vs Raw        
+
+------------------------------------+------------+------------+--------------------
+
+Raw Memory (AoS struct)             |    12288 B |     100.0% |  1.00x
+
+Bincode (1.3)                       |    12296 B |     100.1% |  1.00x
+
+MessagePack (rmp-serde)             |    12291 B |     100.0% |  1.00x
+
+Protobuf (prost 0.13 repeated)      |     9225 B |      75.1% |  1.33x
+
+Postcard (1.1)                      |     9218 B |      75.0% |  1.33x
+
+CBP Reference Columnar Container    |     3098 B |      25.2% |  3.97x [Delta+BitPack+CRC32]
+
+-------------------------------------------------------------------------------
+
+  CBP Container Breakdown for 1,024 Records:
+
+    - Element Count PrefixVarint: 2 bytes
+
+    - Column 1 (ip_from, Monotone Delta+BitPack): ~1,156 bytes
+
+    - Column 2 (ip_to, Monotone Delta+BitPack):   ~1,156 bytes
+
+    - Column 3 (profile_id, Bounded BitPack 6b):  ~770 bytes
+
+    - Stream Length Descriptors:                  ~6 bytes
+
+    - CBP Frame Envelope (Header + CRC32):        8 bytes
+
+    => TOTAL: 3098 bytes (vs Protobuf: 9225 B -> 33.6% of Protobuf size)
+
+
+
+===============================================================================
+
+  SCENARIO B: SINGLE GAME TELEMETRY SNAPSHOT (24 BYTES RAW AoS) SCOREBOARD    
+
+===============================================================================
+
+Format / Serializer                 |  Wire Size |   Overhead | Integrity Check          
+
+------------------------------------+------------+------------+-------------------------
+
+Raw Memory (AoS struct)             |       24 B |        0 B | None                     
+
+Bincode (1.3)                       |       24 B |         +0 | None                     
+
+Postcard (1.1)                      |       19 B |         -5 | None                     
+
+Protobuf (prost 0.13)               |       26 B |         +2 | None                     
+
+MessagePack (rmp-serde)             |       26 B |         +2 | None                     
+
+CBP Reference Field Packer          |       27 B |         +3 | Software Castagnoli CRC32
+
+-------------------------------------------------------------------------------
+
+  CBP Single Snapshot Breakdown:
+
+    - Payload: 19 bytes (player_id varint: 2B, x/y/z: 12B, health/flags/tick: 5B)
+
+    - CBP Frame Header (Magic + Version + Profile/Flags + PayloadLen): 4 bytes
+
+    - Castagnoli CRC32 Integrity Footer: 4 bytes
+
+    => TOTAL: 27 bytes (including full 32-bit CRC32 checksum)
+
+
+
+===============================================================================
+
+  SCENARIO B2: BATCH OF 64 GAME SNAPSHOTS (1,536 BYTES RAW AoS) SCOREBOARD    
+
+===============================================================================
+
+Format / Serializer                 |  Wire Size |      % Raw | Integrity Check     
+
+------------------------------------+------------+------------+--------------------
+
+Raw Memory (AoS struct)             |     1536 B |     100.0% | None                
+
+Bincode (1.3)                       |     1544 B |     100.5% | None                
+
+MessagePack (rmp-serde)             |     1668 B |     108.6% | None                
+
+Protobuf (prost 0.13 batch)         |     1815 B |     118.2% | None                
+
+Postcard (1.1)                      |     1242 B |      80.9% | None                
+
+CBP Reference Batch Packer          |     1251 B |      81.4% | Castagnoli CRC32    
+
+===============================================================================
+
+
+
+>>> ALL ROUNDTRIP AND ALLOCATION INVARIANTS VERIFIED CLEANLY.
+
+Primitives/PrefixVarint/encode/0_1B
+
+                        time:   [908.15 ps 929.51 ps 967.99 ps]
+
+Found 11 outliers among 50 measurements (22.00%)
+
+  1 (2.00%) low severe
+
+  7 (14.00%) low mild
+
+  3 (6.00%) high severe
+
+Primitives/PrefixVarint/decode/0_1B
+
+                        time:   [733.89 ps 747.23 ps 763.40 ps]
+
+Primitives/PrefixVarint/encode/1_1B
+
+                        time:   [875.98 ps 897.97 ps 931.68 ps]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high severe
+
+Primitives/PrefixVarint/decode/1_1B
+
+                        time:   [741.83 ps 757.95 ps 778.78 ps]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+Primitives/PrefixVarint/encode/127_1B
+
+                        time:   [889.93 ps 912.81 ps 946.58 ps]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high severe
+
+Primitives/PrefixVarint/decode/127_1B
+
+                        time:   [727.56 ps 739.72 ps 754.57 ps]
+
+Primitives/PrefixVarint/encode/128_2B
+
+                        time:   [970.25 ps 994.88 ps 1.0246 ns]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high mild
+
+Primitives/PrefixVarint/decode/128_2B
+
+                        time:   [2.3547 ns 2.3904 ns 2.4281 ns]
+
+Primitives/PrefixVarint/encode/16383_2B
+
+                        time:   [963.03 ps 981.54 ps 1.0085 ns]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high mild
+
+Primitives/PrefixVarint/decode/16383_2B
+
+                        time:   [2.4438 ns 2.4782 ns 2.5230 ns]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Primitives/PrefixVarint/encode/16384_3B
+
+                        time:   [1.3114 ns 1.3338 ns 1.3563 ns]
+
+Primitives/PrefixVarint/decode/16384_3B
+
+                        time:   [2.8141 ns 2.8308 ns 2.8471 ns]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+Primitives/PrefixVarint/encode/2097151_3B
+
+                        time:   [1.3066 ns 1.3265 ns 1.3462 ns]
+
+Primitives/PrefixVarint/decode/2097151_3B
+
+                        time:   [2.9079 ns 2.9532 ns 3.0069 ns]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Primitives/PrefixVarint/encode/2097152_4B
+
+                        time:   [1.6751 ns 1.7123 ns 1.7587 ns]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Primitives/PrefixVarint/decode/2097152_4B
+
+                        time:   [2.7941 ns 2.8213 ns 2.8516 ns]
+
+Primitives/PrefixVarint/encode/268435455_4B
+
+                        time:   [1.6562 ns 1.6949 ns 1.7364 ns]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Primitives/PrefixVarint/decode/268435455_4B
+
+                        time:   [2.7913 ns 2.8281 ns 2.8661 ns]
+
+Primitives/PrefixVarint/encode/268435456_5B
+
+                        time:   [2.0131 ns 2.0400 ns 2.0690 ns]
+
+Primitives/PrefixVarint/decode/268435456_5B
+
+                        time:   [3.4939 ns 3.5477 ns 3.5949 ns]
+
+Primitives/PrefixVarint/encode/u64_max_9B
+
+                        time:   [1.7680 ns 1.8032 ns 1.8470 ns]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Primitives/PrefixVarint/decode/u64_max_9B
+
+                        time:   [979.72 ps 993.61 ps 1.0082 ns]
+
+
+
+Primitives/ZigZag/zigzag32/encode/0
+
+                        time:   [357.06 ps 362.12 ps 366.68 ps]
+
+Primitives/ZigZag/zigzag32/decode/0
+
+                        time:   [475.55 ps 480.83 ps 485.65 ps]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) low mild
+
+  1 (2.00%) high severe
+
+Primitives/ZigZag/zigzag32/encode/neg_1
+
+                        time:   [370.60 ps 375.56 ps 380.72 ps]
+
+Found 5 outliers among 50 measurements (10.00%)
+
+  3 (6.00%) low mild
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+Primitives/ZigZag/zigzag32/decode/neg_1
+
+                        time:   [481.32 ps 484.36 ps 487.46 ps]
+
+Primitives/ZigZag/zigzag32/encode/pos_1
+
+                        time:   [357.11 ps 361.68 ps 366.24 ps]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high mild
+
+Primitives/ZigZag/zigzag32/decode/pos_1
+
+                        time:   [480.62 ps 492.25 ps 506.23 ps]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  1 (2.00%) low mild
+
+  2 (4.00%) high severe
+
+Primitives/ZigZag/zigzag32/encode/i32_min
+
+                        time:   [377.36 ps 387.02 ps 398.65 ps]
+
+Found 4 outliers among 50 measurements (8.00%)
+
+  2 (4.00%) high mild
+
+  2 (4.00%) high severe
+
+Primitives/ZigZag/zigzag32/decode/i32_min
+
+                        time:   [474.60 ps 481.87 ps 488.53 ps]
+
+Primitives/ZigZag/zigzag32/encode/i32_max
+
+                        time:   [366.56 ps 371.98 ps 377.91 ps]
+
+Found 4 outliers among 50 measurements (8.00%)
+
+  3 (6.00%) high mild
+
+  1 (2.00%) high severe
+
+Primitives/ZigZag/zigzag32/decode/i32_max
+
+                        time:   [468.30 ps 475.50 ps 483.95 ps]
+
+Primitives/ZigZag/zigzag64/encode/0
+
+                        time:   [468.63 ps 476.55 ps 483.50 ps]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) low mild
+
+Primitives/ZigZag/zigzag64/decode/0
+
+                        time:   [479.85 ps 489.56 ps 499.98 ps]
+
+Found 6 outliers among 50 measurements (12.00%)
+
+  3 (6.00%) low mild
+
+  2 (4.00%) high mild
+
+  1 (2.00%) high severe
+
+Primitives/ZigZag/zigzag64/encode/neg_1
+
+                        time:   [471.00 ps 477.22 ps 482.53 ps]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+Primitives/ZigZag/zigzag64/decode/neg_1
+
+                        time:   [473.08 ps 480.74 ps 488.89 ps]
+
+Found 10 outliers among 50 measurements (20.00%)
+
+  3 (6.00%) low severe
+
+  7 (14.00%) low mild
+
+Primitives/ZigZag/zigzag64/encode/pos_1
+
+                        time:   [464.43 ps 469.37 ps 473.97 ps]
+
+Found 5 outliers among 50 measurements (10.00%)
+
+  3 (6.00%) low mild
+
+  2 (4.00%) high mild
+
+Primitives/ZigZag/zigzag64/decode/pos_1
+
+                        time:   [477.34 ps 486.64 ps 499.83 ps]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+Primitives/ZigZag/zigzag64/encode/i64_min
+
+                        time:   [467.48 ps 478.17 ps 490.12 ps]
+
+Primitives/ZigZag/zigzag64/decode/i64_min
+
+                        time:   [475.97 ps 481.36 ps 486.77 ps]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high mild
+
+Primitives/ZigZag/zigzag64/encode/i64_max
+
+                        time:   [471.63 ps 477.76 ps 483.65 ps]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) low mild
+
+Primitives/ZigZag/zigzag64/decode/i64_max
+
+                        time:   [485.57 ps 494.45 ps 505.11 ps]
+
+Found 5 outliers among 50 measurements (10.00%)
+
+  2 (4.00%) high mild
+
+  3 (6.00%) high severe
+
+
+
+Primitives/CRC32_Castagnoli/crc32/8B
+
+                        time:   [29.343 ns 29.505 ns 29.663 ns]
+
+                        thrpt:  [257.20 MiB/s 258.58 MiB/s 260.01 MiB/s]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  1 (2.00%) low mild
+
+  2 (4.00%) high mild
+
+Primitives/CRC32_Castagnoli/crc32/24B
+
+                        time:   [94.819 ns 95.542 ns 96.364 ns]
+
+                        thrpt:  [237.52 MiB/s 239.56 MiB/s 241.39 MiB/s]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  3 (6.00%) high severe
+
+Primitives/CRC32_Castagnoli/crc32/64B
+
+                        time:   [246.93 ns 247.96 ns 249.06 ns]
+
+                        thrpt:  [245.06 MiB/s 246.14 MiB/s 247.18 MiB/s]
+
+Primitives/CRC32_Castagnoli/crc32/1KiB
+
+                        time:   [3.9421 ,%a%s 3.9828 ,%a%s 4.0277 ,%a%s]
+
+                        thrpt:  [242.46 MiB/s 245.19 MiB/s 247.73 MiB/s]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  2 (4.00%) high mild
+
+  1 (2.00%) high severe
+
+Primitives/CRC32_Castagnoli/crc32/64KiB
+
+                        time:   [256.77 ,%a%s 260.83 ,%a%s 265.18 ,%a%s]
+
+                        thrpt:  [235.69 MiB/s 239.62 MiB/s 243.41 MiB/s]
+
+Found 6 outliers among 50 measurements (12.00%)
+
+  5 (10.00%) high mild
+
+  1 (2.00%) high severe
+
+Primitives/CRC32_Castagnoli/crc32/1MiB
+
+                        time:   [4.0316 ms 4.0550 ms 4.0820 ms]
+
+                        thrpt:  [244.98 MiB/s 246.61 MiB/s 248.04 MiB/s]
+
+Found 4 outliers among 50 measurements (8.00%)
+
+  3 (6.00%) high mild
+
+  1 (2.00%) high severe
+
+
+
+Transforms/Delta/encode/monotone_step_1/1K
+
+                        time:   [330.92 ns 335.68 ns 341.43 ns]
+
+                        thrpt:  [11.173 GiB/s 11.364 GiB/s 11.528 GiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high mild
+
+Transforms/Delta/encode/monotone_step_256/1K
+
+                        time:   [341.48 ns 345.72 ns 350.08 ns]
+
+                        thrpt:  [10.897 GiB/s 11.034 GiB/s 11.171 GiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Transforms/Delta/encode/constant/1K
+
+                        time:   [343.74 ns 346.83 ns 349.58 ns]
+
+                        thrpt:  [10.912 GiB/s 10.999 GiB/s 11.098 GiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high mild
+
+Transforms/Delta/encode/random/1K
+
+                        time:   [351.28 ns 359.02 ns 367.46 ns]
+
+                        thrpt:  [10.381 GiB/s 10.625 GiB/s 10.859 GiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Transforms/Delta/encode/monotone_step_1/1M
+
+                        time:   [360.88 ,%a%s 367.93 ,%a%s 375.33 ,%a%s]
+
+                        thrpt:  [10.408 GiB/s 10.617 GiB/s 10.824 GiB/s]
+
+Transforms/Delta/encode/monotone_step_256/1M
+
+                        time:   [366.29 ,%a%s 371.40 ,%a%s 376.76 ,%a%s]
+
+                        thrpt:  [10.368 GiB/s 10.518 GiB/s 10.664 GiB/s]
+
+Transforms/Delta/encode/constant/1M
+
+                        time:   [366.97 ,%a%s 372.81 ,%a%s 378.21 ,%a%s]
+
+                        thrpt:  [10.328 GiB/s 10.478 GiB/s 10.645 GiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Transforms/Delta/encode/random/1M
+
+                        time:   [377.38 ,%a%s 383.96 ,%a%s 389.78 ,%a%s]
+
+                        thrpt:  [10.022 GiB/s 10.174 GiB/s 10.351 GiB/s]
+
+
+
+Transforms/BitPack/pack_u32/width_1b
+
+                        time:   [2.8475 ,%a%s 2.8807 ,%a%s 2.9099 ,%a%s]
+
+                        thrpt:  [1.3110 GiB/s 1.3242 GiB/s 1.3396 GiB/s]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  2 (4.00%) low severe
+
+  1 (2.00%) low mild
+
+Transforms/BitPack/unpack_u32/width_1b
+
+                        time:   [2.3744 ,%a%s 2.4088 ,%a%s 2.4498 ,%a%s]
+
+                        thrpt:  [1.5571 GiB/s 1.5836 GiB/s 1.6066 GiB/s]
+
+Found 10 outliers among 50 measurements (20.00%)
+
+  9 (18.00%) low mild
+
+  1 (2.00%) high severe
+
+Transforms/BitPack/pack_u32/width_4b
+
+                        time:   [2.1721 ,%a%s 2.2075 ,%a%s 2.2405 ,%a%s]
+
+                        thrpt:  [1.7026 GiB/s 1.7281 GiB/s 1.7562 GiB/s]
+
+Transforms/BitPack/unpack_u32/width_4b
+
+                        time:   [2.4011 ,%a%s 2.4300 ,%a%s 2.4592 ,%a%s]
+
+                        thrpt:  [1.5512 GiB/s 1.5698 GiB/s 1.5887 GiB/s]
+
+Found 8 outliers among 50 measurements (16.00%)
+
+  8 (16.00%) high mild
+
+Transforms/BitPack/pack_u32/width_8b
+
+                        time:   [2.0568 ,%a%s 2.0869 ,%a%s 2.1183 ,%a%s]
+
+                        thrpt:  [1.8009 GiB/s 1.8279 GiB/s 1.8547 GiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Transforms/BitPack/unpack_u32/width_8b
+
+                        time:   [2.3858 ,%a%s 2.4219 ,%a%s 2.4585 ,%a%s]
+
+                        thrpt:  [1.5516 GiB/s 1.5751 GiB/s 1.5989 GiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high mild
+
+Transforms/BitPack/pack_u32/width_12b
+
+                        time:   [4.2150 ,%a%s 4.2665 ,%a%s 4.3090 ,%a%s]
+
+                        thrpt:  [906.54 MiB/s 915.56 MiB/s 926.76 MiB/s]
+
+Found 7 outliers among 50 measurements (14.00%)
+
+  3 (6.00%) low severe
+
+  3 (6.00%) low mild
+
+  1 (2.00%) high mild
+
+Transforms/BitPack/unpack_u32/width_12b
+
+                        time:   [4.9413 ,%a%s 4.9978 ,%a%s 5.0561 ,%a%s]
+
+                        thrpt:  [772.58 MiB/s 781.59 MiB/s 790.52 MiB/s]
+
+Found 8 outliers among 50 measurements (16.00%)
+
+  3 (6.00%) low mild
+
+  3 (6.00%) high mild
+
+  2 (4.00%) high severe
+
+Transforms/BitPack/pack_u32/width_16b
+
+                        time:   [4.1734 ,%a%s 4.2633 ,%a%s 4.3553 ,%a%s]
+
+                        thrpt:  [896.89 MiB/s 916.25 MiB/s 935.99 MiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high mild
+
+Transforms/BitPack/unpack_u32/width_16b
+
+                        time:   [5.0069 ,%a%s 5.1216 ,%a%s 5.2525 ,%a%s]
+
+                        thrpt:  [743.70 MiB/s 762.69 MiB/s 780.18 MiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+
+
+Transforms/Delta/encode/monotone_step_1/1K
+
+                        time:   [340.80 ns 348.11 ns 355.91 ns]
+
+                        thrpt:  [10.718 GiB/s 10.958 GiB/s 11.193 GiB/s]
+
+                 change:
+
+                        time:   [+2.8300% +4.5756% +6.2596%] (p = 0.00 < 0.05)
+
+                        thrpt:  [5.8908% 4.3754% 2.7521%]
+
+                        Performance has regressed.
+
+Found 9 outliers among 50 measurements (18.00%)
+
+  6 (12.00%) low mild
+
+  3 (6.00%) high mild
+
+Transforms/Delta/encode/monotone_step_256/1K
+
+                        time:   [347.75 ns 350.11 ns 352.40 ns]
+
+                        thrpt:  [10.825 GiB/s 10.896 GiB/s 10.970 GiB/s]
+
+                 change:
+
+                        time:   [2.2271% 0.6665% +0.8807%] (p = 0.42 > 0.05)
+
+                        thrpt:  [0.8730% +0.6710% +2.2778%]
+
+                        No change in performance detected.
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) low severe
+
+  1 (2.00%) high severe
+
+Transforms/Delta/encode/constant/1K
+
+                        time:   [340.11 ns 345.64 ns 351.13 ns]
+
+                        thrpt:  [10.864 GiB/s 11.037 GiB/s 11.216 GiB/s]
+
+                 change:
+
+                        time:   [0.3736% +1.4333% +3.1591%] (p = 0.11 > 0.05)
+
+                        thrpt:  [3.0623% 1.4131% +0.3750%]
+
+                        No change in performance detected.
+
+Transforms/Delta/encode/random/1K
+
+                        time:   [351.97 ns 356.79 ns 362.40 ns]
+
+                        thrpt:  [10.526 GiB/s 10.692 GiB/s 10.838 GiB/s]
+
+                 change:
+
+                        time:   [+0.4426% +2.3035% +4.2252%] (p = 0.02 < 0.05)
+
+                        thrpt:  [4.0540% 2.2517% 0.4407%]
+
+                        Change within noise threshold.
+
+Found 9 outliers among 50 measurements (18.00%)
+
+  5 (10.00%) low mild
+
+  2 (4.00%) high mild
+
+  2 (4.00%) high severe
+
+Transforms/Delta/encode/monotone_step_1/1M
+
+                        time:   [379.53 ,%a%s 385.12 ,%a%s 391.15 ,%a%s]
+
+                        thrpt:  [9.9866 GiB/s 10.143 GiB/s 10.292 GiB/s]
+
+                 change:
+
+                        time:   [+3.4763% +6.6127% +10.766%] (p = 0.00 < 0.05)
+
+                        thrpt:  [9.7193% 6.2025% 3.3595%]
+
+                        Performance has regressed.
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  1 (2.00%) high mild
+
+  2 (4.00%) high severe
+
+Transforms/Delta/encode/monotone_step_256/1M
+
+                        time:   [365.72 ,%a%s 370.65 ,%a%s 375.06 ,%a%s]
+
+                        thrpt:  [10.415 GiB/s 10.539 GiB/s 10.681 GiB/s]
+
+                 change:
+
+                        time:   [1.2665% +0.3245% +1.9803%] (p = 0.71 > 0.05)
+
+                        thrpt:  [1.9419% 0.3235% +1.2828%]
+
+                        No change in performance detected.
+
+Transforms/Delta/encode/constant/1M
+
+                        time:   [363.82 ,%a%s 369.04 ,%a%s 373.95 ,%a%s]
+
+                        thrpt:  [10.446 GiB/s 10.585 GiB/s 10.737 GiB/s]
+
+                 change:
+
+                        time:   [4.2517% 2.3885% 0.5500%] (p = 0.01 < 0.05)
+
+                        thrpt:  [+0.5530% +2.4469% +4.4405%]
+
+                        Change within noise threshold.
+
+Transforms/Delta/encode/random/1M
+
+                        time:   [368.54 ,%a%s 374.10 ,%a%s 379.55 ,%a%s]
+
+                        thrpt:  [10.292 GiB/s 10.442 GiB/s 10.599 GiB/s]
+
+                 change:
+
+                        time:   [1.3427% +0.2611% +1.8977%] (p = 0.75 > 0.05)
+
+                        thrpt:  [1.8624% 0.2604% +1.3610%]
+
+                        No change in performance detected.
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high mild
+
+
+
+Transforms/BitPack/pack_u32/width_1b
+
+                        time:   [2.6386 ,%a%s 2.7102 ,%a%s 2.7819 ,%a%s]
+
+                        thrpt:  [1.3713 GiB/s 1.4075 GiB/s 1.4457 GiB/s]
+
+                 change:
+
+                        time:   [6.5800% 4.5068% 2.6666%] (p = 0.00 < 0.05)
+
+                        thrpt:  [+2.7396% +4.7195% +7.0435%]
+
+                        Performance has improved.
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  3 (6.00%) low mild
+
+Transforms/BitPack/unpack_u32/width_1b
+
+                        time:   [2.3621 ,%a%s 2.3863 ,%a%s 2.4102 ,%a%s]
+
+                        thrpt:  [1.5827 GiB/s 1.5986 GiB/s 1.6149 GiB/s]
+
+                 change:
+
+                        time:   [5.1676% 3.7804% 2.4533%] (p = 0.00 < 0.05)
+
+                        thrpt:  [+2.5150% +3.9289% +5.4492%]
+
+                        Performance has improved.
+
+Found 7 outliers among 50 measurements (14.00%)
+
+  3 (6.00%) high mild
+
+  4 (8.00%) high severe
+
+Transforms/BitPack/pack_u32/width_4b
+
+                        time:   [2.0664 ,%a%s 2.0975 ,%a%s 2.1315 ,%a%s]
+
+                        thrpt:  [1.7896 GiB/s 1.8187 GiB/s 1.8460 GiB/s]
+
+                 change:
+
+                        time:   [5.6847% 3.7440% 1.7519%] (p = 0.00 < 0.05)
+
+                        thrpt:  [+1.7832% +3.8896% +6.0273%]
+
+                        Performance has improved.
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high mild
+
+Transforms/BitPack/unpack_u32/width_4b
+
+                        time:   [2.3606 ,%a%s 2.3980 ,%a%s 2.4404 ,%a%s]
+
+                        thrpt:  [1.5632 GiB/s 1.5908 GiB/s 1.6160 GiB/s]
+
+                 change:
+
+                        time:   [6.3818% 4.6716% 2.9011%] (p = 0.00 < 0.05)
+
+                        thrpt:  [+2.9878% +4.9005% +6.8168%]
+
+                        Performance has improved.
+
+Found 6 outliers among 50 measurements (12.00%)
+
+  3 (6.00%) high mild
+
+  3 (6.00%) high severe
+
+Transforms/BitPack/pack_u32/width_8b
+
+                        time:   [2.0939 ,%a%s 2.1229 ,%a%s 2.1491 ,%a%s]
+
+                        thrpt:  [1.7751 GiB/s 1.7969 GiB/s 1.8218 GiB/s]
+
+                 change:
+
+                        time:   [3.6954% 1.7739% +0.0029%] (p = 0.07 > 0.05)
+
+                        thrpt:  [0.0029% +1.8060% +3.8372%]
+
+                        No change in performance detected.
+
+Transforms/BitPack/unpack_u32/width_8b
+
+                        time:   [2.3878 ,%a%s 2.4095 ,%a%s 2.4329 ,%a%s]
+
+                        thrpt:  [1.5679 GiB/s 1.5832 GiB/s 1.5976 GiB/s]
+
+                 change:
+
+                        time:   [+0.6159% +1.9283% +3.2919%] (p = 0.01 < 0.05)
+
+                        thrpt:  [3.1870% 1.8918% 0.6121%]
+
+                        Change within noise threshold.
+
+Found 7 outliers among 50 measurements (14.00%)
+
+  4 (8.00%) low mild
+
+  2 (4.00%) high mild
+
+  1 (2.00%) high severe
+
+Transforms/BitPack/pack_u32/width_12b
+
+                        time:   [4.2419 ,%a%s 4.2874 ,%a%s 4.3269 ,%a%s]
+
+                        thrpt:  [902.77 MiB/s 911.10 MiB/s 920.88 MiB/s]
+
+                 change:
+
+                        time:   [0.6402% +0.4561% +1.5789%] (p = 0.42 > 0.05)
+
+                        thrpt:  [1.5544% 0.4541% +0.6444%]
+
+                        No change in performance detected.
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  2 (4.00%) low severe
+
+  1 (2.00%) low mild
+
+Transforms/BitPack/unpack_u32/width_12b
+
+                        time:   [4.9595 ,%a%s 5.0160 ,%a%s 5.0726 ,%a%s]
+
+                        thrpt:  [770.07 MiB/s 778.76 MiB/s 787.62 MiB/s]
+
+                 change:
+
+                        time:   [2.0988% +0.2542% +2.6495%] (p = 0.84 > 0.05)
+
+                        thrpt:  [2.5811% 0.2535% +2.1438%]
+
+                        No change in performance detected.
+
+Found 12 outliers among 50 measurements (24.00%)
+
+  1 (2.00%) low severe
+
+  7 (14.00%) low mild
+
+  1 (2.00%) high mild
+
+  3 (6.00%) high severe
+
+Transforms/BitPack/pack_u32/width_16b
+
+                        time:   [4.0129 ,%a%s 4.0527 ,%a%s 4.0949 ,%a%s]
+
+                        thrpt:  [953.93 MiB/s 963.86 MiB/s 973.42 MiB/s]
+
+                 change:
+
+                        time:   [3.1729% 0.9431% +1.3901%] (p = 0.42 > 0.05)
+
+                        thrpt:  [1.3710% +0.9521% +3.2768%]
+
+                        No change in performance detected.
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Transforms/BitPack/unpack_u32/width_16b
+
+                        time:   [4.9414 ,%a%s 4.9915 ,%a%s 5.0376 ,%a%s]
+
+                        thrpt:  [775.42 MiB/s 782.58 MiB/s 790.51 MiB/s]
+
+                 change:
+
+                        time:   [3.1923% 1.6325% 0.1491%] (p = 0.05 < 0.05)
+
+                        thrpt:  [+0.1493% +1.6596% +3.2976%]
+
+                        Change within noise threshold.
+
+Transforms/BitPack/pack_u32/width_32b
+
+                        time:   [8.1086 ,%a%s 8.2027 ,%a%s 8.3220 ,%a%s]
+
+                        thrpt:  [469.39 MiB/s 476.21 MiB/s 481.74 MiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Transforms/BitPack/unpack_u32/width_32b
+
+                        time:   [10.016 ,%a%s 10.097 ,%a%s 10.188 ,%a%s]
+
+                        thrpt:  [383.41 MiB/s 386.87 MiB/s 389.98 MiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high severe
+
+
+
+Transforms/RLE/encode_u32/run_256
+
+                        time:   [576.70 ns 583.37 ns 590.46 ns]
+
+                        thrpt:  [6.4606 GiB/s 6.5391 GiB/s 6.6147 GiB/s]
+
+Transforms/RLE/decode_u32/run_256
+
+                        time:   [52.309 ns 52.989 ns 53.799 ns]
+
+                        thrpt:  [70.906 GiB/s 71.990 GiB/s 72.926 GiB/s]
+
+Transforms/RLE/encode_u32/run_16
+
+                        time:   [591.62 ns 611.90 ns 633.46 ns]
+
+                        thrpt:  [6.0220 GiB/s 6.2342 GiB/s 6.4479 GiB/s]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  2 (4.00%) high mild
+
+  1 (2.00%) high severe
+
+Transforms/RLE/decode_u32/run_16
+
+                        time:   [287.59 ns 291.34 ns 295.21 ns]
+
+                        thrpt:  [12.922 GiB/s 13.094 GiB/s 13.264 GiB/s]
+
+Transforms/RLE/encode_u32/run_1_unique
+
+                        time:   [1.1942 ,%a%s 1.2116 ,%a%s 1.2280 ,%a%s]
+
+                        thrpt:  [3.1064 GiB/s 3.1485 GiB/s 3.1943 GiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high severe
+
+Transforms/RLE/decode_u32/run_1_unique
+
+                        time:   [1.9050 ,%a%s 1.9206 ,%a%s 1.9387 ,%a%s]
+
+                        thrpt:  [1.9677 GiB/s 1.9862 GiB/s 2.0025 GiB/s]
+
+Found 1 outliers among 50 measurements (2.00%)
+
+  1 (2.00%) high mild
+
+
+
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=16_64B_L1Line
+
+                        time:   [68.380 ns 68.927 ns 69.351 ns]
+
+                        thrpt:  [880.09 MiB/s 885.50 MiB/s 892.59 MiB/s]
+
+Found 5 outliers among 50 measurements (10.00%)
+
+  5 (10.00%) low mild
+
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=16_64B_L1Line
+
+                        time:   [56.964 ns 57.747 ns 58.582 ns]
+
+                        thrpt:  [1.0175 GiB/s 1.0322 GiB/s 1.0464 GiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) low mild
+
+  1 (2.00%) high mild
+
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=256_1KiB_L1Cache
+
+                        time:   [720.21 ns 730.57 ns 740.33 ns]
+
+                        thrpt:  [1.2882 GiB/s 1.3054 GiB/s 1.3242 GiB/s]
+
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=256_1KiB_L1Cache
+
+                        time:   [861.41 ns 874.06 ns 890.96 ns]
+
+                        thrpt:  [1.0704 GiB/s 1.0911 GiB/s 1.1071 GiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high mild
+
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=4096_16KiB_L1dBound
+
+                        time:   [10.940 ,%a%s 11.064 ,%a%s 11.183 ,%a%s]
+
+                        thrpt:  [1.3645 GiB/s 1.3791 GiB/s 1.3947 GiB/s]
+
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=4096_16KiB_L1dBound
+
+                        time:   [13.509 ,%a%s 13.682 ,%a%s 13.853 ,%a%s]
+
+                        thrpt:  [1.1015 GiB/s 1.1153 GiB/s 1.1296 GiB/s]
+
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=65536_256KiB_L2Bound
+
+                        time:   [177.51 ,%a%s 180.04 ,%a%s 182.98 ,%a%s]
+
+                        thrpt:  [1.3342 GiB/s 1.3560 GiB/s 1.3754 GiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=65536_256KiB_L2Bound
+
+                        time:   [217.05 ,%a%s 219.74 ,%a%s 222.28 ,%a%s]
+
+                        thrpt:  [1.0983 GiB/s 1.1111 GiB/s 1.1248 GiB/s]
+
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=1048576_4MiB_L3Bound
+
+                        time:   [3.1652 ms 3.2017 ms 3.2385 ms]
+
+                        thrpt:  [1.2062 GiB/s 1.2201 GiB/s 1.2341 GiB/s]
+
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=1048576_4MiB_L3Bound
+
+                        time:   [3.5734 ms 3.6105 ms 3.6459 ms]
+
+                        thrpt:  [1.0714 GiB/s 1.0819 GiB/s 1.0932 GiB/s]
+
+
+
+Framing/Pack_Unpack/pack_frame/24B
+
+                        time:   [117.96 ns 118.57 ns 119.20 ns]
+
+                        thrpt:  [192.01 MiB/s 193.03 MiB/s 194.04 MiB/s]
+
+Framing/Pack_Unpack/unpack_frame/24B
+
+                        time:   [113.13 ns 114.50 ns 115.88 ns]
+
+                        thrpt:  [197.51 MiB/s 199.89 MiB/s 202.32 MiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high mild
+
+Framing/Pack_Unpack/pack_frame/1KiB
+
+                        time:   [4.1798 ,%a%s 4.2390 ,%a%s 4.3068 ,%a%s]
+
+                        thrpt:  [226.75 MiB/s 230.37 MiB/s 233.64 MiB/s]
+
+Framing/Pack_Unpack/unpack_frame/1KiB
+
+                        time:   [3.9850 ,%a%s 4.0120 ,%a%s 4.0445 ,%a%s]
+
+                        thrpt:  [241.45 MiB/s 243.41 MiB/s 245.06 MiB/s]
+
+Found 8 outliers among 50 measurements (16.00%)
+
+  3 (6.00%) high mild
+
+  5 (10.00%) high severe
+
+Framing/Pack_Unpack/pack_frame/64KiB
+
+                        time:   [255.46 ,%a%s 256.91 ,%a%s 258.65 ,%a%s]
+
+                        thrpt:  [241.64 MiB/s 243.28 MiB/s 244.66 MiB/s]
+
+Found 4 outliers among 50 measurements (8.00%)
+
+  2 (4.00%) high mild
+
+  2 (4.00%) high severe
+
+Framing/Pack_Unpack/unpack_frame/64KiB
+
+                        time:   [252.79 ,%a%s 253.96 ,%a%s 255.65 ,%a%s]
+
+                        thrpt:  [244.48 MiB/s 246.10 MiB/s 247.24 MiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+Framing/Pack_Unpack/pack_frame/1MiB
+
+                        time:   [4.1556 ms 4.1788 ms 4.2060 ms]
+
+                        thrpt:  [237.76 MiB/s 239.30 MiB/s 240.64 MiB/s]
+
+Found 5 outliers among 50 measurements (10.00%)
+
+  3 (6.00%) high mild
+
+  2 (4.00%) high severe
+
+Framing/Pack_Unpack/unpack_frame/1MiB
+
+                        time:   [4.0530 ms 4.0679 ms 4.0841 ms]
+
+                        thrpt:  [244.85 MiB/s 245.83 MiB/s 246.73 MiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high mild
+
+
+
+Framing/Header_Variations/pack/no_schema_hash_64B
+
+                        time:   [278.77 ns 281.05 ns 283.24 ns]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  1 (2.00%) low mild
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+Framing/Header_Variations/pack/with_schema_hash_64B
+
+                        time:   [306.66 ns 308.51 ns 310.51 ns]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+Framing/Header_Variations/pack/profile_Direct_64B
+
+                        time:   [279.40 ns 281.35 ns 283.57 ns]
+
+Found 6 outliers among 50 measurements (12.00%)
+
+  4 (8.00%) high mild
+
+  2 (4.00%) high severe
+
+Framing/Header_Variations/pack/profile_Realtime_64B
+
+                        time:   [275.03 ns 277.35 ns 280.01 ns]
+
+Framing/Header_Variations/pack/profile_Balanced_64B
+
+                        time:   [283.29 ns 286.60 ns 290.21 ns]
+
+Found 10 outliers among 50 measurements (20.00%)
+
+  6 (12.00%) high mild
+
+  4 (8.00%) high severe
+
+Framing/Header_Variations/pack/profile_MaxDensity_64B
+
+                        time:   [277.17 ns 279.25 ns 281.27 ns]
+
+
+
+Framing/CRC_Overhead_Breakdown/total_pack_frame_64KiB
+
+                        time:   [262.15 ,%a%s 270.33 ,%a%s 278.92 ,%a%s]
+
+                        thrpt:  [224.08 MiB/s 231.20 MiB/s 238.42 MiB/s]
+
+Found 8 outliers among 50 measurements (16.00%)
+
+  3 (6.00%) high mild
+
+  5 (10.00%) high severe
+
+Framing/CRC_Overhead_Breakdown/pure_crc32_component_64KiB
+
+                        time:   [252.87 ,%a%s 254.12 ,%a%s 255.71 ,%a%s]
+
+                        thrpt:  [244.41 MiB/s 245.95 MiB/s 247.17 MiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+Framing/CRC_Overhead_Breakdown/payload_copy_and_header_only_64KiB
+
+                        time:   [1.2771 ,%a%s 1.2919 ,%a%s 1.3120 ,%a%s]
+
+                        thrpt:  [46.520 GiB/s 47.246 GiB/s 47.794 GiB/s]
+
+Found 5 outliers among 50 measurements (10.00%)
+
+  1 (2.00%) low mild
+
+  2 (4.00%) high mild
+
+  2 (4.00%) high severe
+
+
+
+CrossSerializer/ScenarioA_1024Intervals/encode/Raw_Memory_AoS
+
+                        time:   [76.459 ns 77.050 ns 77.616 ns]
+
+                        thrpt:  [147.45 GiB/s 148.53 GiB/s 149.68 GiB/s]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  2 (4.00%) low mild
+
+  1 (2.00%) high mild
+
+CrossSerializer/ScenarioA_1024Intervals/encode/Bincode
+
+                        time:   [1.7257 ,%a%s 1.7690 ,%a%s 1.8183 ,%a%s]
+
+                        thrpt:  [6.2938 GiB/s 6.4693 GiB/s 6.6316 GiB/s]
+
+Found 6 outliers among 50 measurements (12.00%)
+
+  3 (6.00%) low mild
+
+  3 (6.00%) high severe
+
+CrossSerializer/ScenarioA_1024Intervals/encode/Postcard
+
+                        time:   [13.856 ,%a%s 13.976 ,%a%s 14.103 ,%a%s]
+
+                        thrpt:  [830.92 MiB/s 838.47 MiB/s 845.78 MiB/s]
+
+CrossSerializer/ScenarioA_1024Intervals/encode/Protobuf_prost
+
+                        time:   [12.457 ,%a%s 12.610 ,%a%s 12.768 ,%a%s]
+
+                        thrpt:  [917.82 MiB/s 929.32 MiB/s 940.73 MiB/s]
+
+CrossSerializer/ScenarioA_1024Intervals/encode/MessagePack
+
+                        time:   [12.608 ,%a%s 12.742 ,%a%s 12.896 ,%a%s]
+
+                        thrpt:  [908.69 MiB/s 919.71 MiB/s 929.50 MiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) low mild
+
+CrossSerializer/ScenarioA_1024Intervals/encode/CBP_Reference_Container
+
+                        time:   [24.423 ,%a%s 24.678 ,%a%s 24.899 ,%a%s]
+
+                        thrpt:  [470.66 MiB/s 474.87 MiB/s 479.82 MiB/s]
+
+CrossSerializer/ScenarioA_1024Intervals/decode/Bincode
+
+                        time:   [856.95 ns 867.53 ns 876.79 ns]
+
+                        thrpt:  [13.052 GiB/s 13.192 GiB/s 13.355 GiB/s]
+
+Found 4 outliers among 50 measurements (8.00%)
+
+  1 (2.00%) low severe
+
+  2 (4.00%) low mild
+
+  1 (2.00%) high mild
+
+CrossSerializer/ScenarioA_1024Intervals/decode/Postcard
+
+                        time:   [4.2106 ,%a%s 4.2863 ,%a%s 4.3506 ,%a%s]
+
+                        thrpt:  [2.6305 GiB/s 2.6699 GiB/s 2.7179 GiB/s]
+
+CrossSerializer/ScenarioA_1024Intervals/decode/Protobuf_prost
+
+                        time:   [9.1619 ,%a%s 9.3375 ,%a%s 9.5059 ,%a%s]
+
+                        thrpt:  [1.2039 GiB/s 1.2256 GiB/s 1.2491 GiB/s]
+
+CrossSerializer/ScenarioA_1024Intervals/decode/MessagePack
+
+                        time:   [12.453 ,%a%s 12.690 ,%a%s 12.926 ,%a%s]
+
+                        thrpt:  [906.61 MiB/s 923.49 MiB/s 941.03 MiB/s]
+
+Found 8 outliers among 50 measurements (16.00%)
+
+  2 (4.00%) low severe
+
+  5 (10.00%) low mild
+
+  1 (2.00%) high severe
+
+CrossSerializer/ScenarioA_1024Intervals/decode/CBP_Reference_Container
+
+                        time:   [26.166 ,%a%s 26.318 ,%a%s 26.475 ,%a%s]
+
+                        thrpt:  [442.63 MiB/s 445.27 MiB/s 447.86 MiB/s]
+
+
+
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Raw_Memory_AoS
+
+                        time:   [965.01 ps 980.46 ps 999.46 ps]
+
+                        thrpt:  [22.364 GiB/s 22.797 GiB/s 23.162 GiB/s]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  2 (4.00%) high mild
+
+  1 (2.00%) high severe
+
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Bincode
+
+                        time:   [36.567 ns 37.140 ns 37.628 ns]
+
+                        thrpt:  [608.27 MiB/s 616.27 MiB/s 625.93 MiB/s]
+
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Postcard
+
+                        time:   [160.83 ns 163.71 ns 166.57 ns]
+
+                        thrpt:  [137.41 MiB/s 139.81 MiB/s 142.32 MiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high mild
+
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Protobuf_prost
+
+                        time:   [17.703 ns 17.900 ns 18.141 ns]
+
+                        thrpt:  [1.2321 GiB/s 1.2487 GiB/s 1.2626 GiB/s]
+
+CrossSerializer/ScenarioB_SingleSnapshot/encode/MessagePack
+
+                        time:   [152.31 ns 155.82 ns 159.33 ns]
+
+                        thrpt:  [143.65 MiB/s 146.89 MiB/s 150.27 MiB/s]
+
+Found 6 outliers among 50 measurements (12.00%)
+
+  3 (6.00%) low mild
+
+  1 (2.00%) high mild
+
+  2 (4.00%) high severe
+
+CrossSerializer/ScenarioB_SingleSnapshot/encode/CBP_Reference_Snapshot
+
+                        time:   [105.45 ns 106.25 ns 107.07 ns]
+
+                        thrpt:  [213.76 MiB/s 215.41 MiB/s 217.06 MiB/s]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  3 (6.00%) high mild
+
+CrossSerializer/ScenarioB_SingleSnapshot/decode/Bincode
+
+                        time:   [10.016 ns 10.118 ns 10.212 ns]
+
+                        thrpt:  [2.1887 GiB/s 2.2090 GiB/s 2.2316 GiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high mild
+
+CrossSerializer/ScenarioB_SingleSnapshot/decode/Postcard
+
+                        time:   [12.104 ns 12.211 ns 12.324 ns]
+
+                        thrpt:  [1.8137 GiB/s 1.8305 GiB/s 1.8466 GiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) low mild
+
+CrossSerializer/ScenarioB_SingleSnapshot/decode/Protobuf_prost
+
+                        time:   [31.929 ns 32.246 ns 32.585 ns]
+
+                        thrpt:  [702.41 MiB/s 709.80 MiB/s 716.85 MiB/s]
+
+Found 7 outliers among 50 measurements (14.00%)
+
+  4 (8.00%) low mild
+
+  2 (4.00%) high mild
+
+  1 (2.00%) high severe
+
+CrossSerializer/ScenarioB_SingleSnapshot/decode/MessagePack
+
+                        time:   [31.062 ns 31.552 ns 32.081 ns]
+
+                        thrpt:  [713.46 MiB/s 725.42 MiB/s 736.86 MiB/s]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  3 (6.00%) low mild
+
+CrossSerializer/ScenarioB_SingleSnapshot/decode/CBP_Reference_Snapshot
+
+                        time:   [114.11 ns 116.82 ns 119.88 ns]
+
+                        thrpt:  [190.93 MiB/s 195.93 MiB/s 200.58 MiB/s]
+
+Found 3 outliers among 50 measurements (6.00%)
+
+  2 (4.00%) high mild
+
+  1 (2.00%) high severe
+
+
+
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/Bincode
+
+                        time:   [362.47 ns 372.29 ns 383.68 ns]
+
+                        thrpt:  [3.7284 GiB/s 3.8424 GiB/s 3.9465 GiB/s]
+
+Found 4 outliers among 50 measurements (8.00%)
+
+  1 (2.00%) high mild
+
+  3 (6.00%) high severe
+
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/Postcard
+
+                        time:   [1.5962 ,%a%s 1.6120 ,%a%s 1.6268 ,%a%s]
+
+                        thrpt:  [900.46 MiB/s 908.72 MiB/s 917.69 MiB/s]
+
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/Protobuf_prost
+
+                        time:   [1.4219 ,%a%s 1.4448 ,%a%s 1.4665 ,%a%s]
+
+                        thrpt:  [998.84 MiB/s 1013.9 MiB/s 1.0061 GiB/s]
+
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/MessagePack
+
+                        time:   [1.7923 ,%a%s 1.8164 ,%a%s 1.8412 ,%a%s]
+
+                        thrpt:  [795.57 MiB/s 806.47 MiB/s 817.31 MiB/s]
+
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/CBP_Reference_Batch
+
+                        time:   [5.3646 ,%a%s 5.3840 ,%a%s 5.4039 ,%a%s]
+
+                        thrpt:  [271.07 MiB/s 272.07 MiB/s 273.06 MiB/s]
+
+Found 4 outliers among 50 measurements (8.00%)
+
+  4 (8.00%) low mild
+
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/Bincode
+
+                        time:   [377.28 ns 379.43 ns 382.43 ns]
+
+                        thrpt:  [3.7405 GiB/s 3.7701 GiB/s 3.7916 GiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  2 (4.00%) high mild
+
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/Postcard
+
+                        time:   [944.82 ns 957.47 ns 970.21 ns]
+
+                        thrpt:  [1.4744 GiB/s 1.4941 GiB/s 1.5141 GiB/s]
+
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/Protobuf_prost
+
+                        time:   [2.4861 ,%a%s 2.5125 ,%a%s 2.5422 ,%a%s]
+
+                        thrpt:  [576.22 MiB/s 583.03 MiB/s 589.22 MiB/s]
+
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/MessagePack
+
+                        time:   [2.2893 ,%a%s 2.3168 ,%a%s 2.3482 ,%a%s]
+
+                        thrpt:  [623.83 MiB/s 632.26 MiB/s 639.85 MiB/s]
+
+Found 2 outliers among 50 measurements (4.00%)
+
+  1 (2.00%) high mild
+
+  1 (2.00%) high severe
+
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/CBP_Reference_Batch
+
+                        time:   [5.4936 ,%a%s 5.5706 ,%a%s 5.6638 ,%a%s]
+
+                        thrpt:  [258.63 MiB/s 262.96 MiB/s 266.64 MiB/s]
+
+Found 7 outliers among 50 measurements (14.00%)
+
+  4 (8.00%) high mild
+
+  3 (6.00%) high severe
+
+
+

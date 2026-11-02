@@ -1,0 +1,100 @@
+Testbed Hardware: Intel Core i9-11900H @ 2.50GHz (Turbo ~4.50GHz), 8C/16T, 64-byte L1 cache line, Windows 11
+Toolchain: rustc 1.90.0-nightly / cargo 2024 edition, target-cpu=native, thin LTO
+Date: 2026-11-02
+Harness: cargo bench --bench framing
+
+=== BENCHMARK RAW OUTPUT ===
+
+Framing/Pack_Unpack/pack_frame_contiguous/24B
+                        time:   [14.577 ns 14.742 ns 14.916 ns]
+                        thrpt:  [1.4985 GiB/s 1.5162 GiB/s 1.5333 GiB/s]
+
+Framing/Pack_Unpack/pack_frame_vectored/24B
+                        time:   [13.490 ns 13.596 ns 13.699 ns]
+                        thrpt:  [1.6316 GiB/s 1.6440 GiB/s 1.6570 GiB/s]
+
+Framing/Pack_Unpack/unpack_frame/24B
+                        time:   [9.3359 ns 9.3949 ns 9.4543 ns]
+                        thrpt:  [2.3642 GiB/s 2.3791 GiB/s 2.3942 GiB/s]
+
+Framing/Pack_Unpack/pack_frame_contiguous/1KiB
+                        time:   [103.44 ns 103.78 ns 104.15 ns]
+                        thrpt:  [9.1566 GiB/s 9.1897 GiB/s 9.2194 GiB/s]
+
+Framing/Pack_Unpack/pack_frame_vectored/1KiB
+                        time:   [56.651 ns 56.949 ns 57.299 ns]
+                        thrpt:  [16.644 GiB/s 16.746 GiB/s 16.834 GiB/s]
+
+Framing/Pack_Unpack/unpack_frame/1KiB
+                        time:   [57.768 ns 57.955 ns 58.161 ns]
+                        thrpt:  [16.397 GiB/s 16.455 GiB/s 16.509 GiB/s]
+
+Framing/Pack_Unpack/pack_frame_contiguous/64KiB
+                        time:   [6.7263 µs 6.7402 µs 6.7541 µs]
+                        thrpt:  [9.0368 GiB/s 9.0554 GiB/s 9.0741 GiB/s]
+
+Framing/Pack_Unpack/pack_frame_vectored/64KiB
+                        time:   [5.5591 µs 5.5700 µs 5.5811 µs]
+                        thrpt:  [10.936 GiB/s 10.958 GiB/s 10.979 GiB/s]
+
+Framing/Pack_Unpack/unpack_frame/64KiB
+                        time:   [5.5887 µs 5.6041 µs 5.6254 µs]
+                        thrpt:  [10.850 GiB/s 10.891 GiB/s 10.921 GiB/s]
+
+Framing/Pack_Unpack/pack_frame_contiguous/1MiB
+                        time:   [127.28 µs 130.50 µs 134.38 µs]
+                        thrpt:  [7.2673 GiB/s 7.4834 GiB/s 7.6726 GiB/s]
+
+Framing/Pack_Unpack/pack_frame_vectored/1MiB
+                        time:   [91.557 µs 92.319 µs 93.160 µs]
+                        thrpt:  [10.483 GiB/s 10.578 GiB/s 10.666 GiB/s]
+
+Framing/Pack_Unpack/unpack_frame/1MiB
+                        time:   [89.996 µs 90.250 µs 90.549 µs]
+                        thrpt:  [10.785 GiB/s 10.821 GiB/s 10.851 GiB/s]
+
+Framing/Header_Variations/pack/no_schema_hash_64B
+                        time:   [18.746 ns 18.897 ns 19.059 ns]
+
+Framing/Header_Variations/pack/with_schema_hash_64B
+                        time:   [18.785 ns 18.933 ns 19.086 ns]
+
+Framing/Header_Variations/pack/profile_Direct_64B
+                        time:   [18.864 ns 19.001 ns 19.132 ns]
+
+Framing/Header_Variations/pack/profile_Realtime_64B
+                        time:   [18.825 ns 18.930 ns 19.033 ns]
+
+Framing/Header_Variations/pack/profile_Balanced_64B
+                        time:   [18.808 ns 18.927 ns 19.044 ns]
+
+Framing/Header_Variations/pack/profile_MaxDensity_64B
+                        time:   [18.641 ns 18.785 ns 18.933 ns]
+
+Framing/CRC_Overhead_Breakdown/total_pack_frame_64KiB
+                        time:   [6.7325 µs 6.7479 µs 6.7633 µs]
+                        thrpt:  [9.0245 GiB/s 9.0451 GiB/s 9.0657 GiB/s]
+
+Framing/CRC_Overhead_Breakdown/pure_crc32_component_64KiB
+                        time:   [5.5590 µs 5.5744 µs 5.5914 µs]
+                        thrpt:  [10.916 GiB/s 10.949 GiB/s 10.980 GiB/s]
+
+Framing/CRC_Overhead_Breakdown/payload_copy_and_header_only_64KiB
+                        time:   [1.2247 µs 1.2307 µs 1.2370 µs]
+                        thrpt:  [49.343 GiB/s 49.594 GiB/s 49.836 GiB/s]
+
+Framing/Streaming_and_Resync/FrameReader/16_frames_stream_4KiB
+                        time:   [306.46 ns 309.46 ns 312.58 ns]
+                        thrpt:  [12.633 GiB/s 12.760 GiB/s 12.885 GiB/s]
+
+Framing/Streaming_and_Resync/find_magic/AVX2_clean_64KiB
+                        time:   [1.7104 µs 1.7235 µs 1.7361 µs]
+                        thrpt:  [35.157 GiB/s 35.413 GiB/s 35.684 GiB/s]
+
+Framing/Streaming_and_Resync/find_magic/SWAR_clean_64KiB
+                        time:   [5.7846 µs 5.8309 µs 5.8750 µs]
+                        thrpt:  [10.389 GiB/s 10.467 GiB/s 10.551 GiB/s]
+
+Framing/Streaming_and_Resync/resync_frame/after_256B_noise
+                        time:   [26.962 ns 27.139 ns 27.312 ns]
+                        thrpt:  [2234.8 GiB/s 2249.0 GiB/s 2263.8 GiB/s]

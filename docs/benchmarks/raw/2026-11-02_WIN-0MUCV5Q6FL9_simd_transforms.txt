@@ -1,0 +1,65 @@
+================================================================================
+CBP BENCHMARK SUITE EXECUTION LOG: CATEGORY 2 (HARDWARE OPTIMIZATIONS & SIMD)
+Host: WIN-0MUCV5Q6FL9
+Date: 2026-11-02
+Toolchain: rustc 1.99.1 (58cf8f9c3 2026-10-13)
+CPU: 11th Gen Intel(R) Core(TM) i9-11900H @ 2.50GHz (AVX2, SSE4.2, BMI2)
+Profile: release, opt-level = 3, lto = "thin"
+================================================================================
+
+--- TRANSFORMS BENCHMARK (cargo bench --bench transforms) ---
+Transforms/Delta/encode/monotone_step_1/1K:   [105.28 ns 106.43 ns 107.54 ns]  35.842 GiB/s  (-2.95% time)
+Transforms/Delta/encode/monotone_step_1/1M:   [118.18 µs 119.04 µs 120.03 µs]  32.814 GiB/s
+Transforms/Delta/encode/monotone_step_256/1K: [103.57 ns 104.55 ns 105.54 ns]  36.485 GiB/s
+Transforms/Delta/encode/constant/1K:          [105.00 ns 105.93 ns 106.93 ns]  36.013 GiB/s
+Transforms/Delta/encode/random/1K:            [104.28 ns 105.19 ns 106.09 ns]  36.265 GiB/s
+Transforms/Delta/encode/signed_i32/1K:        [106.18 ns 107.29 ns 108.50 ns]  35.554 GiB/s
+Transforms/Delta/decode/signed_i32/1K:        [286.93 ns 287.52 ns 288.16 ns]  13.268 GiB/s
+
+Transforms/BitPack/pack_u32/width_1b:         [1.0869 µs 1.0938 µs 1.1007 µs]   3.4876 GiB/s  (+154.07% thrpt)
+Transforms/BitPack/unpack_u32/width_1b:       [606.86 ns 611.52 ns 617.46 ns]   6.2381 GiB/s  (+280.82% thrpt)
+Transforms/BitPack/pack_u32/width_4b:         [386.76 ns 389.21 ns 391.73 ns]   9.8010 GiB/s  (+460.64% thrpt)
+Transforms/BitPack/unpack_u32/width_4b:       [141.06 ns 142.34 ns 143.76 ns]  26.800 GiB/s   (+1547.7% thrpt)
+Transforms/BitPack/pack_u32/width_8b:         [235.73 ns 237.21 ns 238.77 ns]  16.082 GiB/s   (+771.00% thrpt)
+Transforms/BitPack/unpack_u32/width_8b:       [43.522 ns 45.443 ns 47.428 ns]  83.944 GiB/s   (+5217.1% thrpt)
+Transforms/BitPack/pack_u32/width_12b:        [664.38 ns 668.55 ns 672.67 ns]   5.7060 GiB/s  (+523.48% thrpt)
+Transforms/BitPack/unpack_u32/width_12b:      [550.85 ns 554.20 ns 557.70 ns]   6.8832 GiB/s  (+784.67% thrpt)
+Transforms/BitPack/pack_u32/width_16b:        [363.84 ns 366.14 ns 368.57 ns]  10.419 GiB/s   (+1027.2% thrpt)
+Transforms/BitPack/unpack_u32/width_16b:      [53.106 ns 54.656 ns 56.040 ns]  69.795 GiB/s   (+9210.3% thrpt)
+Transforms/BitPack/pack_u32/width_32b:        [234.08 ns 235.70 ns 237.45 ns]  16.185 GiB/s   (+3039.6% thrpt)
+Transforms/BitPack/unpack_u32/width_32b:      [37.052 ns 37.366 ns 37.674 ns] 102.09 GiB/s   (+2401.6% thrpt)
+
+Transforms/RLE/encode_u32/run_256:            [562.63 ns 565.71 ns 569.36 ns]   6.7432 GiB/s
+Transforms/RLE/decode_u32/run_256:            [51.234 ns 52.120 ns 53.012 ns]  73.120 GiB/s
+Transforms/Gorilla_Float/compress_f32:        [8.9735 µs 9.0451 µs 9.1140 µs]  431.86 MiB/s
+Transforms/Gorilla_Float/decompress_f32:      [13.140 µs 13.208 µs 13.275 µs]  295.74 MiB/s
+Transforms/Gorilla_Float/compress_f64:        [12.628 µs 12.736 µs 12.846 µs]  613.43 MiB/s
+Transforms/Gorilla_Float/decompress_f64:      [18.259 µs 18.318 µs 18.385 µs]  426.49 MiB/s
+
+--- PIPELINE BENCHMARK (cargo bench --bench pipeline) ---
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=16:    [43.767 ns 44.158 ns 44.597 ns]  1.3498 GiB/s (+45.08% thrpt)
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=16:  [26.864 ns 27.123 ns 27.387 ns]  2.1976 GiB/s (+111.8% thrpt)
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=256:   [319.60 ns 322.26 ns 324.91 ns]  2.9593 GiB/s (+121.8% thrpt)
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=256: [345.76 ns 348.96 ns 352.55 ns]  2.7329 GiB/s (+156.7% thrpt)
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=4096:  [4.6541 µs 4.6858 µs 4.7163 µs]  3.2564 GiB/s (+136.6% thrpt)
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=4096:[5.1320 µs 5.1724 µs 5.2140 µs]  2.9501 GiB/s (+164.6% thrpt)
+Pipeline/Profile_Comparison/compress/Realtime_O1:  [271.74 ns 273.16 ns 274.66 ns] 13.965 GiB/s
+Pipeline/Profile_Comparison/decompress/Realtime_O1:[74.031 ns 74.662 ns 75.285 ns] 51.093 GiB/s
+Pipeline/Profile_Comparison/compress/Balanced_O2:  [1.0530 µs 1.0642 µs 1.0774 µs]  3.5844 GiB/s (+111.8% thrpt)
+Pipeline/Profile_Comparison/decompress/Balanced_O2:[1.1741 µs 1.1836 µs 1.1932 µs]  3.2229 GiB/s (+141.5% thrpt)
+Pipeline/Profile_Comparison/compress/MaxDensity_O3:[2.0562 µs 2.0692 µs 2.0808 µs]  1.8435 GiB/s (+57.8% thrpt)
+Pipeline/Profile_Comparison/decompress/MaxDensity_O3:[1.1850 µs 1.1951 µs 1.2052 µs]3.1919 GiB/s (+143.6% thrpt)
+
+--- CROSS-SERIALIZER BENCHMARK (cargo bench --bench cross_serializer) ---
+CrossSerializer/ScenarioA_1024Intervals/encode/Bincode:            [1.6492 µs 1.6550 µs 1.6607 µs]   6.9150 GiB/s
+CrossSerializer/ScenarioA_1024Intervals/decode/Bincode:            [808.51 ns 814.63 ns 820.77 ns]  14.048 GiB/s
+CrossSerializer/ScenarioA_1024Intervals/encode/Postcard:           [13.565 µs 13.614 µs 13.666 µs]  860.82 MiB/s
+CrossSerializer/ScenarioA_1024Intervals/decode/Postcard:           [3.8716 µs 3.9070 µs 3.9433 µs]   2.9292 GiB/s
+CrossSerializer/ScenarioA_1024Intervals/encode/Protobuf_prost:     [12.386 µs 12.456 µs 12.528 µs]  940.83 MiB/s
+CrossSerializer/ScenarioA_1024Intervals/decode/Protobuf_prost:     [9.0631 µs 9.1463 µs 9.2335 µs]   1.2512 GiB/s
+CrossSerializer/ScenarioA_1024Intervals/encode/MessagePack:        [12.446 µs 12.526 µs 12.604 µs]  935.55 MiB/s
+CrossSerializer/ScenarioA_1024Intervals/decode/MessagePack:        [11.848 µs 11.980 µs 12.126 µs]  978.22 MiB/s
+CrossSerializer/ScenarioA_1024Intervals/encode/CBP_Reference_Container: [5.6408 µs 5.6881 µs 5.7410 µs] 2.0119 GiB/s (+124.6% thrpt)
+CrossSerializer/ScenarioA_1024Intervals/decode/CBP_Reference_Container: [7.1514 µs 7.2012 µs 7.2502 µs] 1.5892 GiB/s (+115.8% thrpt)
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/CBP_Reference_Batch:   [546.43 ns 551.12 ns 555.73 ns] 2.5956 GiB/s
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/CBP_Reference_Batch:   [702.37 ns 708.77 ns 715.82 ns] 2.0183 GiB/s
