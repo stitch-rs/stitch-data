@@ -7,8 +7,10 @@ extern crate alloc;
 
 pub mod bitpack;
 pub mod delta;
+pub mod pipeline;
 pub mod rle;
 
 pub use bitpack::BitPacker;
 pub use delta::DeltaTransformer;
+pub use pipeline::{CompressionPipeline, DecompressionPipeline};
 pub use rle::RleTransformer;
