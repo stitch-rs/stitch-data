@@ -37,8 +37,8 @@ enum Segment<'a> {
 
 /// Derives `CbpRecord` for a struct, providing zero-allocation serialization,
 /// deserialization, sub-byte bit packing, and compile-time schema fingerprinting.
-#[proc_macro_derive(StitchRecord, attributes(stitch, cbp))]
-pub fn derive_stitch_record(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(Record, attributes(stitch, cbp))]
+pub fn derive_record(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let struct_name = &input.ident;
 
@@ -48,14 +48,14 @@ pub fn derive_stitch_record(input: TokenStream) -> TokenStream {
             _ => {
                 return syn::Error::new_spanned(
                     struct_name,
-                    "CbpRecord derive only supports structs with named fields",
+                    "Record derive only supports structs with named fields",
                 )
                 .to_compile_error()
                 .into();
             }
         },
         _ => {
-            return syn::Error::new_spanned(struct_name, "CbpRecord derive only supports structs")
+            return syn::Error::new_spanned(struct_name, "Record derive only supports structs")
                 .to_compile_error()
                 .into();
         }
@@ -206,7 +206,7 @@ pub fn derive_stitch_record(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         #[automatically_derived]
-        impl ::stitch_data::record::StitchRecord for #struct_name {
+        impl ::stitch_data::record::Record for #struct_name {
             const SCHEMA_HASH: u64 = #schema_hash_val;
 
             #[inline]
@@ -925,5 +925,5 @@ fn generate_columnar_field(
 
 #[proc_macro_derive(CbpRecord, attributes(stitch, cbp))]
 pub fn derive_cbp_record(input: TokenStream) -> TokenStream {
-    derive_stitch_record(input)
+    derive_record(input)
 }

@@ -1,7 +1,7 @@
 //! Production Reference Example: Real-Time UDP Game Telemetry (64 players @ 128Hz).
 //!
 //! Demonstrates:
-//! 1. High-frequency tick serialization with `#[derive(StitchRecord)]`.
+//! 1. High-frequency tick serialization with `#[derive(Record)]`.
 //! 2. Columnar block aggregation using `ColumnarBlockBuilder<PlayerSnapshot, 64>`.
 //! 3. Zero-copy vectored framing (`pack_frame_vectored`) for UDP socket transmission.
 //! 4. Noise-resilient streaming decoding (`StreamResyncParser`) with automatic frame recovery.
@@ -11,7 +11,7 @@ use std::time::Instant;
 use stitch_data::prelude::*;
 
 /// Real-time multiplayer game player state snapshot (32 bytes raw AoS).
-#[derive(StitchRecord, Debug, Clone, Copy, PartialEq)]
+#[derive(Record, Debug, Clone, Copy, PartialEq)]
 #[repr(C)]
 pub struct PlayerSnapshot {
     #[stitch(varint)]

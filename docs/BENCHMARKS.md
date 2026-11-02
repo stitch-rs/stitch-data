@@ -86,10 +86,10 @@ All measurements were executed on the following dedicated bare-metal testbed:
   - Bit-packing in `crates/stitch-data-transforms/src/bitpack.rs` employs AVX2 SIMD
     zero-extension unpacking, pairwise unrolling, and 64-bit SWAR bitstreams.
   - stitch-data provides both low-level transform pipelines, procedural derive ergonomics
-    via #[derive(StitchRecord)] in crates/stitch-data-derive, and
+    via #[derive(Record)] in crates/stitch-data-derive, and
     batch streaming via
     `ColumnarBlockBuilder`. Cross-serializer benchmarks evaluate both
-    #[derive(StitchRecord)] and hand-crafted reference containers, clearly
+    #[derive(Record)] and hand-crafted reference containers, clearly
     distinguishing between library derive macros and reference containers.
   - All comparisons with Protobuf, Postcard, Bincode, and MessagePack encode
     **all fields** of the underlying struct, ensuring an honest full-record

@@ -24,7 +24,7 @@ pub use frame::{
     CBP_MAGIC, CBP_VERSION_1, FrameFlags, FrameHeader, FrameReader, FrameView, MAX_HEADER_SIZE,
     OptimizationProfile, VectoredFrame, pack_frame, pack_frame_vectored, unpack_frame,
 };
-pub use record::{CbpRecord, FieldCodec, StitchRecord};
+pub use record::{CbpRecord, FieldCodec, Record};
 pub use resync::{ResyncStats, StreamResyncParser, find_magic, find_magic_swar, resync_frame};
 pub use varint::{decode_prefix_varint, encode_prefix_varint};
 pub use zigzag::{decode_zigzag32, decode_zigzag64, encode_zigzag32, encode_zigzag64};

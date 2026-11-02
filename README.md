@@ -37,7 +37,7 @@ ultra-low latency, high-throughput, and extreme entropy density.
   - Fast-forward stream resynchronization (`find_magic` at 35.4 GiB/s, recovers
     from noise in 27 ns).
 - **Zero-Cost Derive Macros & Schema Fingerprinting**:
-  - `#[derive(StitchRecord)]` with field routing attributes
+  - `#[derive(Record)]` with field routing attributes
     (`#[stitch(varint)]`, `#[stitch(zigzag)]`, `#[stitch(raw)]`,
     `#[stitch(bits = N)]`) and multi-profile dispatch (`-O0 Direct`
     uncompressed memcpy vs `-O2 Balanced` bit-packed compression).
@@ -58,7 +58,7 @@ ultra-low latency, high-throughput, and extreme entropy density.
   RLE, Gorilla Float) with AVX2 SIMD acceleration powered by `stitch-core`, and
   `RecordBatchBuilder`.
 - **`crates/stitch-data-derive`**: Procedural derive macro
-  `#[derive(StitchRecord)]` with field attribute routing and compile-time schema
+  `#[derive(Record)]` with field attribute routing and compile-time schema
   hashing.
 - **`crates/stitch-data`**: High-performance ergonomic facade.
 - **`crates/stitch-data-fuzz`**: Deterministic 100,000-iteration adversarial
@@ -72,7 +72,7 @@ ultra-low latency, high-throughput, and extreme entropy density.
 ```rust
 use stitch_data::prelude::*;
 
-#[derive(Debug, PartialEq, StitchRecord)]
+#[derive(Debug, PartialEq, Record)]
 pub struct PlayerSnapshot {
     pub tick: u64,
     #[stitch(zigzag)]

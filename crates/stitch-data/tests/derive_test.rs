@@ -1,6 +1,6 @@
 use stitch_data::prelude::*;
 
-#[derive(StitchRecord, Debug, PartialEq, Clone, Copy)]
+#[derive(Record, Debug, PartialEq, Clone, Copy)]
 struct TestTelemetry {
     #[stitch(varint)]
     pub sequence_id: u32,
@@ -13,7 +13,7 @@ struct TestTelemetry {
     pub is_active: bool,
 }
 
-#[derive(StitchRecord, Debug, PartialEq, Clone, Copy)]
+#[derive(Record, Debug, PartialEq, Clone, Copy)]
 struct IncompatibleTelemetry {
     pub sequence_id: u64, // Different type!
     pub is_active: bool,
@@ -125,7 +125,7 @@ fn test_derive_record_with_columnar_builder() {
     assert!(!records_out[7].is_active);
 }
 
-#[derive(StitchRecord, Debug, PartialEq, Clone, Copy)]
+#[derive(Record, Debug, PartialEq, Clone, Copy)]
 struct BoundedRecord {
     #[stitch(bits = 4)]
     pub nibble: u8,
@@ -146,7 +146,7 @@ fn test_bounded_bit_pack_rejects_out_of_range() {
     assert_eq!(dec.nibble, 15);
 }
 
-#[derive(StitchRecord, Debug, PartialEq, Clone, Copy)]
+#[derive(Record, Debug, PartialEq, Clone, Copy)]
 struct BitstreamPackedRecord {
     #[stitch(bits = 1)]
     pub flag: bool,
@@ -212,13 +212,13 @@ fn test_optimization_profile_direct_vs_balanced() {
     assert_eq!(dec_balanced, record);
 }
 
-#[derive(StitchRecord, Debug, PartialEq, Clone, Copy)]
+#[derive(Record, Debug, PartialEq, Clone, Copy)]
 struct StructFieldOrderA {
     pub x: u32,
     pub y: u64,
 }
 
-#[derive(StitchRecord, Debug, PartialEq, Clone, Copy)]
+#[derive(Record, Debug, PartialEq, Clone, Copy)]
 struct StructFieldOrderB {
     pub y: u64,
     pub x: u32,

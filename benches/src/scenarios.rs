@@ -58,7 +58,7 @@ impl Lcg {
 // ============================================================================
 
 /// Scenario A: IPAtlas Range Interval (12 bytes raw AoS).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, StitchRecord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Record)]
 #[repr(C)]
 pub struct Ipv4Interval {
     #[stitch(varint)]
@@ -81,7 +81,7 @@ pub struct ProtoIpv4IntervalList {
 }
 
 /// Scenario B: Multiplayer Real-Time Game Telemetry Snapshot (24 bytes raw AoS).
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, StitchRecord)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, Record)]
 #[repr(C)]
 pub struct PlayerSnapshot {
     #[stitch(varint)]
