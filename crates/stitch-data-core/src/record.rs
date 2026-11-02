@@ -17,7 +17,7 @@ pub enum FieldCodec {
 }
 
 /// Trait implemented by types serializable to and from Stitch Data representations.
-pub trait StitchRecord: Sized {
+pub trait Record: Sized {
     /// 64-bit compile-time schema fingerprint computed from struct identifier and field definitions.
     const SCHEMA_HASH: u64;
 
@@ -117,7 +117,7 @@ pub trait StitchRecord: Sized {
     /// Encodes a batch of records using Columnar (Structure-of-Arrays) layout into `dst`.
     ///
     /// By default, falls back to `encode_batch_profile(records, OptimizationProfile::MaxDensity, dst)`.
-    /// Types derived via `#[derive(StitchRecord)]` provide a zero-allocation transposed implementation.
+    /// Types derived via `#[derive(Record)]` provide a zero-allocation transposed implementation.
     #[inline]
     fn encode_columnar_batch(records: &[Self], dst: &mut [u8]) -> Result<usize, StitchError> {
         Self::encode_batch_profile(records, OptimizationProfile::MaxDensity, dst)
@@ -175,5 +175,5 @@ pub trait StitchRecord: Sized {
 }
 
 /// Backward compatibility alias.
-pub trait CbpRecord: StitchRecord {}
-impl<T: StitchRecord> CbpRecord for T {}
+pub trait CbpRecord: Record {}
+impl<T: Record> CbpRecord for T {}

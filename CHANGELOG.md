@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added specialized column encoding and decoding routines for
     `u32`/`u16`/`u8` (`AdaptiveU32`), `i32`/`i16`/`i8` (`DeltaZigZagI32`),
     and `f32` (`GorillaF32`).
-  - Extended `#[derive(StitchRecord)]` to automatically synthesize chunked
+  - Extended `#[derive(Record)]` to automatically synthesize chunked
     columnar transposition loops (processing in 256-element L1D cache blocks).
   - Upgraded `RecordBatchBuilder::flush` to dispatch to columnar compression
     when `OptimizationProfile::MaxDensity` is selected, and added

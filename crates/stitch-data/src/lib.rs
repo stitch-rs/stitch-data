@@ -7,9 +7,9 @@ pub use stitch_data_transforms;
 
 pub use stitch_data_core::{
     CBP_MAGIC, CBP_VERSION_1, CbpError, CbpRecord, FieldCodec, FrameFlags, FrameHeader,
-    FrameReader, FrameView, MAX_HEADER_SIZE, OptimizationProfile, ResyncStats, StitchError,
-    StitchRecord, StreamResyncParser, VectoredFrame, bitstream, crc, error, frame, record, resync,
-    simd, varint, zigzag,
+    FrameReader, FrameView, MAX_HEADER_SIZE, OptimizationProfile, Record, ResyncStats, StitchError,
+    StreamResyncParser, VectoredFrame, bitstream, crc, error, frame, record, resync, simd, varint,
+    zigzag,
 };
 
 pub use stitch_data_transforms::{
@@ -22,7 +22,7 @@ pub use stitch_data_transforms::{
 };
 
 #[cfg(feature = "derive")]
-pub use stitch_data_derive::{CbpRecord, StitchRecord};
+pub use stitch_data_derive::{CbpRecord, Record};
 
 /// Backward compatibility aliases for cbp naming.
 pub mod cbp {
@@ -41,7 +41,7 @@ pub mod prelude {
         CBP_MAGIC, CBP_VERSION_1, FrameFlags, FrameHeader, FrameReader, FrameView, MAX_HEADER_SIZE,
         OptimizationProfile, VectoredFrame, pack_frame, pack_frame_vectored, unpack_frame,
     };
-    pub use stitch_data_core::record::{CbpRecord, FieldCodec, StitchRecord};
+    pub use stitch_data_core::record::{CbpRecord, FieldCodec, Record};
     pub use stitch_data_core::resync::{
         ResyncStats, StreamResyncParser, find_magic, find_magic_swar, resync_frame,
     };
@@ -66,5 +66,5 @@ pub mod prelude {
     pub use stitch_data_transforms::rle::RleTransformer;
 
     #[cfg(feature = "derive")]
-    pub use stitch_data_derive::{CbpRecord, StitchRecord};
+    pub use stitch_data_derive::{CbpRecord, Record};
 }

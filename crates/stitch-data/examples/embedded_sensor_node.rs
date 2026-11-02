@@ -2,14 +2,14 @@
 //!
 //! Demonstrates:
 //! 1. Strict stack-only operation (0 heap allocations).
-//! 2. Multi-sensor telemetry record using `#[derive(StitchRecord)]`.
+//! 2. Multi-sensor telemetry record using `#[derive(Record)]`.
 //! 3. Compact 128-byte stack buffer encoding and verification.
 //! 4. Hardware Castagnoli CRC32 validation and compile-time schema safety.
 
 use stitch_data::prelude::*;
 
 /// Multi-sensor telemetry snapshot (28 bytes raw C-struct).
-#[derive(StitchRecord, Debug, Clone, Copy, PartialEq)]
+#[derive(Record, Debug, Clone, Copy, PartialEq)]
 #[repr(C)]
 pub struct SensorTelemetry {
     #[stitch(varint)]

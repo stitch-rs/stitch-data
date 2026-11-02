@@ -118,11 +118,11 @@ The frame concludes with a mandatory 4-byte integrity checksum:
 ## 3. Layered Optimization Profiles (-O0 .. -O3)
 
 CBP defines 4 operational profiles for streaming pipelines (`CompressionPipeline`),
-alongside dual-profile dispatch for individual records (`StitchRecord`):
+alongside dual-profile dispatch for individual records (`Record`):
 
 - Streaming pipelines in `cbp-transforms` execute monomorphic compile-time
   traversal across all 4 profiles (`-O0` through `-O3`).
-- Single-record serialization via `StitchRecord` dispatches between `-O0 Direct`
+- Single-record serialization via `Record` dispatches between `-O0 Direct`
   (zero-copy uncompressed POD byte layout) and `-O1..-O3 Compact` (branchless
   PrefixVarint, ZigZag, and sub-byte bit packing).
 
@@ -288,14 +288,14 @@ On noisy or byte-corrupted transports:
 
 ### 6.1 Deterministic 64-bit FNV-1a Schema Hash
 
-Every struct annotated with `#[derive(StitchRecord)]` generates a compile-time
+Every struct annotated with `#[derive(Record)]` generates a compile-time
 canonical schema string:
 
 <!-- markdownlint-disable MD013 -->
 $$\text{SchemaString} = \text{StructName} + "\{" + \sum (\text{FieldName} + ":" + \text{FieldType} + "@" + \text{Codec} + ";") + "\}"$$
 <!-- markdownlint-enable MD013 -->
 
-The 64-bit FNV-1a hash of this UTF-8 string defines `StitchRecord::SCHEMA_HASH`.
+The 64-bit FNV-1a hash of this UTF-8 string defines `Record::SCHEMA_HASH`.
 
 ### 6.2 Fail-Fast ABI Compatibility Contract
 
@@ -309,7 +309,7 @@ No unverified payload bytes are decoded when schemas diverge.
 
 ### 6.3 Record Batch Builder (`RecordBatchBuilder` / `ColumnarBlockBuilder`)
 
-`RecordBatchBuilder<T: StitchRecord, const CAPACITY: usize>` (aliased as
+`RecordBatchBuilder<T: Record, const CAPACITY: usize>` (aliased as
 `ColumnarBlockBuilder` for backward compatibility) buffers records in
 an inline stack array `[MaybeUninit<T>; CAPACITY]` with $O(1)$ push. Upon
 reaching capacity, `flush(&mut scratch, &mut dst)` serializes all records

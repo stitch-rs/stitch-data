@@ -1,4 +1,4 @@
-//! True Columnar (SoA) block building and batch serialization for `StitchRecord`.
+//! True Columnar (SoA) block building and batch serialization for `Record`.
 //!
 //! Provides zero-allocation columnar transposition and streaming codecs that buffer
 //! records in Array-of-Structs (AoS) format and flush framed, columnar-compressed
@@ -10,7 +10,7 @@ use stitch_data_core::error::CbpError;
 use stitch_data_core::frame::{
     FrameFlags, FrameHeader, OptimizationProfile, pack_frame, unpack_frame,
 };
-use stitch_data_core::record::StitchRecord;
+use stitch_data_core::record::Record;
 
 /// Tag identifying the specific columnar encoding algorithm used for a column.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -263,7 +263,7 @@ pub fn decode_raw_column(src: &[u8], dst: &mut [u8]) -> Result<usize, CbpError> 
 
 /// A fixed-capacity, cache-conscious batch builder that buffers records in
 /// Array-of-Structs (AoS) format and flushes framed, profile-optimized CBP packets.
-pub struct RecordBatchBuilder<T: StitchRecord, const CAPACITY: usize = 256> {
+pub struct RecordBatchBuilder<T: Record, const CAPACITY: usize = 256> {
     records: [MaybeUninit<T>; CAPACITY],
     count: usize,
     profile: OptimizationProfile,
@@ -272,7 +272,7 @@ pub struct RecordBatchBuilder<T: StitchRecord, const CAPACITY: usize = 256> {
 /// Backward-compatible type alias for `RecordBatchBuilder`.
 pub type ColumnarBlockBuilder<T, const CAPACITY: usize = 256> = RecordBatchBuilder<T, CAPACITY>;
 
-impl<T: StitchRecord, const CAPACITY: usize> RecordBatchBuilder<T, CAPACITY> {
+impl<T: Record, const CAPACITY: usize> RecordBatchBuilder<T, CAPACITY> {
     /// Creates a new `RecordBatchBuilder` with the specified optimization profile.
     pub const fn new(profile: OptimizationProfile) -> Self {
         // SAFETY: An uninitialized array of MaybeUninit is valid.
@@ -401,17 +401,14 @@ impl<T: StitchRecord, const CAPACITY: usize> RecordBatchBuilder<T, CAPACITY> {
     }
 }
 
-impl<T: StitchRecord, const CAPACITY: usize> Drop for RecordBatchBuilder<T, CAPACITY> {
+impl<T: Record, const CAPACITY: usize> Drop for RecordBatchBuilder<T, CAPACITY> {
     fn drop(&mut self) {
         self.clear();
     }
 }
 
 /// Decodes a framed columnar batch packet into `dst`.
-pub fn decode_columnar_frame<T: StitchRecord>(
-    frame: &[u8],
-    dst: &mut [T],
-) -> Result<usize, CbpError> {
+pub fn decode_columnar_frame<T: Record>(frame: &[u8], dst: &mut [T]) -> Result<usize, CbpError> {
     let (header, payload) = unpack_frame(frame)?;
     if let Some(hash) = header.schema_hash
         && hash != T::SCHEMA_HASH

@@ -2,7 +2,7 @@
 
 use stitch_data::prelude::*;
 
-#[derive(StitchRecord, Debug, PartialEq, Clone, Copy, Default)]
+#[derive(Record, Debug, PartialEq, Clone, Copy, Default)]
 struct TelemetryRecord {
     #[stitch(codec = "varint")]
     pub timestamp_ms: u32,

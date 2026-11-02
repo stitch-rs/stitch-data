@@ -8,7 +8,7 @@
 use stitch_data::prelude::*;
 
 /// Target model for record-level fuzzing.
-#[derive(StitchRecord, Debug, PartialEq, Clone, Copy, Default)]
+#[derive(Record, Debug, PartialEq, Clone, Copy, Default)]
 pub struct FuzzRecord {
     #[stitch(varint)]
     pub id: u32,
@@ -73,7 +73,7 @@ pub fn fuzz_gorilla_float(data: &[u8]) {
     let _ = GorillaCompressor::decompress_f64(data, &mut dst_f64);
 }
 
-/// Fuzzes `StitchRecord` generated deserializers with arbitrary bytes.
+/// Fuzzes `Record` generated deserializers with arbitrary bytes.
 #[inline]
 pub fn fuzz_derived_record(data: &[u8]) {
     let _ = FuzzRecord::decode_record(data);
