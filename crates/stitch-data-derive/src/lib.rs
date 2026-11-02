@@ -194,6 +194,16 @@ pub fn derive_stitch_record(input: TokenStream) -> TokenStream {
         decode_compact_stmts.push(dec);
     }
 
+    // Generate Columnar SoA statements
+    let mut encode_columnar_stmts = Vec::new();
+    let mut decode_columnar_stmts = Vec::new();
+    for field in &parsed_fields {
+        let (enc, dec) = generate_columnar_field(field.name, field.ty);
+        encode_columnar_stmts.push(enc);
+        decode_columnar_stmts.push(dec);
+    }
+    let num_columns = parsed_fields.len();
+
     let expanded = quote! {
         #[automatically_derived]
         impl ::stitch_data::record::StitchRecord for #struct_name {
@@ -251,6 +261,58 @@ pub fn derive_stitch_record(input: TokenStream) -> TokenStream {
                         ))
                     }
                 }
+            }
+
+            fn encode_columnar_batch(
+                records: &[Self],
+                dst: &mut [u8],
+            ) -> ::core::result::Result<usize, ::stitch_data::error::CbpError> {
+                if records.is_empty() {
+                    return Ok(0);
+                }
+                let mut total_written = 0usize;
+                for chunk in records.chunks(256) {
+                    let row_count = chunk.len();
+                    let mut writer = ::stitch_data::columnar::ColumnarBlockWriter::new(
+                        row_count,
+                        #num_columns,
+                        &mut dst[total_written..],
+                    )?;
+
+                    #( #encode_columnar_stmts )*
+
+                    let block_len = writer.finish()?;
+                    total_written += block_len;
+                }
+                Ok(total_written)
+            }
+
+            fn decode_columnar_batch(
+                src: &[u8],
+                dst: &mut [Self],
+            ) -> ::core::result::Result<usize, ::stitch_data::error::CbpError> {
+                if src.is_empty() || dst.is_empty() {
+                    return Ok(0);
+                }
+                let mut src_offset = 0usize;
+                let mut total_decoded = 0usize;
+                while src_offset < src.len() && total_decoded < dst.len() {
+                    let mut reader = ::stitch_data::columnar::ColumnarBlockReader::new(&src[src_offset..])?;
+                    let block_rows = reader.row_count();
+                    if total_decoded + block_rows > dst.len() {
+                        return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                            required: total_decoded + block_rows,
+                            available: dst.len(),
+                        });
+                    }
+                    let target = &mut dst[total_decoded..total_decoded + block_rows];
+
+                    #( #decode_columnar_stmts )*
+
+                    total_decoded += block_rows;
+                    src_offset += reader.offset();
+                }
+                Ok(total_decoded)
             }
         }
     };
@@ -640,6 +702,221 @@ fn generate_direct_field(
                 let (val, vlen) = ::stitch_data::varint::decode_prefix_varint(&src[offset..])?;
                 offset += vlen;
                 let #field_name = <#field_type>::try_from(val).map_err(|_| ::stitch_data::error::CbpError::MalformedVarint)?;
+            };
+            (enc, dec)
+        }
+    }
+}
+
+fn generate_columnar_field(
+    name: &syn::Ident,
+    ty: &syn::Type,
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    let ty_clean = type_to_schema_str(ty);
+    match ty_clean.as_str() {
+        "bool" => {
+            let enc = quote! {
+                {
+                    let mut col = [0u32; 256];
+                    for (i, r) in chunk.iter().enumerate() {
+                        col[i] = if r.#name { 1 } else { 0 };
+                    }
+                    let mut scratch = [0u32; 256];
+                    let mut col_buf = [0u8; 1024 + 64];
+                    let col_len = ::stitch_data::columnar::encode_u32_column(
+                        &col[..row_count],
+                        &mut scratch[..row_count],
+                        &mut col_buf,
+                    )?;
+                    writer.write_column(
+                        ::stitch_data::columnar::ColumnCodecTag::AdaptiveU32,
+                        &col_buf[..col_len],
+                    )?;
+                }
+            };
+            let dec = quote! {
+                {
+                    let (_tag, col_payload) = reader.next_column()?;
+                    let mut col = [0u32; 256];
+                    ::stitch_data::columnar::decode_u32_column(col_payload, &mut col[..block_rows])?;
+                    for (i, r) in target.iter_mut().enumerate() {
+                        r.#name = col[i] != 0;
+                    }
+                }
+            };
+            (enc, dec)
+        }
+        "u8" | "u16" | "u32" | "usize" => {
+            let enc = quote! {
+                {
+                    let mut col = [0u32; 256];
+                    for (i, r) in chunk.iter().enumerate() {
+                        col[i] = r.#name as u32;
+                    }
+                    let mut scratch = [0u32; 256];
+                    let mut col_buf = [0u8; 1024 + 64];
+                    let col_len = ::stitch_data::columnar::encode_u32_column(
+                        &col[..row_count],
+                        &mut scratch[..row_count],
+                        &mut col_buf,
+                    )?;
+                    writer.write_column(
+                        ::stitch_data::columnar::ColumnCodecTag::AdaptiveU32,
+                        &col_buf[..col_len],
+                    )?;
+                }
+            };
+            let dec = quote! {
+                {
+                    let (_tag, col_payload) = reader.next_column()?;
+                    let mut col = [0u32; 256];
+                    ::stitch_data::columnar::decode_u32_column(col_payload, &mut col[..block_rows])?;
+                    for (i, r) in target.iter_mut().enumerate() {
+                        r.#name = col[i] as #ty;
+                    }
+                }
+            };
+            (enc, dec)
+        }
+        "i8" | "i16" | "i32" | "isize" => {
+            let enc = quote! {
+                {
+                    let mut col = [0i32; 256];
+                    for (i, r) in chunk.iter().enumerate() {
+                        col[i] = r.#name as i32;
+                    }
+                    let mut scratch = [0u32; 256];
+                    let mut col_buf = [0u8; 1024 + 64];
+                    let col_len = ::stitch_data::columnar::encode_i32_column(
+                        &col[..row_count],
+                        &mut scratch[..row_count],
+                        &mut col_buf,
+                    )?;
+                    writer.write_column(
+                        ::stitch_data::columnar::ColumnCodecTag::DeltaZigZagI32,
+                        &col_buf[..col_len],
+                    )?;
+                }
+            };
+            let dec = quote! {
+                {
+                    let (_tag, col_payload) = reader.next_column()?;
+                    let mut col = [0i32; 256];
+                    let mut scratch = [0u32; 256];
+                    ::stitch_data::columnar::decode_i32_column(
+                        col_payload,
+                        &mut scratch[..block_rows],
+                        &mut col[..block_rows],
+                    )?;
+                    for (i, r) in target.iter_mut().enumerate() {
+                        r.#name = col[i] as #ty;
+                    }
+                }
+            };
+            (enc, dec)
+        }
+        "f32" => {
+            let enc = quote! {
+                {
+                    let mut col = [0.0f32; 256];
+                    for (i, r) in chunk.iter().enumerate() {
+                        col[i] = r.#name;
+                    }
+                    let mut col_buf = [0u8; 1024 + 64];
+                    let col_len = ::stitch_data::columnar::encode_f32_column(
+                        &col[..row_count],
+                        &mut col_buf,
+                    )?;
+                    writer.write_column(
+                        ::stitch_data::columnar::ColumnCodecTag::GorillaF32,
+                        &col_buf[..col_len],
+                    )?;
+                }
+            };
+            let dec = quote! {
+                {
+                    let (_tag, col_payload) = reader.next_column()?;
+                    let mut col = [0.0f32; 256];
+                    ::stitch_data::columnar::decode_f32_column(col_payload, &mut col[..block_rows])?;
+                    for (i, r) in target.iter_mut().enumerate() {
+                        r.#name = col[i];
+                    }
+                }
+            };
+            (enc, dec)
+        }
+        "u64" | "i64" | "f64" => {
+            let enc = quote! {
+                {
+                    let mut col_buf = [0u8; 256 * 8 + 64];
+                    let mut offset = 0usize;
+                    for r in chunk {
+                        let bytes = r.#name.to_le_bytes();
+                        col_buf[offset..offset + 8].copy_from_slice(&bytes);
+                        offset += 8;
+                    }
+                    writer.write_column(
+                        ::stitch_data::columnar::ColumnCodecTag::Raw,
+                        &col_buf[..offset],
+                    )?;
+                }
+            };
+            let dec = quote! {
+                {
+                    let (_tag, col_payload) = reader.next_column()?;
+                    for (i, r) in target.iter_mut().enumerate() {
+                        let start = i * 8;
+                        let end = start + 8;
+                        if col_payload.len() < end {
+                            return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                                required: end,
+                                available: col_payload.len(),
+                            });
+                        }
+                        let bytes: [u8; 8] = col_payload[start..end]
+                            .try_into()
+                            .map_err(|_| ::stitch_data::error::CbpError::PayloadDecodeError)?;
+                        r.#name = <#ty>::from_le_bytes(bytes);
+                    }
+                }
+            };
+            (enc, dec)
+        }
+        _ => {
+            let enc = quote! {
+                {
+                    let mut col_buf = [0u8; 256 * 8 + 64];
+                    let mut offset = 0usize;
+                    for r in chunk {
+                        let bytes = r.#name.to_le_bytes();
+                        col_buf[offset..offset + bytes.len()].copy_from_slice(&bytes);
+                        offset += bytes.len();
+                    }
+                    writer.write_column(
+                        ::stitch_data::columnar::ColumnCodecTag::Raw,
+                        &col_buf[..offset],
+                    )?;
+                }
+            };
+            let dec = quote! {
+                {
+                    let (_tag, col_payload) = reader.next_column()?;
+                    let item_size = ::core::mem::size_of::<#ty>();
+                    for (i, r) in target.iter_mut().enumerate() {
+                        let start = i * item_size;
+                        let end = start + item_size;
+                        if col_payload.len() < end {
+                            return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                                required: end,
+                                available: col_payload.len(),
+                            });
+                        }
+                        let bytes = col_payload[start..end]
+                            .try_into()
+                            .map_err(|_| ::stitch_data::error::CbpError::PayloadDecodeError)?;
+                        r.#name = <#ty>::from_le_bytes(bytes);
+                    }
+                }
             };
             (enc, dec)
         }

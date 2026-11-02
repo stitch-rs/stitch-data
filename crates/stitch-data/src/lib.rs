@@ -13,9 +13,12 @@ pub use stitch_data_core::{
 };
 
 pub use stitch_data_transforms::{
-    BitPacker, ColumnarBlockBuilder, CompressionPipeline, DecompressionPipeline, DeltaTransformer,
-    GorillaCompressor, RecordBatchBuilder, RleTransformer, bitpack, columnar, delta, float,
-    pipeline, rle,
+    BitPacker, ColumnCodecTag, ColumnarBlockBuilder, ColumnarBlockReader, ColumnarBlockWriter,
+    CompressionPipeline, DecompressionPipeline, DeltaTransformer, GorillaCompressor,
+    RecordBatchBuilder, RleTransformer, bitpack, columnar, decode_columnar_frame,
+    decode_f32_column, decode_i32_column, decode_raw_column, decode_u32_column, delta,
+    encode_f32_column, encode_i32_column, encode_raw_column, encode_u32_column, float, pipeline,
+    rle,
 };
 
 #[cfg(feature = "derive")]
@@ -48,7 +51,12 @@ pub mod prelude {
     };
 
     pub use stitch_data_transforms::bitpack::BitPacker;
-    pub use stitch_data_transforms::columnar::{ColumnarBlockBuilder, RecordBatchBuilder};
+    pub use stitch_data_transforms::columnar::{
+        ColumnCodecTag, ColumnarBlockBuilder, ColumnarBlockReader, ColumnarBlockWriter,
+        RecordBatchBuilder, decode_columnar_frame, decode_f32_column, decode_i32_column,
+        decode_raw_column, decode_u32_column, encode_f32_column, encode_i32_column,
+        encode_raw_column, encode_u32_column,
+    };
     pub use stitch_data_transforms::delta::{
         DeltaTransformer, delta_decode_i32, delta_decode_u32, delta_decode_with_base_u32,
         delta_encode_i32, delta_encode_u32, delta_encode_with_base_u32,
