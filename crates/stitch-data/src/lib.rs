@@ -6,8 +6,8 @@ pub use stitch_data_core;
 pub use stitch_data_transforms;
 
 pub use stitch_data_core::{
-    CBP_MAGIC, CBP_VERSION_1, CbpError, CbpRecord, ColumnCodec, FieldCodec, FrameFlags, FrameHeader,
-    FrameReader, FrameView, MAX_HEADER_SIZE, OptimizationProfile, Record, ResyncStats, StitchError,
+    CBP_MAGIC, CBP_VERSION_1, ColumnCodec, FieldCodec, FrameFlags, FrameHeader, FrameReader,
+    FrameView, MAX_HEADER_SIZE, OptimizationProfile, Record, ResyncStats, StitchError,
     StreamResyncParser, VectoredFrame, bitstream, crc, error, frame, record, resync, simd, varint,
     zigzag,
 };
@@ -23,12 +23,7 @@ pub use stitch_data_transforms::{
 };
 
 #[cfg(feature = "derive")]
-pub use stitch_data_derive::{CbpRecord, Record};
-
-/// Backward compatibility aliases for cbp naming.
-pub mod cbp {
-    pub use crate::*;
-}
+pub use stitch_data_derive::Record;
 
 /// Convenient prelude module re-exporting key framing, types, and transform pipelines.
 pub mod prelude {
@@ -37,12 +32,12 @@ pub mod prelude {
         crc32_castagnoli, crc32_castagnoli_finalize, crc32_castagnoli_init,
         crc32_castagnoli_slices, crc32_castagnoli_update,
     };
-    pub use stitch_data_core::error::{CbpError, StitchError};
+    pub use stitch_data_core::error::StitchError;
     pub use stitch_data_core::frame::{
         CBP_MAGIC, CBP_VERSION_1, FrameFlags, FrameHeader, FrameReader, FrameView, MAX_HEADER_SIZE,
         OptimizationProfile, VectoredFrame, pack_frame, pack_frame_vectored, unpack_frame,
     };
-    pub use stitch_data_core::record::{CbpRecord, ColumnCodec, FieldCodec, Record};
+    pub use stitch_data_core::record::{ColumnCodec, FieldCodec, Record};
     pub use stitch_data_core::resync::{
         ResyncStats, StreamResyncParser, find_magic, find_magic_swar, resync_frame,
     };
@@ -69,5 +64,5 @@ pub mod prelude {
     pub use stitch_data_transforms::rle::RleTransformer;
 
     #[cfg(feature = "derive")]
-    pub use stitch_data_derive::{CbpRecord, Record};
+    pub use stitch_data_derive::Record;
 }

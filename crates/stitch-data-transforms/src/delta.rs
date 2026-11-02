@@ -3,7 +3,7 @@
 //! Provides utilities to delta-encode sequential integers relative to an explicit baseline
 //! or relative to the preceding item.
 
-use stitch_data_core::error::CbpError;
+use stitch_data_core::error::StitchError;
 
 /// Applies delta encoding in-place on a slice of unsigned 32-bit integers,
 /// with deltas relative to `slice[0]`: `[x0, x1 - x0, x2 - x1, ...]`.
@@ -66,9 +66,9 @@ pub fn delta_encode_with_base_u32(
     src: &[u32],
     baseline: u32,
     dst: &mut [u32],
-) -> Result<(), CbpError> {
+) -> Result<(), StitchError> {
     if dst.len() < src.len() {
-        return Err(CbpError::UnexpectedEof {
+        return Err(StitchError::UnexpectedEof {
             required: src.len(),
             available: dst.len(),
         });
@@ -88,9 +88,9 @@ pub fn delta_decode_with_base_u32(
     src: &[u32],
     baseline: u32,
     dst: &mut [u32],
-) -> Result<(), CbpError> {
+) -> Result<(), StitchError> {
     if dst.len() < src.len() {
-        return Err(CbpError::UnexpectedEof {
+        return Err(StitchError::UnexpectedEof {
             required: src.len(),
             available: dst.len(),
         });
@@ -110,9 +110,9 @@ pub struct DeltaTransformer;
 impl DeltaTransformer {
     /// Encodes delta sequence into a separate destination slice.
     #[inline]
-    pub fn encode(src: &[u32], dst: &mut [u32]) -> Result<(), CbpError> {
+    pub fn encode(src: &[u32], dst: &mut [u32]) -> Result<(), StitchError> {
         if dst.len() < src.len() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: src.len(),
                 available: dst.len(),
             });
@@ -124,9 +124,9 @@ impl DeltaTransformer {
 
     /// Decodes delta sequence into a separate destination slice.
     #[inline]
-    pub fn decode(src: &[u32], dst: &mut [u32]) -> Result<(), CbpError> {
+    pub fn decode(src: &[u32], dst: &mut [u32]) -> Result<(), StitchError> {
         if dst.len() < src.len() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: src.len(),
                 available: dst.len(),
             });

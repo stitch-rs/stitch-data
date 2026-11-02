@@ -30,7 +30,7 @@ pub struct SensorTelemetry {
     pub status_flags: u8,
 }
 
-fn main() -> Result<(), CbpError> {
+fn main() -> Result<(), StitchError> {
     println!("===============================================================================");
     println!("    CBP CONSTRAINED EMBEDDED IoT / SENSOR NODE REFERENCE IMPLEMENTATION        ");
     println!("===============================================================================\n");

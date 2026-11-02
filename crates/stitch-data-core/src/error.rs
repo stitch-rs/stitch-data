@@ -47,9 +47,6 @@ pub enum StitchError {
     },
 }
 
-/// Backward compatibility alias.
-pub type CbpError = StitchError;
-
 impl fmt::Display for StitchError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

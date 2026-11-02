@@ -3,7 +3,7 @@
 //! Provides zero-allocation, SIMD-accelerated and SWAR fast-path bit packing
 //! for 1..32 bit widths.
 
-use stitch_data_core::error::CbpError;
+use stitch_data_core::error::StitchError;
 
 /// Bit-packing compressor calculating optimal bit widths per block.
 pub struct BitPacker;
@@ -22,9 +22,9 @@ impl BitPacker {
 
     /// Packs a slice of `u32` into a byte buffer using minimal bit-width.
     /// Format: `[BitWidth: u8]` + `[PackedBits: BitWidth * len]`
-    pub fn pack_u32(slice: &[u32], dst: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn pack_u32(slice: &[u32], dst: &mut [u8]) -> Result<usize, StitchError> {
         if dst.is_empty() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 1,
                 available: 0,
             });
@@ -36,14 +36,14 @@ impl BitPacker {
         let total_bits = slice
             .len()
             .checked_mul(bit_width as usize)
-            .ok_or(CbpError::PayloadDecodeError)?;
+            .ok_or(StitchError::PayloadDecodeError)?;
         let packed_bytes = total_bits.div_ceil(8);
         let total_required = 1usize
             .checked_add(packed_bytes)
-            .ok_or(CbpError::PayloadDecodeError)?;
+            .ok_or(StitchError::PayloadDecodeError)?;
 
         if dst.len() < total_required {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: total_required,
                 available: dst.len(),
             });
@@ -150,9 +150,9 @@ impl BitPacker {
     }
 
     /// Unpacks a packed slice of `u32` from a byte buffer.
-    pub fn unpack_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    pub fn unpack_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
         if src.is_empty() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 1,
                 available: 0,
             });
@@ -160,20 +160,20 @@ impl BitPacker {
 
         let bit_width = src[0];
         if bit_width == 0 || bit_width > 32 {
-            return Err(CbpError::InvalidBitWidth(bit_width));
+            return Err(StitchError::InvalidBitWidth(bit_width));
         }
 
         let total_bits = dst
             .len()
             .checked_mul(bit_width as usize)
-            .ok_or(CbpError::PayloadDecodeError)?;
+            .ok_or(StitchError::PayloadDecodeError)?;
         let packed_bytes = total_bits.div_ceil(8);
         let total_required = 1usize
             .checked_add(packed_bytes)
-            .ok_or(CbpError::PayloadDecodeError)?;
+            .ok_or(StitchError::PayloadDecodeError)?;
 
         if src.len() < total_required {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: total_required,
                 available: src.len(),
             });

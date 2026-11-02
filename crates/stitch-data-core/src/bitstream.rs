@@ -2,7 +2,7 @@
 //!
 //! Provides zero-allocation, sub-byte bit packing into continuous memory buffers.
 
-use crate::error::CbpError;
+use crate::error::StitchError;
 
 /// Bit-level stream writer operating over an existing mutable byte buffer.
 pub struct BitWriter<'a> {
@@ -27,17 +27,17 @@ impl<'a> BitWriter<'a> {
 
     /// Writes `count` bits (1..=64) from `value` into the stream.
     #[inline]
-    pub fn write_bits(&mut self, mut value: u64, mut count: u8) -> Result<(), CbpError> {
+    pub fn write_bits(&mut self, mut value: u64, mut count: u8) -> Result<(), StitchError> {
         if count == 0 {
             return Ok(());
         }
         if count > 64 {
-            return Err(CbpError::InvalidBitWidth(count));
+            return Err(StitchError::InvalidBitWidth(count));
         }
 
         while count > 0 {
             if self.byte_pos >= self.buf.len() {
-                return Err(CbpError::UnexpectedEof {
+                return Err(StitchError::UnexpectedEof {
                     required: self.byte_pos + 1,
                     available: self.buf.len(),
                 });
@@ -110,12 +110,12 @@ impl<'a> BitReader<'a> {
 
     /// Reads `count` bits (1..=64) from the stream into a `u64`.
     #[inline]
-    pub fn read_bits(&mut self, mut count: u8) -> Result<u64, CbpError> {
+    pub fn read_bits(&mut self, mut count: u8) -> Result<u64, StitchError> {
         if count == 0 {
             return Ok(0);
         }
         if count > 64 {
-            return Err(CbpError::InvalidBitWidth(count));
+            return Err(StitchError::InvalidBitWidth(count));
         }
 
         let mut result = 0u64;
@@ -123,7 +123,7 @@ impl<'a> BitReader<'a> {
 
         while count > 0 {
             if self.byte_pos >= self.buf.len() {
-                return Err(CbpError::UnexpectedEof {
+                return Err(StitchError::UnexpectedEof {
                     required: self.byte_pos + 1,
                     available: self.buf.len(),
                 });

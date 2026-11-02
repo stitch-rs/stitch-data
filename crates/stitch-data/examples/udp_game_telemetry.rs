@@ -29,7 +29,7 @@ pub struct PlayerSnapshot {
     pub tick: u32,
 }
 
-fn main() -> Result<(), CbpError> {
+fn main() -> Result<(), StitchError> {
     println!("===============================================================================");
     println!("    CBP REAL-TIME UDP MULTIPLAYER GAME TELEMETRY SIMULATOR (128Hz, 64 PLAYERS) ");
     println!("===============================================================================\n");

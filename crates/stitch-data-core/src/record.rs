@@ -191,7 +191,3 @@ pub trait Record: Sized {
         Ok(record)
     }
 }
-
-/// Backward compatibility alias.
-pub trait CbpRecord: Record {}
-impl<T: Record> CbpRecord for T {}
