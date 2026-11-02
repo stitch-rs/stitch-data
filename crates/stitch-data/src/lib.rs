@@ -42,7 +42,7 @@ pub mod prelude {
         CBP_MAGIC, CBP_VERSION_1, FrameFlags, FrameHeader, FrameReader, FrameView, MAX_HEADER_SIZE,
         OptimizationProfile, VectoredFrame, pack_frame, pack_frame_vectored, unpack_frame,
     };
-    pub use stitch_data_core::record::{CbpRecord, FieldCodec, Record};
+    pub use stitch_data_core::record::{CbpRecord, ColumnCodec, FieldCodec, Record};
     pub use stitch_data_core::resync::{
         ResyncStats, StreamResyncParser, find_magic, find_magic_swar, resync_frame,
     };

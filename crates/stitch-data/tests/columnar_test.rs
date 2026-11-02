@@ -169,11 +169,11 @@ fn test_columnar_dict_and_rle_codecs() {
 
 #[derive(Debug, PartialEq, Clone, Default, Record)]
 struct AdvancedTelemetryBatchRecord {
-    #[stitch(column = "rle")]
+    #[stitch(column = ColumnCodec::Rle)]
     pub state_flags: u32,
-    #[stitch(column = "dict")]
+    #[stitch(column = ColumnCodec::Dict)]
     pub category_id: u32,
-    #[stitch(column = "gorilla")]
+    #[stitch(column = ColumnCodec::Gorilla)]
     pub sensor_reading: f32,
 }
 
