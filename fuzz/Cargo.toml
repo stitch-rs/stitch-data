@@ -1,7 +1,7 @@
 [workspace]
 
 [package]
-name = "cbp-cargo-fuzz"
+name = "stitch-data-cargo-fuzz"
 version = "0.0.0"
 publish = false
 edition = "2024"
@@ -11,7 +11,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-cbp-fuzz = { path = "../crates/cbp-fuzz" }
+stitch-data-fuzz = { path = "../crates/stitch-data-fuzz" }
 
 [[bin]]
 name = "fuzz_frame"

@@ -1,7 +1,8 @@
-# Compact Binary Protocol (CBP) Microbenchmark & Empirical Analysis
+# Compact Binary Protocol (stitch-data) Microbenchmark & Empirical Analysis
 
 This document provides a rigorous, empirical, and transparent breakdown of
-**Compact Binary Protocol (CBP)** serialization efficiency, compression ratios,
+**Stitch Data Engine (stitch-data)** serialization efficiency, compression
+ratios,
 and throughput metrics across primitive, transformation, pipeline, framing,
 and cross-serializer dimensions.
 
@@ -31,8 +32,8 @@ version-controlled raw log artifacts:
 | **Git Commit SHA** | `f61dc398f6e1e713709b35493d547f9f0a56cde5` (`f61dc39`) |
 | **Branch** | `feature/benchmarks-and-stages` |
 | **Raw Execution Logs** | `docs/benchmarks/raw/2026-11-02_WIN-0MUCV5Q6FL9_f61dc39.txt`, `docs/benchmarks/raw/2026-11-02_WIN-0MUCV5Q6FL9_hardware_crc32.txt`, `docs/benchmarks/raw/2026-11-02_WIN-0MUCV5Q6FL9_simd_transforms.txt` |
-| **Scoreboard Harness** | `cargo run -p cbp-benches --release` |
-| **Criterion Suite** | `cargo bench -p cbp-benches -- --noplot --sample-size 50` |
+| **Scoreboard Harness** | `cargo run -p stitch-data-benches --release` |
+| **Criterion Suite** | `cargo bench -p stitch-data-benches -- --noplot --sample-size 50` |
 <!-- markdownlint-enable MD013 -->
 
 ---
@@ -79,15 +80,16 @@ All measurements were executed on the following dedicated bare-metal testbed:
 - **Zero Invented Numbers**: Every single latency, throughput, and size metric
   in this report is taken directly from raw execution logs.
 - **Fact-Checked Implementation Realities**:
-  - `crc32_castagnoli` in `crates/cbp-core/src/crc.rs` utilizes Intel SSE4.2
+  - `crc32_castagnoli` in `crates/stitch-data-core/src/crc.rs` utilizes Intel SSE4.2
     hardware acceleration (`_mm_crc32_u64` unroll x4) with a compile-time
     slicing-by-8 fallback for `#![no_std]`.
-  - Bit-packing in `crates/cbp-transforms/src/bitpack.rs` employs AVX2 SIMD
+  - Bit-packing in `crates/stitch-data-transforms/src/bitpack.rs` employs AVX2 SIMD
     zero-extension unpacking, pairwise unrolling, and 64-bit SWAR bitstreams.
-  - CBP provides both low-level transform pipelines, procedural derive ergonomics
-    via `#[derive(CbpRecord)]` in `crates/cbp-derive`, and batch streaming via
+  - stitch-data provides both low-level transform pipelines, procedural derive ergonomics
+    via #[derive(StitchRecord)] in crates/stitch-data-derive, and
+    batch streaming via
     `ColumnarBlockBuilder`. Cross-serializer benchmarks evaluate both
-    `#[derive(CbpRecord)]` and hand-crafted reference containers, clearly
+    #[derive(StitchRecord)] and hand-crafted reference containers, clearly
     distinguishing between library derive macros and reference containers.
   - All comparisons with Protobuf, Postcard, Bincode, and MessagePack encode
     **all fields** of the underlying struct, ensuring an honest full-record
@@ -97,7 +99,7 @@ All measurements were executed on the following dedicated bare-metal testbed:
 
 ## 4. Workload Topology & Dataset Geometry
 
-To prevent synthetic bias, CBP was evaluated across multiple distinct
+To prevent synthetic bias, stitch-data was evaluated across multiple distinct
 operational workload topologies:
 
 ### 4.1 Scenario A: Bulk Columnar Routing Intervals (IPAtlas Workload)
@@ -137,10 +139,10 @@ operational workload topologies:
 | **MessagePack (`rmp-serde`)** | 12,291 B | 100.0% | 1.00x | Dynamic array tags |
 | **Protobuf (`prost` 0.13)** | 9,225 B | 75.1% | 1.33x | Tagged repeated varint fields |
 | **Postcard (1.1)** | 9,218 B | 75.0% | 1.33x | Untagged LEB128 varints |
-| **CBP Reference Container** | **3,098 B** | **25.2%** | **3.97x** | **Delta + BitPack + CRC32 (33.6% of Protobuf)** |
+| **stitch-data Reference Container** | **3,098 B** | **25.2%** | **3.97x** | **Delta + BitPack + CRC32 (33.6% of Protobuf)** |
 <!-- markdownlint-enable MD013 -->
 
-> **Entropy Reduction Analysis**: CBP reduces wire size to **25.2% of raw
+> **Entropy Reduction Analysis**: stitch-data reduces wire size to **25.2% of raw
 > memory** by transposing AoS to SoA columns and applying monomorphic Delta +
 > BitPack transforms, outperforming Protobuf by **2.98x in wire density**.
 
@@ -154,7 +156,7 @@ operational workload topologies:
 | **Postcard (1.1)** | 19 B | -5 B | None | LEB128 varint on small integer fields |
 | **Protobuf (`prost`)** | 26 B | +2 B | None | Field tags + varints |
 | **MessagePack (`rmp-serde`)** | 26 B | +2 B | None | Map tags |
-| **CBP Reference Snapshot** | **27 B** | **+3 B** | **Castagnoli CRC32** | **Full 4B header + 4B hardware CRC32 included** |
+| **stitch-data Reference Snapshot** | **27 B** | **+3 B** | **Castagnoli CRC32** | **Full 4B header + 4B hardware CRC32 included** |
 <!-- markdownlint-enable MD013 -->
 
 ### 5.3 Scenario B2: Batch of 64 Game Snapshots (1,536 Bytes Raw AoS)
@@ -167,7 +169,7 @@ operational workload topologies:
 | **MessagePack (`rmp-serde`)** | 1,668 B | 108.6% | None | Array element tags |
 | **Protobuf (`prost`)** | 1,815 B | 118.2% | None | Tagged repeated structures |
 | **Postcard (1.1)** | 1,242 B | 80.9% | None | LEB128 varint per field |
-| **CBP Reference Batch** | **1,251 B** | **81.4%** | **Castagnoli CRC32** | **Near Postcard density + Full CRC32 checksum** |
+| **stitch-data Reference Batch** | **1,251 B** | **81.4%** | **Castagnoli CRC32** | **Near Postcard density + Full CRC32 checksum** |
 <!-- markdownlint-enable MD013 -->
 
 ---
@@ -374,7 +376,7 @@ High-throughput continuous frame parsing and corrupted stream recovery:
 | **Postcard (1.1)** | 9,218 B | **13.61 µs** | **860.82 MiB/s** | **3.91 µs** | **2.93 GiB/s** | LEB128 varint per field |
 | **Protobuf (`prost`)** | 9,225 B | **12.46 µs** | **940.83 MiB/s** | **9.15 µs** | **1.25 GiB/s** | Tagged repeated fields |
 | **MessagePack (`rmp-serde`)** | 12,291 B | **12.53 µs** | **935.55 MiB/s** | **11.98 µs** | **978.22 MiB/s** | Dynamic type headers |
-| **CBP Reference Container** | **3,098 B** | **5.69 µs** | **2.01 GiB/s** | **7.20 µs** | **1.59 GiB/s** | **Delta + BitPack + CRC32 (3.97x denser, faster than Protobuf)** |
+| **stitch-data Reference Container** | **3,098 B** | **5.69 µs** | **2.01 GiB/s** | **7.20 µs** | **1.59 GiB/s** | **Delta + BitPack + CRC32 (3.97x denser, faster than Protobuf)** |
 <!-- markdownlint-enable MD013 -->
 
 #### Scenario B: Single Game Telemetry Snapshot (24 Bytes Raw AoS)
@@ -383,13 +385,13 @@ High-throughput continuous frame parsing and corrupted stream recovery:
 | Serializer / Engine | Wire Size | Encode Latency | Encode Throughput | Decode Latency | Decode Throughput | Integrity Check |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Raw Memory (AoS)** | 24 B | **1.04 ns** | **21.46 GiB/s** | N/A | N/A | Direct stack struct copy |
-| **CBP Derived Record (`#[derive(CbpRecord)]`)** | **19 B** | **8.71 ns** | **2.57 GiB/s** | **14.23 ns** | **1.57 GiB/s** | None (Direct record codec) |
+| **stitch-data Derived Record (`#[derive(stitch-dataRecord)]`)** | **19 B** | **8.71 ns** | **2.57 GiB/s** | **14.23 ns** | **1.57 GiB/s** | None (Direct record codec) |
 | **Bincode (1.3)** | 24 B | **42.89 ns** | **533.70 MiB/s** | **9.90 ns** | **2.26 GiB/s** | None |
 | **Protobuf (`prost`)** | 26 B | **19.05 ns** | **1.17 GiB/s** | **31.98 ns** | **715.77 MiB/s** | None |
 | **Postcard (1.1)** | 19 B | **178.95 ns** | **127.90 MiB/s** | **12.34 ns** | **1.81 GiB/s** | None |
 | **MessagePack (`rmp-serde`)** | 26 B | **163.19 ns** | **140.26 MiB/s** | **33.06 ns** | **692.40 MiB/s** | None |
-| **CBP Reference Snapshot** | **27 B** | **18.34 ns** | **1.22 GiB/s** | **19.75 ns** | **1.13 GiB/s** | **Castagnoli CRC32 (Hardware SSE4.2)** |
-| **CBP Derived Framed + Schema Hash** | **27 B** | **18.43 ns** | **1.21 GiB/s** | **26.41 ns** | **866.78 MiB/s** | **Hardware CRC32 + 64-bit Schema Fingerprint** |
+| **stitch-data Reference Snapshot** | **27 B** | **18.34 ns** | **1.22 GiB/s** | **19.75 ns** | **1.13 GiB/s** | **Castagnoli CRC32 (Hardware SSE4.2)** |
+| **stitch-data Derived Framed + Schema Hash** | **27 B** | **18.43 ns** | **1.21 GiB/s** | **26.41 ns** | **866.78 MiB/s** | **Hardware CRC32 + 64-bit Schema Fingerprint** |
 <!-- markdownlint-enable MD013 -->
 
 #### Scenario B2: Batch of 64 Snapshots (1,536 Bytes Raw AoS)
@@ -401,8 +403,8 @@ High-throughput continuous frame parsing and corrupted stream recovery:
 | **Protobuf (`prost`)** | 1,815 B | **1.51 µs** | **968.25 MiB/s** | **2.66 µs** | **551.66 MiB/s** | None |
 | **Postcard (1.1)** | 1,242 B | **1.68 µs** | **873.09 MiB/s** | **1.01 µs** | **1.42 GiB/s** | None |
 | **MessagePack (`rmp-serde`)** | 1,668 B | **1.96 µs** | **749.00 MiB/s** | **2.54 µs** | **576.17 MiB/s** | None |
-| **CBP Reference Batch** | **1,251 B** | **621.52 ns** | **2.30 GiB/s** | **738.69 ns** | **1.94 GiB/s** | **Castagnoli CRC32 (Hardware SSE4.2)** |
-| **CBP ColumnarBlockBuilder (64)** | **1,251 B** | **726.69 ns** | **1.97 GiB/s** | **1.38 µs** | **1.04 GiB/s** | **Hardware CRC32 + 64-bit Schema Fingerprint** |
+| **stitch-data Reference Batch** | **1,251 B** | **621.52 ns** | **2.30 GiB/s** | **738.69 ns** | **1.94 GiB/s** | **Castagnoli CRC32 (Hardware SSE4.2)** |
+| **stitch-data ColumnarBlockBuilder (64)** | **1,251 B** | **726.69 ns** | **1.97 GiB/s** | **1.38 µs** | **1.04 GiB/s** | **Hardware CRC32 + 64-bit Schema Fingerprint** |
 <!-- markdownlint-enable MD013 -->
 
 ---
@@ -444,11 +446,12 @@ atomic counting allocator (`CountingAllocator` in `benches/src/main.rs`):
 | `PlayerSnapshot::pack_to_frame` | **0** | **0 bytes** | **VERIFIED ZERO-ALLOCATION** |
 | `PlayerSnapshot::unpack_from_frame` | **0** | **0 bytes** | **VERIFIED ZERO-ALLOCATION** |
 | `ColumnarBlockBuilder::push + flush` | **0** | **0 bytes** | **VERIFIED ZERO-ALLOCATION** |
-| `CbpReferenceIntervalContainer::encode` | **0** | **0 bytes** | **VERIFIED ZERO-ALLOCATION** |
-| `CbpReferenceIntervalContainer::decode` | **0** | **0 bytes** | **VERIFIED ZERO-ALLOCATION** |
+| `stitch-dataReferenceIntervalContainer::encode` | **0** | **0 bytes** | **VERIFIED ZERO-ALLOCATION** |
+| `stitch-dataReferenceIntervalContainer::decode` | **0** | **0 bytes** | **VERIFIED ZERO-ALLOCATION** |
 <!-- markdownlint-enable MD013 -->
 
-When caller provides pre-allocated scratch slices, CBP operates strictly within
+When caller provides pre-allocated scratch slices, stitch-data operates
+strictly within
 stack and provided memory buffers with zero reliance on the heap allocator.
 
 ---
@@ -514,7 +517,7 @@ The streaming transport layer eliminates payload memory duplication:
 
 ### 9.4 Developer Experience & Zero-Cost Derive Macro (Category 4)
 
-Procedural derive macro `#[derive(CbpRecord)]` generates optimized, zero-allocation
+Procedural derive macro `#[derive(stitch-dataRecord)]` generates optimized, zero-allocation
 serialization and deserialization with field-level routing attributes:
 
 - **Record-Level Throughput**: `PlayerSnapshot::encode_record` executes in
@@ -524,7 +527,7 @@ serialization and deserialization with field-level routing attributes:
   compile-time hash `SCHEMA_HASH: u64`. `pack_to_frame` and `unpack_from_frame`
   embed and validate this fingerprint alongside hardware CRC32 in **18.43 ns**
   (encode) and **26.41 ns** (decode), guaranteeing immediate fail-fast error
-  detection on schema drift (`CbpError::SchemaMismatch`).
+  detection on schema drift (`stitch-dataError::SchemaMismatch`).
 - **Columnar Block Batching (`ColumnarBlockBuilder`)**: Stack-allocated
   `[MaybeUninit<T>; CAPACITY]` buffer provides $O(1)$ push and zero-allocation
   flushing, serializing 64 snapshots in **726.69 ns** (2.08x faster than
@@ -540,13 +543,13 @@ verified codebase realities:
 <!-- markdownlint-disable MD013 -->
 | Documented Claim / Assumption | Verified Codebase Reality | Status | Corrective Action Taken |
 | :--- | :--- | :--- | :--- |
-| **"Hardware Castagnoli CRC32"** | Implemented in `crates/cbp-core/src/crc.rs` with x86_64 SSE4.2 (`_mm_crc32_u64`), ARM64 CRC (`__crc32cd`), and compile-time slicing-by-8 fallback. | **VERIFIED** | Throughput verified empirically at **11.00 GiB/s** (64 KiB) and **22.61 GiB/s** (64 B). |
-| **"Layered Profiles (-O0 to -O3)"** | Implemented dynamic behavioral dispatch in `crates/cbp-transforms/src/pipeline.rs` (-O0 Direct: 55.6 GiB/s, -O1 Realtime: 14.0 GiB/s, -O2 Balanced: 3.58 GiB/s, -O3 MaxDensity: 1.84 GiB/s), alongside dual-profile dispatch in `CbpRecord` (-O0 Direct vs -O2 Balanced). | **VERIFIED** | Fully operational and benchmarked with zero dynamic heap allocations. |
-| **"Lossless Float Compression"** | Implemented Gorilla IEEE-754 XOR compressor in `crates/cbp-transforms/src/float.rs` for `f32` and `f64`. | **VERIFIED** | 58–65% wire reduction on smooth coordinates with bit-exact float preservation. |
-| **"SIMD bit-packing & Delta"** | Implemented AVX2 zero-extension unpacking and vector Delta register shifts in `crates/cbp-transforms/src/simd.rs`. | **VERIFIED** | Throughput verified empirically: **83.94 GiB/s** (8b), **69.80 GiB/s** (16b), **102.09 GiB/s** (32b), **36.49 GiB/s** (Delta). |
-| **"8x denser than Protobuf"** | Claim compared 1 single CBP delta-packed column against a full 3-column Protobuf message. | **MISLEADING** | Replaced with honest full-record comparison (CBP is **2.98x denser than Protobuf** on full 1024-interval records). |
+| **"Hardware Castagnoli CRC32"** | Implemented in `crates/stitch-data-core/src/crc.rs` with x86_64 SSE4.2 (`_mm_crc32_u64`), ARM64 CRC (`__crc32cd`), and compile-time slicing-by-8 fallback. | **VERIFIED** | Throughput verified empirically at **11.00 GiB/s** (64 KiB) and **22.61 GiB/s** (64 B). |
+| **"Layered Profiles (-O0 to -O3)"** | Implemented dynamic behavioral dispatch in `crates/stitch-data-transforms/src/pipeline.rs` (-O0 Direct: 55.6 GiB/s, -O1 Realtime: 14.0 GiB/s, -O2 Balanced: 3.58 GiB/s, -O3 MaxDensity: 1.84 GiB/s), alongside dual-profile dispatch in `stitch-dataRecord` (-O0 Direct vs -O2 Balanced). | **VERIFIED** | Fully operational and benchmarked with zero dynamic heap allocations. |
+| **"Lossless Float Compression"** | Implemented Gorilla IEEE-754 XOR compressor in `crates/stitch-data-transforms/src/float.rs` for `f32` and `f64`. | **VERIFIED** | 58–65% wire reduction on smooth coordinates with bit-exact float preservation. |
+| **"SIMD bit-packing & Delta"** | Implemented AVX2 zero-extension unpacking and vector Delta register shifts in `crates/stitch-data-transforms/src/simd.rs`. | **VERIFIED** | Throughput verified empirically: **83.94 GiB/s** (8b), **69.80 GiB/s** (16b), **102.09 GiB/s** (32b), **36.49 GiB/s** (Delta). |
+| **"8x denser than Protobuf"** | Claim compared 1 single stitch-data delta-packed column against a full 3-column Protobuf message. | **MISLEADING** | Replaced with honest full-record comparison (stitch-data is **2.98x denser than Protobuf** on full 1024-interval records). |
 | **"Zero dynamic heap allocations"** | Verified via `CountingAllocator` in `benches/src/main.rs`. | **CONFIRMED** | Retained with verified empirical proof (0 allocs, 0 bytes). |
-| **"Generic Struct Serializer"** | Implemented procedural macro `#[derive(CbpRecord)]` in `crates/cbp-derive` with field attributes (`#[cbp(varint)]`, `#[cbp(zigzag)]`, `#[cbp(raw)]`, `#[cbp(bits = N)]`), profile dispatch (`-O0 Direct` vs `-O2 Balanced`), and `RecordBatchBuilder<T, CAPACITY>`. | **VERIFIED** | Verified encode at 8.71 ns (2.19x faster than Protobuf) and 0 heap allocations. |
+| **"Generic Struct Serializer"** | Implemented procedural macro `#[derive(stitch-dataRecord)]` in `crates/stitch-data-derive` with field attributes (`#[stitch-data(varint)]`, `#[stitch-data(zigzag)]`, `#[stitch-data(raw)]`, `#[stitch-data(bits = N)]`), profile dispatch (`-O0 Direct` vs `-O2 Balanced`), and `RecordBatchBuilder<T, CAPACITY>`. | **VERIFIED** | Verified encode at 8.71 ns (2.19x faster than Protobuf) and 0 heap allocations. |
 <!-- markdownlint-enable MD013 -->
 
 ---
@@ -574,12 +577,12 @@ verified codebase realities:
 <!-- markdownlint-disable MD013 -->
 | Operational Constraint | Recommended Serialization Technology | Architectural Rationale |
 | :--- | :--- | :--- |
-| **Monotonic sequential telemetry / routing tables** | **CBP (`CompressionPipeline`)** | 3.97x denser than raw AoS, 2.98x denser than Protobuf; 2.01 GiB/s encode, 1.59 GiB/s decode. |
-| **Real-time UDP telemetry with corruption checks** | **CBP Frame (`-O1 Realtime`)** | Sub-microsecond packaging (16 ns snapshot) with mandatory Castagnoli CRC32. |
+| **Monotonic sequential telemetry / routing tables** | **stitch-data (`CompressionPipeline`)** | 3.97x denser than raw AoS, 2.98x denser than Protobuf; 2.01 GiB/s encode, 1.59 GiB/s decode. |
+| **Real-time UDP telemetry with corruption checks** | **stitch-data Frame (`-O1 Realtime`)** | Sub-microsecond packaging (16 ns snapshot) with mandatory Castagnoli CRC32. |
 | **Maximum raw CPU throughput, wire size unconstrained** | **Bincode** | 6.9 GiB/s encode; raw memory dump without transform overhead. |
 | **Embedded microcontroller, no schema, tiny payloads** | **Postcard** | Minimal code footprint, lightweight LEB128 varints. |
 | **Cross-language Polyglot RPC / Public API** | **Protobuf (`prost`)** | Universal language bindings and formal schema IDL. |
-| **Bulk historical cold archival ($> 100\text{ MB}$)** | **CBP Columnar + Zstandard** | Delta pre-conditioning eliminates sequence entropy prior to Zstd dictionary compression. |
+| **Bulk historical cold archival ($> 100\text{ MB}$)** | **stitch-data Columnar + Zstandard** | Delta pre-conditioning eliminates sequence entropy prior to Zstd dictionary compression. |
 <!-- markdownlint-enable MD013 -->
 
 ---
@@ -591,17 +594,17 @@ machine:
 
 ```bash
 # 1. Verify exact roundtrip invariants and zero heap allocations
-cargo run -p cbp-benches --release
+cargo run -p stitch-data-benches --release
 
 # 2. Run full Criterion benchmark suite
-cargo bench -p cbp-benches -- --noplot --sample-size 50
+cargo bench -p stitch-data-benches -- --noplot --sample-size 50
 
 # 3. Run individual benchmark suites
-cargo bench -p cbp-benches --bench primitives -- --noplot
-cargo bench -p cbp-benches --bench transforms -- --noplot
-cargo bench -p cbp-benches --bench pipeline -- --noplot
-cargo bench -p cbp-benches --bench framing -- --noplot
-cargo bench -p cbp-benches --bench cross_serializer -- --noplot
+cargo bench -p stitch-data-benches --bench primitives -- --noplot
+cargo bench -p stitch-data-benches --bench transforms -- --noplot
+cargo bench -p stitch-data-benches --bench pipeline -- --noplot
+cargo bench -p stitch-data-benches --bench framing -- --noplot
+cargo bench -p stitch-data-benches --bench cross_serializer -- --noplot
 ```
 
 ---
@@ -617,13 +620,13 @@ cargo bench -p cbp-benches --bench cross_serializer -- --noplot
   decompression throughput accelerated by **2.4x** (up to 3.22 GiB/s).
 - **2026-11-02 (Category 1: Adaptive Profiles, Signed Delta & Gorilla Float)**:
   Implemented dynamic behavioral profile dispatch (-O0 Direct, -O1 Realtime,
-  -O2 Balanced, -O3 MaxDensity) in `cbp-transforms`. Added lossless floating-point
+  -O2 Balanced, -O3 MaxDensity) in `stitch-data-transforms`. Added lossless floating-point
   Gorilla IEEE-754 XOR compression (`f32`/`f64`) and wrapping signed `i32` delta
   pipeline. All hot paths verified at 0 heap allocations.
-- **2026-11-02 (Hardware CRC32 & CBP-01 Fix)**: Integrated x86_64 SSE4.2
+- **2026-11-02 (Hardware CRC32 & stitch-data-01 Fix)**: Integrated x86_64 SSE4.2
   (`_mm_crc32_u64`) and ARMv8 CRC hardware acceleration with compile-time
   slicing-by-8 fallback. Verified 46.1x CRC speedup (11.00 GiB/s) and 38.8x
-  `pack_frame` speedup (6.76 µs at 64 KiB). Fixed Issue CBP-01 off-by-one in
+  pack_frame speedup (6.76 �s at 64 KiB). Fixed off-by-one in
   `BitPacker::unpack_u32` and verified zero-allocation invariant with exact byte
   consumption across all bit-widths.
 - **2026-11-02**: Initial comprehensive benchmark suite, counting allocator

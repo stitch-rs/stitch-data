@@ -1,7 +1,7 @@
 use core::hint::black_box;
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 
-use cbp::prelude::*;
+use stitch_data::prelude::*;
 
 fn bench_frame_pack_unpack(c: &mut Criterion) {
     let mut group = c.benchmark_group("Framing/Pack_Unpack");

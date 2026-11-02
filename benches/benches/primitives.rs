@@ -1,7 +1,7 @@
 use core::hint::black_box;
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 
-use cbp::prelude::*;
+use stitch_data::prelude::*;
 
 fn bench_prefix_varint(c: &mut Criterion) {
     let mut group = c.benchmark_group("Primitives/PrefixVarint");

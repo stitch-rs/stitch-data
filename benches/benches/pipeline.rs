@@ -1,8 +1,8 @@
 use core::hint::black_box;
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 
-use cbp::prelude::*;
-use cbp_benches::scenarios::*;
+use stitch_data::prelude::*;
+use stitch_data_benches::scenarios::*;
 
 fn bench_pipeline_scaling(c: &mut Criterion) {
     let mut group = c.benchmark_group("Pipeline/Monomorphic_U_Cycle");

@@ -66,59 +66,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
 
 [[package]]
-name = "cbp"
-version = "0.1.0"
-dependencies = [
- "cbp-core",
- "cbp-derive",
- "cbp-transforms",
-]
-
-[[package]]
-name = "cbp-benches"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "cbp",
- "criterion",
- "postcard",
- "prost",
- "rmp-serde",
- "serde",
-]
-
-[[package]]
-name = "cbp-core"
-version = "0.1.0"
-dependencies = [
- "zerocopy",
-]
-
-[[package]]
-name = "cbp-derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.119",
-]
-
-[[package]]
-name = "cbp-fuzz"
-version = "0.1.0"
-dependencies = [
- "cbp",
-]
-
-[[package]]
-name = "cbp-transforms"
-version = "0.1.0"
-dependencies = [
- "cbp-core",
- "stitch-core",
-]
-
-[[package]]
 name = "cc"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -492,7 +439,60 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 [[package]]
 name = "stitch-core"
 version = "0.3.0"
-source = "git+https://github.com/ulquiorracode/stitch-rs.git?rev=89de13aedcc61e13af97ccb8cc07f543080071ad#89de13aedcc61e13af97ccb8cc07f543080071ad"
+source = "git+https://github.com/stitch-rs/stitch-framework.git?branch=main#89de13aedcc61e13af97ccb8cc07f543080071ad"
+
+[[package]]
+name = "stitch-data"
+version = "0.1.0"
+dependencies = [
+ "stitch-data-core",
+ "stitch-data-derive",
+ "stitch-data-transforms",
+]
+
+[[package]]
+name = "stitch-data-benches"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "criterion",
+ "postcard",
+ "prost",
+ "rmp-serde",
+ "serde",
+ "stitch-data",
+]
+
+[[package]]
+name = "stitch-data-core"
+version = "0.1.0"
+dependencies = [
+ "zerocopy",
+]
+
+[[package]]
+name = "stitch-data-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "stitch-data-fuzz"
+version = "0.1.0"
+dependencies = [
+ "stitch-data",
+]
+
+[[package]]
+name = "stitch-data-transforms"
+version = "0.1.0"
+dependencies = [
+ "stitch-core",
+ "stitch-data-core",
+]
 
 [[package]]
 name = "syn"

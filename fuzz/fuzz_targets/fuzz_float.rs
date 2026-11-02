@@ -3,5 +3,5 @@
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
-    cbp_fuzz::fuzz_gorilla_float(data);
+    stitch_data_fuzz::fuzz_gorilla_float(data);
 });

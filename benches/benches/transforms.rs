@@ -1,8 +1,8 @@
 use core::hint::black_box;
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 
-use cbp::prelude::*;
-use cbp_benches::scenarios::*;
+use stitch_data::prelude::*;
+use stitch_data_benches::scenarios::*;
 
 type GenFn = fn(usize) -> Vec<u32>;
 

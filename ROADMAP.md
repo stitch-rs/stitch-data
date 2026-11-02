@@ -1,8 +1,8 @@
-# Compact Binary Protocol (CBP) — Strategic Roadmap
+# Compact Binary Protocol (stitch-data) — Strategic Roadmap
 
 ## Overview & Vision
 
-Compact Binary Protocol (CBP) is engineered under the **Scrooge Systems
+Compact Binary Protocol (stitch-data) is engineered under the **Scrooge Systems
 Mindset**: mechanical sympathy, zero allocations on hot paths, 64-byte cache
 alignment, monomorphic compile-time traversal, and empirical hardware
 validation.
@@ -19,7 +19,7 @@ flowchart TD
         M2["AVX2 SIMD BitPack & Delta"]
         M3["Gorilla IEEE-754 Float XOR"]
         M4["Zero-Copy FrameReader & Vectored Framing"]
-        M5["#[derive(CbpRecord)] & RecordBatchBuilder"]
+        M5["#[derive(stitch-dataRecord)] & RecordBatchBuilder"]
         M6["Adversarial Fuzzing & Miri UB Verification"]
     end
 
@@ -31,7 +31,7 @@ flowchart TD
     end
 
     subgraph V3["v0.3.0: Universal Cross-Ecosystem Portability"]
-        T5["C-ABI Export Crate (cbp-ffi)"]
+        T5["C-ABI Export Crate (stitch-data-ffi)"]
         T6["WebAssembly Target (wasm32-unknown-unknown)"]
         T7["Zero-Copy TypeScript/JavaScript Client Wrapper"]
     end
@@ -54,7 +54,7 @@ flowchart TD
 | :--- | :--- | :--- | :--- |
 | **v0.1.0** | Core & SIMD | **DONE** | RFC v1.1, Derive, AVX2 |
 | **v0.2.0** | I/O & Access | **TODO** | Loopback UDP, In-Place |
-| **v0.3.0** | FFI & Web | **TODO** | `cbp-ffi`, WebAssembly |
+| **v0.3.0** | FFI & Web | **TODO** | `stitch-data-ffi`, WebAssembly |
 | **v0.4.0** | Cascades | **TODO** | Delta -> LZ4 Pipeline |
 
 ---
@@ -82,9 +82,9 @@ flowchart TD
   - AVX2 magic scanner (`find_magic` at 35.41 GiB/s) and stream noise
     recovery (`resync_frame` in 27.14 ns).
 - [x] **Developer Experience & Codec Macros**:
-  - Procedural derive macro `#[derive(CbpRecord)]` in `crates/cbp-derive`
-    with routing attributes (`#[cbp(varint)]`, `#[cbp(zigzag)]`,
-    `#[cbp(raw)]`, `#[cbp(bits = N)]`) and dual-profile dispatch
+  - Procedural derive macro `#[derive(stitch-dataRecord)]` in `crates/stitch-data-derive`
+    with routing attributes (`#[stitch-data(varint)]`, `#[stitch-data(zigzag)]`,
+    `#[stitch-data(raw)]`, `#[stitch-data(bits = N)]`) and dual-profile dispatch
     (`-O0 Direct` memcpy vs `-O2 Balanced` bit-packed compression).
   - Single record encode: **8.71 ns** (2.19x faster than Protobuf prost);
     decode: **14.23 ns** (2.25x faster than Protobuf prost).
@@ -96,10 +96,10 @@ flowchart TD
   - Compile-time 64-bit FNV-1a schema fingerprinting (`SCHEMA_HASH: u64`)
     and fail-fast drift detection.
 - [x] **Quality Assurance, Fuzzing & Miri**:
-  - 100,000-iteration adversarial fuzz test suite (`crates/cbp-fuzz` and
+  - 100,000-iteration adversarial fuzz test suite (`crates/stitch-data-fuzz` and
     `fuzz/`).
   - Miri-verified derive and framing contracts
-    (`cargo +nightly miri test -p cbp --test derive_test`): 0 UB, 0 unaligned
+    (`cargo +nightly miri test -p stitch-data --test derive_test`): 0 UB, 0 unaligned
     reads, 0 Stacked Borrows violations.
   - 0 heap allocations confirmed across all hot paths via `CountingAllocator`.
 
@@ -113,7 +113,7 @@ and high-entropy edge cases.
 ### 2.1 In-Place Random-Access Columnar Slicing (FlatBuffers Parity)
 
 - **Problem**: FlatBuffers allows $O(1)$ zero-allocation field reads without
-  unpacking the full message. CBP currently requires sequential column decoding.
+  unpacking the full message. stitch-data currently requires sequential column decoding.
 - **Goal**: Provide $O(1)$ indexed reads for arbitrary records without
   decompressing the surrounding batch.
 - **Architecture**:
@@ -122,7 +122,7 @@ and high-entropy edge cases.
     bit-packed columns.
   - AVX2 Gather / Shift primitives to extract element $i$ in $< 2\text{ ns}$
     directly from compressed byte slices.
-  - Retain CBP's 3x-4x density advantage over FlatBuffers while achieving
+  - Retain stitch-data's 3x-4x density advantage over FlatBuffers while achieving
     identical read latency.
 
 ### 2.2 Loopback Network Benchmark Suite & Kernel Bypass
@@ -130,7 +130,7 @@ and high-entropy edge cases.
 - **Problem**: Current benchmarks measure in-memory CPU cycles. Real-world
   network applications incur OS socket overhead (`sendmsg`, `recvmsg`, UDP
   packet fragmentation).
-- **Goal**: Construct reproducible end-to-end socket benchmarks comparing CBP
+- **Goal**: Construct reproducible end-to-end socket benchmarks comparing stitch-data
   against Protobuf and raw Bincode over local UDP and Unix Domain Sockets.
 - **Architecture**:
   - Criterion benchmarks with real `std::net::UdpSocket` loopback traffic.
@@ -172,25 +172,26 @@ and high-entropy edge cases.
 
 Eliminating the language boundary barrier against Protobuf and FlatBuffers.
 
-### 3.1 C-ABI Export Crate (`crates/cbp-ffi`)
+### 3.1 C-ABI Export Crate (`crates/stitch-data-ffi`)
 
 - **Goal**: Enable seamless drop-in integration for C, C++, C#, Python, and Go
   applications.
 - **Architecture**:
-  - Dedicated `crates/cbp-ffi` workspace crate producing `cbp.dll`, `libcbp.so`,
-    and `libcbp.dylib`.
-  - Flat C-compatible functions (`cbp_frame_pack`, `cbp_frame_unpack`,
-    `cbp_record_decode`).
+  - Dedicated crates/stitch-data-ffi workspace crate producing
+    stitch-data.dll, libstitch-data.so,
+    and `libstitch-data.dylib`.
+  - Flat C-compatible functions (`stitch-data_frame_pack`, `stitch-data_frame_unpack`,
+    `stitch-data_record_decode`).
   - Opaque pointers, explicit status codes, and zero panic crossing
     (`std::panic::catch_unwind`).
-  - Auto-generated C/C++ header (`cbp.h`) via `cbindgen`.
+  - Auto-generated C/C++ header (`stitch-data.h`) via `cbindgen`.
 
 ### 3.2 WebAssembly Target (`wasm32-unknown-unknown`) & TypeScript SDK
 
 - **Goal**: Native high-speed decoding in web browsers, Node.js, and Cloudflare
   Workers.
 - **Architecture**:
-  - Compile `cbp-core` to WebAssembly without standard library overhead
+  - Compile `stitch-data-core` to WebAssembly without standard library overhead
     ($< 15\text{ KB}$ gzipped wasm binary).
   - TypeScript zero-copy wrapper operating directly over `ArrayBuffer` and
     `DataView`.
@@ -203,12 +204,13 @@ Eliminating the language boundary barrier against Protobuf and FlatBuffers.
 
 Expanding beyond numeric telemetry into general-purpose large structured blobs.
 
-### 4.1 Two-Stage Pipeline Cascade (CBP Delta -> LZ4 / Snappy)
+### 4.1 Two-Stage Pipeline Cascade (stitch-data Delta -> LZ4 / Snappy)
 
 - **Goal**: Combine structural domain transforms with byte-level dictionary
   compressors for huge data dumps.
 - **Architecture**:
-  - Stage 1: Monomorphic CBP Delta transformation maps consecutive values into
+  - Stage 1: Monomorphic stitch-data Delta transformation maps consecutive
+    values into
     zero-padded runs.
   - Stage 2: Light dictionary compressor (LZ4 / Snappy) compresses the
     pre-conditioned zero runs.

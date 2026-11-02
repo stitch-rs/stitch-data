@@ -1,0 +1,62 @@
+//! High-density data layout, zero-allocation transformation engine and columnar codecs (Stitch Data Engine).
+
+#![cfg_attr(not(feature = "std"), no_std)]
+
+pub use stitch_data_core;
+pub use stitch_data_transforms;
+
+pub use stitch_data_core::{
+    CBP_MAGIC, CBP_VERSION_1, CbpError, CbpRecord, FieldCodec, FrameFlags, FrameHeader,
+    FrameReader, FrameView, MAX_HEADER_SIZE, OptimizationProfile, ResyncStats, StitchError,
+    StitchRecord, StreamResyncParser, VectoredFrame, bitstream, crc, error, frame, record, resync,
+    simd, varint, zigzag,
+};
+
+pub use stitch_data_transforms::{
+    BitPacker, ColumnarBlockBuilder, CompressionPipeline, DecompressionPipeline, DeltaTransformer,
+    GorillaCompressor, RecordBatchBuilder, RleTransformer, bitpack, columnar, delta, float,
+    pipeline, rle,
+};
+
+#[cfg(feature = "derive")]
+pub use stitch_data_derive::{CbpRecord, StitchRecord};
+
+/// Backward compatibility aliases for cbp naming.
+pub mod cbp {
+    pub use crate::*;
+}
+
+/// Convenient prelude module re-exporting key framing, types, and transform pipelines.
+pub mod prelude {
+    pub use stitch_data_core::bitstream::{BitReader, BitWriter};
+    pub use stitch_data_core::crc::{
+        crc32_castagnoli, crc32_castagnoli_finalize, crc32_castagnoli_init,
+        crc32_castagnoli_slices, crc32_castagnoli_update,
+    };
+    pub use stitch_data_core::error::{CbpError, StitchError};
+    pub use stitch_data_core::frame::{
+        CBP_MAGIC, CBP_VERSION_1, FrameFlags, FrameHeader, FrameReader, FrameView, MAX_HEADER_SIZE,
+        OptimizationProfile, VectoredFrame, pack_frame, pack_frame_vectored, unpack_frame,
+    };
+    pub use stitch_data_core::record::{CbpRecord, FieldCodec, StitchRecord};
+    pub use stitch_data_core::resync::{
+        ResyncStats, StreamResyncParser, find_magic, find_magic_swar, resync_frame,
+    };
+    pub use stitch_data_core::varint::{decode_prefix_varint, encode_prefix_varint};
+    pub use stitch_data_core::zigzag::{
+        decode_zigzag32, decode_zigzag64, encode_zigzag32, encode_zigzag64,
+    };
+
+    pub use stitch_data_transforms::bitpack::BitPacker;
+    pub use stitch_data_transforms::columnar::{ColumnarBlockBuilder, RecordBatchBuilder};
+    pub use stitch_data_transforms::delta::{
+        DeltaTransformer, delta_decode_i32, delta_decode_u32, delta_decode_with_base_u32,
+        delta_encode_i32, delta_encode_u32, delta_encode_with_base_u32,
+    };
+    pub use stitch_data_transforms::float::GorillaCompressor;
+    pub use stitch_data_transforms::pipeline::{CompressionPipeline, DecompressionPipeline};
+    pub use stitch_data_transforms::rle::RleTransformer;
+
+    #[cfg(feature = "derive")]
+    pub use stitch_data_derive::{CbpRecord, StitchRecord};
+}

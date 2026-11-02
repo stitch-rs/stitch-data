@@ -2,8 +2,8 @@ use core::hint::black_box;
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use prost::Message;
 
-use cbp::prelude::*;
-use cbp_benches::scenarios::*;
+use stitch_data::prelude::*;
+use stitch_data_benches::scenarios::*;
 
 // ============================================================================
 // Scenario A: IP Intervals (1024 Intervals, 12,288 Bytes Raw AoS)
