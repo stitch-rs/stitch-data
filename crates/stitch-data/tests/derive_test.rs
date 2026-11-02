@@ -63,7 +63,7 @@ fn test_derive_record_framed_roundtrip_and_schema_validation() {
     // Test Schema Mismatch rejection: unpacking as IncompatibleTelemetry must fail with SchemaMismatch!
     let err = IncompatibleTelemetry::unpack_from_frame(&framed_dst[..total]).unwrap_err();
     match err {
-        CbpError::SchemaMismatch { expected, actual } => {
+        StitchError::SchemaMismatch { expected, actual } => {
             assert_eq!(expected, IncompatibleTelemetry::SCHEMA_HASH);
             assert_eq!(actual, TestTelemetry::SCHEMA_HASH);
         }
@@ -136,7 +136,7 @@ fn test_bounded_bit_pack_rejects_out_of_range() {
     let invalid = BoundedRecord { nibble: 16 }; // > 15 (4 bits)
     let mut buf = [0u8; 16];
     let err = invalid.encode_record(&mut buf).unwrap_err();
-    assert_eq!(err, CbpError::InvalidBitWidth(4));
+    assert_eq!(err, StitchError::InvalidBitWidth(4));
 
     let valid = BoundedRecord { nibble: 15 };
     let written = valid.encode_record(&mut buf).unwrap();

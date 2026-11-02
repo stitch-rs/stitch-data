@@ -1,6 +1,6 @@
 //! Run-Length Encoding (RLE) transformer for repetitive sequences.
 
-use stitch_data_core::error::CbpError;
+use stitch_data_core::error::StitchError;
 
 /// Stateless Run-Length Encoding transformer.
 pub struct RleTransformer;
@@ -8,10 +8,10 @@ pub struct RleTransformer;
 impl RleTransformer {
     /// Encodes a slice of `u32` into pairs of `(count: u16, value: u32)`.
     /// Format: `[NumPairs: u32]` + `[(Count: u16, Value: u32)]*`
-    pub fn encode_u32(src: &[u32], dst: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn encode_u32(src: &[u32], dst: &mut [u8]) -> Result<usize, StitchError> {
         if src.is_empty() {
             if dst.len() < 4 {
-                return Err(CbpError::UnexpectedEof {
+                return Err(StitchError::UnexpectedEof {
                     required: 4,
                     available: dst.len(),
                 });
@@ -31,7 +31,7 @@ impl RleTransformer {
                 current_run += 1;
             } else {
                 if dst.len() < offset + 6 {
-                    return Err(CbpError::UnexpectedEof {
+                    return Err(StitchError::UnexpectedEof {
                         required: offset + 6,
                         available: dst.len(),
                     });
@@ -48,7 +48,7 @@ impl RleTransformer {
 
         // Flush last pair
         if dst.len() < offset + 6 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: offset + 6,
                 available: dst.len(),
             });
@@ -65,25 +65,26 @@ impl RleTransformer {
     /// Decodes an RLE sequence into a destination slice.
     ///
     /// Returns `(elements_decoded, bytes_consumed)`.
-    pub fn decode_u32_ext(src: &[u8], dst: &mut [u32]) -> Result<(usize, usize), CbpError> {
+    pub fn decode_u32_ext(src: &[u8], dst: &mut [u32]) -> Result<(usize, usize), StitchError> {
         if src.len() < 4 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 4,
                 available: src.len(),
             });
         }
 
         let raw_pairs = u32::from_le_bytes(src[..4].try_into().unwrap());
-        let pairs_count = usize::try_from(raw_pairs).map_err(|_| CbpError::PayloadDecodeError)?;
+        let pairs_count =
+            usize::try_from(raw_pairs).map_err(|_| StitchError::PayloadDecodeError)?;
         let pairs_bytes = pairs_count
             .checked_mul(6)
-            .ok_or(CbpError::PayloadDecodeError)?;
+            .ok_or(StitchError::PayloadDecodeError)?;
         let expected_bytes = 4usize
             .checked_add(pairs_bytes)
-            .ok_or(CbpError::PayloadDecodeError)?;
+            .ok_or(StitchError::PayloadDecodeError)?;
 
         if src.len() < expected_bytes {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: expected_bytes,
                 available: src.len(),
             });
@@ -99,7 +100,7 @@ impl RleTransformer {
 
             for _ in 0..run {
                 if dst_idx >= dst.len() {
-                    return Err(CbpError::PayloadDecodeError);
+                    return Err(StitchError::PayloadDecodeError);
                 }
                 dst[dst_idx] = val;
                 dst_idx += 1;
@@ -111,7 +112,7 @@ impl RleTransformer {
 
     /// Decodes an RLE sequence into a destination slice. Returns elements decoded.
     #[inline]
-    pub fn decode_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    pub fn decode_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
         Self::decode_u32_ext(src, dst).map(|(elements, _bytes)| elements)
     }
 }

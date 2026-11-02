@@ -2,7 +2,7 @@
 
 use stitch_core::flow::FlowControl;
 use stitch_core::middleware::{Layer, Terminal};
-use stitch_data_core::error::CbpError;
+use stitch_data_core::error::StitchError;
 use stitch_data_core::frame::OptimizationProfile;
 use stitch_data_core::zigzag::{decode_zigzag32, encode_zigzag32};
 
@@ -25,13 +25,13 @@ pub struct TransformContext<'a> {
 /// Stage 1: In-place monotone sequence Delta-encoding layer.
 pub struct DeltaLayer;
 
-impl<'a> Layer<TransformContext<'a>, (), usize, CbpError> for DeltaLayer {
+impl<'a> Layer<TransformContext<'a>, (), usize, StitchError> for DeltaLayer {
     #[inline(always)]
     fn on_enter(
         &self,
         ctx: &mut TransformContext<'a>,
         _intent: (),
-    ) -> FlowControl<(), usize, CbpError> {
+    ) -> FlowControl<(), usize, StitchError> {
         if !ctx.scratch.is_empty() {
             ctx.baseline = ctx.scratch[0];
             delta_encode_u32(ctx.scratch);
@@ -40,21 +40,25 @@ impl<'a> Layer<TransformContext<'a>, (), usize, CbpError> for DeltaLayer {
     }
 
     #[inline(always)]
-    fn on_exit(&self, _ctx: &mut TransformContext<'a>, _outcome: &mut Result<usize, CbpError>) {}
+    fn on_exit(&self, _ctx: &mut TransformContext<'a>, _outcome: &mut Result<usize, StitchError>) {}
 }
 
 /// Stage 2: Terminal Bit-Packing execution handler.
 /// Packs `[baseline: 4 bytes]` + `[BitPacked deltas]` into destination buffer.
 pub struct BitPackTerminal;
 
-impl<'a> Terminal<TransformContext<'a>, (), usize, CbpError> for BitPackTerminal {
+impl<'a> Terminal<TransformContext<'a>, (), usize, StitchError> for BitPackTerminal {
     #[inline(always)]
-    fn execute(&mut self, ctx: &mut TransformContext<'a>, _intent: ()) -> Result<usize, CbpError> {
+    fn execute(
+        &mut self,
+        ctx: &mut TransformContext<'a>,
+        _intent: (),
+    ) -> Result<usize, StitchError> {
         if ctx.scratch.is_empty() {
             return Ok(0);
         }
         if ctx.out_buf.len() < 4 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 4,
                 available: ctx.out_buf.len(),
             });
@@ -103,7 +107,7 @@ impl CompressionPipeline {
         input: &[u32],
         scratch: &mut [u32],
         out_buf: &mut [u8],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         self.compress_with_profile_u32(OptimizationProfile::Balanced, input, scratch, out_buf)
     }
 
@@ -114,7 +118,7 @@ impl CompressionPipeline {
         input: &[u32],
         scratch: &mut [u32],
         out_buf: &mut [u8],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         match profile {
             OptimizationProfile::Direct => Self::compress_direct_u32(input, out_buf),
             OptimizationProfile::Realtime => Self::compress_realtime_u32(input, out_buf),
@@ -132,9 +136,9 @@ impl CompressionPipeline {
         input: &[u32],
         scratch: &mut [u32],
         out_buf: &mut [u8],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         if out_buf.is_empty() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 1,
                 available: 0,
             });
@@ -145,10 +149,10 @@ impl CompressionPipeline {
     }
 
     /// -O0 Direct: raw memory copy (48+ GiB/s, zero transformations).
-    pub fn compress_direct_u32(input: &[u32], out_buf: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn compress_direct_u32(input: &[u32], out_buf: &mut [u8]) -> Result<usize, StitchError> {
         let required = input.len() * 4;
         if out_buf.len() < required {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required,
                 available: out_buf.len(),
             });
@@ -161,12 +165,12 @@ impl CompressionPipeline {
 
     /// -O1 Realtime: byte-aligned integer packing (1, 2, or 4 bytes per item).
     /// Format: `[Mode: 1B (1, 2, or 4)]` + `[Aligned Values: Mode * len]`
-    pub fn compress_realtime_u32(input: &[u32], out_buf: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn compress_realtime_u32(input: &[u32], out_buf: &mut [u8]) -> Result<usize, StitchError> {
         if input.is_empty() {
             return Ok(0);
         }
         if out_buf.is_empty() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 1,
                 available: 0,
             });
@@ -176,7 +180,7 @@ impl CompressionPipeline {
         if max <= 0xFF {
             let required = 1 + input.len();
             if out_buf.len() < required {
-                return Err(CbpError::UnexpectedEof {
+                return Err(StitchError::UnexpectedEof {
                     required,
                     available: out_buf.len(),
                 });
@@ -189,7 +193,7 @@ impl CompressionPipeline {
         } else if max <= 0xFFFF {
             let required = 1 + input.len() * 2;
             if out_buf.len() < required {
-                return Err(CbpError::UnexpectedEof {
+                return Err(StitchError::UnexpectedEof {
                     required,
                     available: out_buf.len(),
                 });
@@ -202,7 +206,7 @@ impl CompressionPipeline {
         } else {
             let required = 1 + input.len() * 4;
             if out_buf.len() < required {
-                return Err(CbpError::UnexpectedEof {
+                return Err(StitchError::UnexpectedEof {
                     required,
                     available: out_buf.len(),
                 });
@@ -221,12 +225,12 @@ impl CompressionPipeline {
         input: &[u32],
         scratch: &mut [u32],
         out_buf: &mut [u8],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         if input.is_empty() {
             return Ok(0);
         }
         if scratch.len() < input.len() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: input.len(),
                 available: scratch.len(),
             });
@@ -267,12 +271,12 @@ impl CompressionPipeline {
         input: &[u32],
         scratch: &mut [u32],
         out_buf: &mut [u8],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         if input.is_empty() {
             return Ok(0);
         }
         if out_buf.len() < 5 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 5,
                 available: out_buf.len(),
             });
@@ -319,18 +323,18 @@ impl CompressionPipeline {
         input: &[i32],
         scratch_u32: &mut [u32],
         out_buf: &mut [u8],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         if input.is_empty() {
             return Ok(0);
         }
         if scratch_u32.len() < input.len() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: input.len(),
                 available: scratch_u32.len(),
             });
         }
         if out_buf.len() < 4 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 4,
                 available: out_buf.len(),
             });
@@ -361,7 +365,7 @@ pub struct DecompressionPipeline;
 impl DecompressionPipeline {
     /// Decompresses data packed with `CompressionPipeline` under default (-O2 Balanced) profile.
     #[inline]
-    pub fn decompress_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    pub fn decompress_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
         Self::decompress_with_profile_u32(OptimizationProfile::Balanced, src, dst)
     }
 
@@ -370,7 +374,7 @@ impl DecompressionPipeline {
         profile: OptimizationProfile,
         src: &[u8],
         dst: &mut [u32],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         match profile {
             OptimizationProfile::Direct => Self::decompress_direct_u32(src, dst),
             OptimizationProfile::Realtime => Self::decompress_realtime_u32(src, dst),
@@ -380,9 +384,9 @@ impl DecompressionPipeline {
     }
 
     /// Decompresses data prefixed with a 1-byte profile tag.
-    pub fn decompress_tagged_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    pub fn decompress_tagged_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
         if src.is_empty() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 1,
                 available: 0,
             });
@@ -393,10 +397,10 @@ impl DecompressionPipeline {
     }
 
     /// -O0 Direct decompression.
-    pub fn decompress_direct_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    pub fn decompress_direct_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
         let required = dst.len() * 4;
         if src.len() < required {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required,
                 available: src.len(),
             });
@@ -408,12 +412,12 @@ impl DecompressionPipeline {
     }
 
     /// -O1 Realtime decompression.
-    pub fn decompress_realtime_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    pub fn decompress_realtime_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
         if dst.is_empty() {
             return Ok(0);
         }
         if src.is_empty() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 1,
                 available: 0,
             });
@@ -424,7 +428,7 @@ impl DecompressionPipeline {
             1 => {
                 let required = 1 + dst.len();
                 if src.len() < required {
-                    return Err(CbpError::UnexpectedEof {
+                    return Err(StitchError::UnexpectedEof {
                         required,
                         available: src.len(),
                     });
@@ -437,7 +441,7 @@ impl DecompressionPipeline {
             2 => {
                 let required = 1 + dst.len() * 2;
                 if src.len() < required {
-                    return Err(CbpError::UnexpectedEof {
+                    return Err(StitchError::UnexpectedEof {
                         required,
                         available: src.len(),
                     });
@@ -451,7 +455,7 @@ impl DecompressionPipeline {
             4 => {
                 let required = 1 + dst.len() * 4;
                 if src.len() < required {
-                    return Err(CbpError::UnexpectedEof {
+                    return Err(StitchError::UnexpectedEof {
                         required,
                         available: src.len(),
                     });
@@ -461,17 +465,17 @@ impl DecompressionPipeline {
                 }
                 Ok(required)
             }
-            _ => Err(CbpError::InvalidBitWidth(mode)),
+            _ => Err(StitchError::InvalidBitWidth(mode)),
         }
     }
 
     /// -O2 Balanced decompression.
-    fn decompress_balanced_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    fn decompress_balanced_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
         if dst.is_empty() {
             return Ok(0);
         }
         if src.len() < 4 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 4,
                 available: src.len(),
             });
@@ -490,12 +494,12 @@ impl DecompressionPipeline {
     }
 
     /// -O3 MaxDensity decompression.
-    pub fn decompress_max_density_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    pub fn decompress_max_density_u32(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
         if dst.is_empty() {
             return Ok(0);
         }
         if src.is_empty() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 1,
                 available: 0,
             });
@@ -511,7 +515,7 @@ impl DecompressionPipeline {
                 let (_elements, bytes_consumed) = RleTransformer::decode_u32_ext(&src[1..], dst)?;
                 Ok(1 + bytes_consumed)
             }
-            _ => Err(CbpError::PayloadDecodeError),
+            _ => Err(StitchError::PayloadDecodeError),
         }
     }
 
@@ -520,12 +524,12 @@ impl DecompressionPipeline {
         src: &[u8],
         scratch_u32: &mut [u32],
         dst: &mut [i32],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         if dst.is_empty() {
             return Ok(0);
         }
         if src.len() < 4 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 4,
                 available: src.len(),
             });
@@ -539,7 +543,7 @@ impl DecompressionPipeline {
         }
 
         if scratch_u32.len() < dst.len() - 1 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: dst.len() - 1,
                 available: scratch_u32.len(),
             });

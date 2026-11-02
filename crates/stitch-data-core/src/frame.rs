@@ -1,7 +1,7 @@
 //! CBP Frame framing structures according to Version 1 Axiom.
 
 use crate::crc::crc32_castagnoli;
-use crate::error::CbpError;
+use crate::error::StitchError;
 use crate::varint::{decode_prefix_varint, encode_prefix_varint};
 
 /// Canonical Magic byte for Compact Binary Protocol (`0xCB`).
@@ -23,11 +23,14 @@ pub const MAX_HEADER_SIZE: usize = 20;
 pub const MAX_FRAME_TOTAL_LEN: usize = MAX_HEADER_SIZE + MAX_FRAME_PAYLOAD_LEN + 4;
 
 /// Helper function to safely calculate total frame length: `header_len + payload_len + 4`.
-/// Returns `Err(CbpError::FrameTooLarge)` or `Err(CbpError::PayloadDecodeError)` on overflow.
+/// Returns `Err(StitchError::FrameTooLarge)` or `Err(StitchError::PayloadDecodeError)` on overflow.
 #[inline]
-pub fn checked_frame_total_len(header_len: usize, payload_len: usize) -> Result<usize, CbpError> {
+pub fn checked_frame_total_len(
+    header_len: usize,
+    payload_len: usize,
+) -> Result<usize, StitchError> {
     if payload_len > MAX_FRAME_PAYLOAD_LEN {
-        return Err(CbpError::FrameTooLarge {
+        return Err(StitchError::FrameTooLarge {
             size: payload_len as u64,
             limit: MAX_FRAME_PAYLOAD_LEN,
         });
@@ -35,10 +38,10 @@ pub fn checked_frame_total_len(header_len: usize, payload_len: usize) -> Result<
 
     let with_payload = header_len
         .checked_add(payload_len)
-        .ok_or(CbpError::PayloadDecodeError)?;
+        .ok_or(StitchError::PayloadDecodeError)?;
     let total = with_payload
         .checked_add(4)
-        .ok_or(CbpError::PayloadDecodeError)?;
+        .ok_or(StitchError::PayloadDecodeError)?;
     Ok(total)
 }
 
@@ -123,7 +126,7 @@ pub struct FrameHeader {
 
 impl FrameHeader {
     /// Serializes this frame header into `buf`. Returns bytes written.
-    pub fn write_into(&self, buf: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn write_into(&self, buf: &mut [u8]) -> Result<usize, StitchError> {
         let has_schema = self.schema_hash.is_some();
         let mut flags = self.flags;
         flags.has_schema_hash = has_schema;
@@ -133,7 +136,7 @@ impl FrameHeader {
         let required_header_len = 3 + varint_len + schema_len;
 
         if buf.len() < required_header_len {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: required_header_len,
                 available: buf.len(),
             });
@@ -159,32 +162,32 @@ impl FrameHeader {
     }
 
     /// Parses a frame header from a byte slice. Returns `(FrameHeader, bytes_consumed)`.
-    pub fn parse(buf: &[u8]) -> Result<(Self, usize), CbpError> {
+    pub fn parse(buf: &[u8]) -> Result<(Self, usize), StitchError> {
         if buf.len() < 3 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 3,
                 available: buf.len(),
             });
         }
 
         if buf[0] != CBP_MAGIC {
-            return Err(CbpError::InvalidMagic(buf[0]));
+            return Err(StitchError::InvalidMagic(buf[0]));
         }
         if buf[1] != CBP_VERSION_1 {
-            return Err(CbpError::UnsupportedVersion(buf[1]));
+            return Err(StitchError::UnsupportedVersion(buf[1]));
         }
 
         let byte2 = buf[2];
         // Enforce reserved bits 6..7 are strictly zero
         if (byte2 & 0b1100_0000) != 0 {
-            return Err(CbpError::InvalidHeaderFlags(byte2));
+            return Err(StitchError::InvalidHeaderFlags(byte2));
         }
 
         let profile = OptimizationProfile::from_bits(byte2 & 0b11);
         let flag_bits = (byte2 >> 2) & 0b1111;
         // Verify reserved flag bit 3 (bit 5 of byte 2) is zero
         if (flag_bits & 0b1000) != 0 {
-            return Err(CbpError::InvalidHeaderFlags(byte2));
+            return Err(StitchError::InvalidHeaderFlags(byte2));
         }
         let flags = FrameFlags::from_bits(flag_bits);
 
@@ -193,13 +196,13 @@ impl FrameHeader {
         offset += varint_len;
 
         let payload_len =
-            usize::try_from(raw_payload_len).map_err(|_| CbpError::FrameTooLarge {
+            usize::try_from(raw_payload_len).map_err(|_| StitchError::FrameTooLarge {
                 size: raw_payload_len,
                 limit: MAX_FRAME_PAYLOAD_LEN,
             })?;
 
         if payload_len > MAX_FRAME_PAYLOAD_LEN {
-            return Err(CbpError::FrameTooLarge {
+            return Err(StitchError::FrameTooLarge {
                 size: raw_payload_len,
                 limit: MAX_FRAME_PAYLOAD_LEN,
             });
@@ -208,7 +211,7 @@ impl FrameHeader {
         let mut schema_hash = None;
         if flags.has_schema_hash {
             if buf.len() < offset + 8 {
-                return Err(CbpError::UnexpectedEof {
+                return Err(StitchError::UnexpectedEof {
                     required: offset + 8,
                     available: buf.len(),
                 });
@@ -236,9 +239,9 @@ pub fn pack_frame(
     header: &FrameHeader,
     payload: &[u8],
     out_buf: &mut [u8],
-) -> Result<usize, CbpError> {
+) -> Result<usize, StitchError> {
     if payload.len() > MAX_FRAME_PAYLOAD_LEN {
-        return Err(CbpError::FrameTooLarge {
+        return Err(StitchError::FrameTooLarge {
             size: payload.len() as u64,
             limit: MAX_FRAME_PAYLOAD_LEN,
         });
@@ -258,7 +261,7 @@ pub fn pack_frame(
     let total_len = checked_frame_total_len(header_len, payload.len())?;
 
     if out_buf.len() < total_len {
-        return Err(CbpError::UnexpectedEof {
+        return Err(StitchError::UnexpectedEof {
             required: total_len,
             available: out_buf.len(),
         });
@@ -276,12 +279,12 @@ pub fn pack_frame(
 }
 
 /// Unpacks and validates a CBP frame from `buf`. Returns `(FrameHeader, payload_slice)`.
-pub fn unpack_frame(buf: &[u8]) -> Result<(FrameHeader, &[u8]), CbpError> {
+pub fn unpack_frame(buf: &[u8]) -> Result<(FrameHeader, &[u8]), StitchError> {
     let (header, header_len) = FrameHeader::parse(buf)?;
     let expected_total = checked_frame_total_len(header_len, header.payload_len)?;
 
     if buf.len() < expected_total {
-        return Err(CbpError::UnexpectedEof {
+        return Err(StitchError::UnexpectedEof {
             required: expected_total,
             available: buf.len(),
         });
@@ -293,7 +296,7 @@ pub fn unpack_frame(buf: &[u8]) -> Result<(FrameHeader, &[u8]), CbpError> {
     let actual_crc = crc32_castagnoli(&buf[..header_len + header.payload_len]);
 
     if expected_crc != actual_crc {
-        return Err(CbpError::ChecksumMismatch {
+        return Err(StitchError::ChecksumMismatch {
             expected: expected_crc,
             actual: actual_crc,
         });
@@ -368,10 +371,10 @@ impl<'a> VectoredFrame<'a> {
 
     /// Copies the entire vectored frame contiguously into `dst`. Returns total bytes written.
     #[inline]
-    pub fn copy_to_slice(&self, dst: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn copy_to_slice(&self, dst: &mut [u8]) -> Result<usize, StitchError> {
         let total = self.total_len();
         if dst.len() < total {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: total,
                 available: dst.len(),
             });
@@ -395,9 +398,9 @@ impl<'a> VectoredFrame<'a> {
 pub fn pack_frame_vectored<'a>(
     header: &FrameHeader,
     payload: &'a [u8],
-) -> Result<VectoredFrame<'a>, CbpError> {
+) -> Result<VectoredFrame<'a>, StitchError> {
     if payload.len() > MAX_FRAME_PAYLOAD_LEN {
-        return Err(CbpError::FrameTooLarge {
+        return Err(StitchError::FrameTooLarge {
             size: payload.len() as u64,
             limit: MAX_FRAME_PAYLOAD_LEN,
         });
@@ -472,9 +475,9 @@ impl<'a> FrameReader<'a> {
     ///
     /// - Returns `Ok(Some(frame))` if a valid frame was unpacked and verified.
     /// - Returns `Ok(None)` if all bytes have been consumed (`remaining().is_empty()`).
-    /// - Returns `Err(CbpError::UnexpectedEof { .. })` if the remaining buffer contains a partial frame.
+    /// - Returns `Err(StitchError::UnexpectedEof { .. })` if the remaining buffer contains a partial frame.
     /// - Returns `Err(...)` if the magic byte, version, or CRC32 checksum is invalid.
-    pub fn next_frame(&mut self) -> Result<Option<FrameView<'a>>, CbpError> {
+    pub fn next_frame(&mut self) -> Result<Option<FrameView<'a>>, StitchError> {
         let remaining = self.remaining();
         if remaining.is_empty() {
             return Ok(None);
@@ -484,7 +487,7 @@ impl<'a> FrameReader<'a> {
         let expected_total = checked_frame_total_len(header_len, header.payload_len)?;
 
         if remaining.len() < expected_total {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: expected_total,
                 available: remaining.len(),
             });
@@ -500,7 +503,7 @@ impl<'a> FrameReader<'a> {
             crate::crc::crc32_castagnoli(&remaining[..header_len + header.payload_len]);
 
         if expected_crc != actual_crc {
-            return Err(CbpError::ChecksumMismatch {
+            return Err(StitchError::ChecksumMismatch {
                 expected: expected_crc,
                 actual: actual_crc,
             });
@@ -518,7 +521,7 @@ impl<'a> FrameReader<'a> {
 }
 
 impl<'a> Iterator for FrameReader<'a> {
-    type Item = Result<FrameView<'a>, CbpError>;
+    type Item = Result<FrameView<'a>, StitchError>;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
@@ -673,7 +676,7 @@ mod tests {
         let err = reader.next_frame().unwrap_err();
 
         match err {
-            CbpError::UnexpectedEof {
+            StitchError::UnexpectedEof {
                 required,
                 available,
             } => {
@@ -700,7 +703,7 @@ mod tests {
         storage[5] ^= 0xFF;
 
         let res = unpack_frame(&storage[..total]);
-        assert!(matches!(res, Err(CbpError::ChecksumMismatch { .. })));
+        assert!(matches!(res, Err(StitchError::ChecksumMismatch { .. })));
     }
 
     #[test]
@@ -711,17 +714,17 @@ mod tests {
         // Set reserved bit 6 in byte2 (0b0100_0000)
         buf[2] = 0b0100_0000;
         let res = FrameHeader::parse(&buf);
-        assert_eq!(res, Err(CbpError::InvalidHeaderFlags(0b0100_0000)));
+        assert_eq!(res, Err(StitchError::InvalidHeaderFlags(0b0100_0000)));
 
         // Set reserved bit 7 in byte2 (0b1000_0000)
         buf[2] = 0b1000_0000;
         let res2 = FrameHeader::parse(&buf);
-        assert_eq!(res2, Err(CbpError::InvalidHeaderFlags(0b1000_0000)));
+        assert_eq!(res2, Err(StitchError::InvalidHeaderFlags(0b1000_0000)));
 
         // Set reserved flag bit 3 (bit 5 in byte2, 0b0010_0000)
         buf[2] = 0b0010_0000;
         let res3 = FrameHeader::parse(&buf);
-        assert_eq!(res3, Err(CbpError::InvalidHeaderFlags(0b0010_0000)));
+        assert_eq!(res3, Err(StitchError::InvalidHeaderFlags(0b0010_0000)));
     }
 
     #[test]

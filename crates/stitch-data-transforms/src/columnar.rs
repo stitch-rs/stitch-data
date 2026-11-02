@@ -6,7 +6,7 @@
 
 use core::mem::MaybeUninit;
 
-use stitch_data_core::error::CbpError;
+use stitch_data_core::error::StitchError;
 use stitch_data_core::frame::{
     FrameFlags, FrameHeader, OptimizationProfile, pack_frame, unpack_frame,
 };
@@ -55,7 +55,11 @@ pub struct ColumnarBlockWriter<'a> {
 
 impl<'a> ColumnarBlockWriter<'a> {
     /// Begins a new columnar block with `row_count` rows and `num_columns` columns.
-    pub fn new(row_count: usize, num_columns: usize, dst: &'a mut [u8]) -> Result<Self, CbpError> {
+    pub fn new(
+        row_count: usize,
+        num_columns: usize,
+        dst: &'a mut [u8],
+    ) -> Result<Self, StitchError> {
         let mut offset = 0;
         let rlen = stitch_data_core::varint::encode_prefix_varint(row_count as u64, dst);
         offset += rlen;
@@ -73,13 +77,17 @@ impl<'a> ColumnarBlockWriter<'a> {
     }
 
     /// Writes a compressed column payload into the block.
-    pub fn write_column(&mut self, codec: ColumnCodecTag, payload: &[u8]) -> Result<(), CbpError> {
+    pub fn write_column(
+        &mut self,
+        codec: ColumnCodecTag,
+        payload: &[u8],
+    ) -> Result<(), StitchError> {
         if self.columns_written >= self.num_columns {
-            return Err(CbpError::PayloadDecodeError);
+            return Err(StitchError::PayloadDecodeError);
         }
 
         if self.dst.len() < self.offset + 1 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: self.offset + 1,
                 available: self.dst.len(),
             });
@@ -94,7 +102,7 @@ impl<'a> ColumnarBlockWriter<'a> {
         self.offset += len_bytes;
 
         if self.dst.len() < self.offset + payload.len() {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: self.offset + payload.len(),
                 available: self.dst.len(),
             });
@@ -106,9 +114,9 @@ impl<'a> ColumnarBlockWriter<'a> {
     }
 
     /// Finalizes the block and returns total bytes written.
-    pub fn finish(self) -> Result<usize, CbpError> {
+    pub fn finish(self) -> Result<usize, StitchError> {
         if self.columns_written != self.num_columns {
-            return Err(CbpError::PayloadDecodeError);
+            return Err(StitchError::PayloadDecodeError);
         }
         Ok(self.offset)
     }
@@ -125,15 +133,15 @@ pub struct ColumnarBlockReader<'a> {
 
 impl<'a> ColumnarBlockReader<'a> {
     /// Parses the header of a columnar block.
-    pub fn new(src: &'a [u8]) -> Result<Self, CbpError> {
+    pub fn new(src: &'a [u8]) -> Result<Self, StitchError> {
         let mut offset = 0;
         let (rc, rlen) = stitch_data_core::varint::decode_prefix_varint(src)?;
         offset += rlen;
         let (cc, clen) = stitch_data_core::varint::decode_prefix_varint(&src[offset..])?;
         offset += clen;
 
-        let row_count = usize::try_from(rc).map_err(|_| CbpError::PayloadDecodeError)?;
-        let num_columns = usize::try_from(cc).map_err(|_| CbpError::PayloadDecodeError)?;
+        let row_count = usize::try_from(rc).map_err(|_| StitchError::PayloadDecodeError)?;
+        let num_columns = usize::try_from(cc).map_err(|_| StitchError::PayloadDecodeError)?;
 
         Ok(Self {
             src,
@@ -163,28 +171,28 @@ impl<'a> ColumnarBlockReader<'a> {
     }
 
     /// Reads the next column descriptor and borrowed compressed payload slice.
-    pub fn next_column(&mut self) -> Result<(ColumnCodecTag, &'a [u8]), CbpError> {
+    pub fn next_column(&mut self) -> Result<(ColumnCodecTag, &'a [u8]), StitchError> {
         if self.columns_read >= self.num_columns {
-            return Err(CbpError::PayloadDecodeError);
+            return Err(StitchError::PayloadDecodeError);
         }
 
         if self.src.len() < self.offset + 1 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: self.offset + 1,
                 available: self.src.len(),
             });
         }
         let tag_byte = self.src[self.offset];
-        let tag = ColumnCodecTag::from_u8(tag_byte).ok_or(CbpError::PayloadDecodeError)?;
+        let tag = ColumnCodecTag::from_u8(tag_byte).ok_or(StitchError::PayloadDecodeError)?;
         self.offset += 1;
 
         let (col_len_u64, len_bytes) =
             stitch_data_core::varint::decode_prefix_varint(&self.src[self.offset..])?;
         self.offset += len_bytes;
-        let col_len = usize::try_from(col_len_u64).map_err(|_| CbpError::PayloadDecodeError)?;
+        let col_len = usize::try_from(col_len_u64).map_err(|_| StitchError::PayloadDecodeError)?;
 
         if self.src.len() < self.offset + col_len {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: self.offset + col_len,
                 available: self.src.len(),
             });
@@ -203,13 +211,13 @@ pub fn encode_u32_column(
     slice: &[u32],
     scratch: &mut [u32],
     dst: &mut [u8],
-) -> Result<usize, CbpError> {
+) -> Result<usize, StitchError> {
     let mut pipeline = crate::pipeline::CompressionPipeline::new();
     pipeline.compress_max_density_u32(slice, scratch, dst)
 }
 
 /// Decodes an unsigned 32-bit integer column from `src` into `dst`.
-pub fn decode_u32_column(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+pub fn decode_u32_column(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
     crate::pipeline::DecompressionPipeline::decompress_max_density_u32(src, dst)
 }
 
@@ -218,7 +226,7 @@ pub fn encode_i32_column(
     slice: &[i32],
     scratch: &mut [u32],
     dst: &mut [u8],
-) -> Result<usize, CbpError> {
+) -> Result<usize, StitchError> {
     crate::pipeline::CompressionPipeline::compress_i32(slice, scratch, dst)
 }
 
@@ -227,24 +235,24 @@ pub fn decode_i32_column(
     src: &[u8],
     scratch: &mut [u32],
     dst: &mut [i32],
-) -> Result<usize, CbpError> {
+) -> Result<usize, StitchError> {
     crate::pipeline::DecompressionPipeline::decompress_i32(src, scratch, dst)
 }
 
 /// Encodes an IEEE-754 32-bit float column slice into `dst` using Gorilla XOR delta compression.
-pub fn encode_f32_column(slice: &[f32], dst: &mut [u8]) -> Result<usize, CbpError> {
+pub fn encode_f32_column(slice: &[f32], dst: &mut [u8]) -> Result<usize, StitchError> {
     crate::float::GorillaCompressor::compress_f32(slice, dst)
 }
 
 /// Decodes an IEEE-754 32-bit float column from `src` into `dst`.
-pub fn decode_f32_column(src: &[u8], dst: &mut [f32]) -> Result<usize, CbpError> {
+pub fn decode_f32_column(src: &[u8], dst: &mut [f32]) -> Result<usize, StitchError> {
     crate::float::GorillaCompressor::decompress_f32(src, dst)
 }
 
 /// Encodes raw POD bytes without transformation.
-pub fn encode_raw_column(bytes: &[u8], dst: &mut [u8]) -> Result<usize, CbpError> {
+pub fn encode_raw_column(bytes: &[u8], dst: &mut [u8]) -> Result<usize, StitchError> {
     if dst.len() < bytes.len() {
-        return Err(CbpError::UnexpectedEof {
+        return Err(StitchError::UnexpectedEof {
             required: bytes.len(),
             available: dst.len(),
         });
@@ -254,9 +262,9 @@ pub fn encode_raw_column(bytes: &[u8], dst: &mut [u8]) -> Result<usize, CbpError
 }
 
 /// Decodes raw POD bytes.
-pub fn decode_raw_column(src: &[u8], dst: &mut [u8]) -> Result<usize, CbpError> {
+pub fn decode_raw_column(src: &[u8], dst: &mut [u8]) -> Result<usize, StitchError> {
     if src.len() < dst.len() {
-        return Err(CbpError::UnexpectedEof {
+        return Err(StitchError::UnexpectedEof {
             required: dst.len(),
             available: src.len(),
         });
@@ -266,27 +274,27 @@ pub fn decode_raw_column(src: &[u8], dst: &mut [u8]) -> Result<usize, CbpError> 
 }
 
 /// Encodes a slice of `u32` into `dst` using Run-Length Encoding.
-pub fn encode_rle_column(slice: &[u32], dst: &mut [u8]) -> Result<usize, CbpError> {
+pub fn encode_rle_column(slice: &[u32], dst: &mut [u8]) -> Result<usize, StitchError> {
     crate::rle::RleTransformer::encode_u32(slice, dst)
 }
 
 /// Decodes an RLE-encoded sequence from `src` into `dst`.
 ///
 /// Returns the number of elements written to `dst`.
-pub fn decode_rle_column(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+pub fn decode_rle_column(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
     let (elements, _bytes) = crate::rle::RleTransformer::decode_u32_ext(src, dst)?;
     Ok(elements)
 }
 
 /// Encodes a categorical slice of `u32` symbols into `dst` using bounded Dictionary encoding.
-pub fn encode_dict_column(slice: &[u32], dst: &mut [u8]) -> Result<usize, CbpError> {
+pub fn encode_dict_column(slice: &[u32], dst: &mut [u8]) -> Result<usize, StitchError> {
     crate::dict::DictTransformer::encode_u32(slice, dst)
 }
 
 /// Decodes a dictionary-compressed column from `src` into `dst`.
 ///
 /// Returns the number of elements written to `dst`.
-pub fn decode_dict_column(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+pub fn decode_dict_column(src: &[u8], dst: &mut [u32]) -> Result<usize, StitchError> {
     let (elements, _bytes) = crate::dict::DictTransformer::decode_u32(src, dst)?;
     Ok(elements)
 }
@@ -359,7 +367,7 @@ impl<T: Record, const CAPACITY: usize> RecordBatchBuilder<T, CAPACITY> {
     ///
     /// When `self.profile == OptimizationProfile::MaxDensity`, true columnar SoA block
     /// compression is automatically utilized.
-    pub fn flush(&mut self, scratch: &mut [u8], dst: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn flush(&mut self, scratch: &mut [u8], dst: &mut [u8]) -> Result<usize, StitchError> {
         if self.count == 0 {
             return Ok(0);
         }
@@ -395,7 +403,7 @@ impl<T: Record, const CAPACITY: usize> RecordBatchBuilder<T, CAPACITY> {
         &mut self,
         scratch: &mut [u8],
         dst: &mut [u8],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         if self.count == 0 {
             return Ok(0);
         }
@@ -440,12 +448,12 @@ impl<T: Record, const CAPACITY: usize> Drop for RecordBatchBuilder<T, CAPACITY> 
 }
 
 /// Decodes a framed columnar batch packet into `dst`.
-pub fn decode_columnar_frame<T: Record>(frame: &[u8], dst: &mut [T]) -> Result<usize, CbpError> {
+pub fn decode_columnar_frame<T: Record>(frame: &[u8], dst: &mut [T]) -> Result<usize, StitchError> {
     let (header, payload) = unpack_frame(frame)?;
     if let Some(hash) = header.schema_hash
         && hash != T::SCHEMA_HASH
     {
-        return Err(CbpError::SchemaMismatch {
+        return Err(StitchError::SchemaMismatch {
             expected: T::SCHEMA_HASH,
             actual: hash,
         });

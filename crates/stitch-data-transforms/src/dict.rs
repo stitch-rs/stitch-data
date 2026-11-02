@@ -4,7 +4,7 @@
 //! Compacts repetitive sets of values into a bounded dictionary and a bit-packed
 //! or compact index sequence.
 
-use stitch_data_core::error::CbpError;
+use stitch_data_core::error::StitchError;
 
 /// Stateless Dictionary encoder and decoder for 32-bit categorical values.
 pub struct DictTransformer;
@@ -23,10 +23,10 @@ impl DictTransformer {
     ///   - If `DictSize <= 256`: 1 byte per index (or bitpacked if width <= 8)
     ///
     /// Returns the number of bytes written to `dst`.
-    pub fn encode_u32(src: &[u32], dst: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn encode_u32(src: &[u32], dst: &mut [u8]) -> Result<usize, StitchError> {
         if src.is_empty() {
             if dst.len() < 2 {
-                return Err(CbpError::UnexpectedEof {
+                return Err(StitchError::UnexpectedEof {
                     required: 2,
                     available: dst.len(),
                 });
@@ -51,7 +51,7 @@ impl DictTransformer {
             if !found {
                 if dict_len >= Self::MAX_ENTRIES {
                     // Dictionary overflow - fallback or report error
-                    return Err(CbpError::PayloadDecodeError);
+                    return Err(StitchError::PayloadDecodeError);
                 }
                 dict[dict_len] = val;
                 dict_len += 1;
@@ -62,13 +62,13 @@ impl DictTransformer {
         let dict_header_len = 2usize;
         let dict_bytes = dict_len
             .checked_mul(4)
-            .ok_or(CbpError::PayloadDecodeError)?;
+            .ok_or(StitchError::PayloadDecodeError)?;
         let header_total = dict_header_len
             .checked_add(dict_bytes)
-            .ok_or(CbpError::PayloadDecodeError)?;
+            .ok_or(StitchError::PayloadDecodeError)?;
 
         if dst.len() < header_total {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: header_total,
                 available: dst.len(),
             });
@@ -90,9 +90,9 @@ impl DictTransformer {
             let indices_len = src.len();
             let total_required = offset
                 .checked_add(indices_len)
-                .ok_or(CbpError::PayloadDecodeError)?;
+                .ok_or(StitchError::PayloadDecodeError)?;
             if dst.len() < total_required {
-                return Err(CbpError::UnexpectedEof {
+                return Err(StitchError::UnexpectedEof {
                     required: total_required,
                     available: dst.len(),
                 });
@@ -105,16 +105,16 @@ impl DictTransformer {
             }
             Ok(offset)
         } else {
-            Err(CbpError::PayloadDecodeError)
+            Err(StitchError::PayloadDecodeError)
         }
     }
 
     /// Decodes a dictionary-compressed stream into `dst`.
     ///
     /// Returns `(elements_decoded, bytes_consumed)`.
-    pub fn decode_u32(src: &[u8], dst: &mut [u32]) -> Result<(usize, usize), CbpError> {
+    pub fn decode_u32(src: &[u8], dst: &mut [u32]) -> Result<(usize, usize), StitchError> {
         if src.len() < 2 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 2,
                 available: src.len(),
             });
@@ -123,20 +123,20 @@ impl DictTransformer {
         let dict_len = u16::from_le_bytes(src[..2].try_into().unwrap()) as usize;
         let dict_bytes = dict_len
             .checked_mul(4)
-            .ok_or(CbpError::PayloadDecodeError)?;
+            .ok_or(StitchError::PayloadDecodeError)?;
         let header_total = 2usize
             .checked_add(dict_bytes)
-            .ok_or(CbpError::PayloadDecodeError)?;
+            .ok_or(StitchError::PayloadDecodeError)?;
 
         if src.len() < header_total {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: header_total,
                 available: src.len(),
             });
         }
 
         if dict_len > Self::MAX_ENTRIES {
-            return Err(CbpError::PayloadDecodeError);
+            return Err(StitchError::PayloadDecodeError);
         }
 
         let mut dict = [0u32; Self::MAX_ENTRIES];
@@ -166,7 +166,7 @@ impl DictTransformer {
         for (i, item) in dst[..to_decode].iter_mut().enumerate() {
             let idx = src[offset + i] as usize;
             if idx >= dict_len {
-                return Err(CbpError::PayloadDecodeError);
+                return Err(StitchError::PayloadDecodeError);
             }
             *item = dict[idx];
         }

@@ -4,7 +4,7 @@
 //! and forces an unpredictable branch in sequential loops, PrefixVarint stores the
 //! byte count as a series of trailing/leading zeros or ones in the first byte.
 
-use crate::error::CbpError;
+use crate::error::StitchError;
 
 /// Returns the number of bytes required to encode `value` as a PrefixVarint.
 #[inline]
@@ -101,9 +101,9 @@ pub fn encode_prefix_varint(value: u64, buf: &mut [u8]) -> usize {
 
 /// Decodes a `u64` from a prefix-varint byte buffer, returning `(value, bytes_consumed)`.
 #[inline]
-pub fn decode_prefix_varint(buf: &[u8]) -> Result<(u64, usize), CbpError> {
+pub fn decode_prefix_varint(buf: &[u8]) -> Result<(u64, usize), StitchError> {
     if buf.is_empty() {
-        return Err(CbpError::UnexpectedEof {
+        return Err(StitchError::UnexpectedEof {
             required: 1,
             available: 0,
         });
@@ -119,7 +119,7 @@ pub fn decode_prefix_varint(buf: &[u8]) -> Result<(u64, usize), CbpError> {
 
     if b0 == 0x00 {
         if buf.len() < 9 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 9,
                 available: buf.len(),
             });
@@ -129,7 +129,7 @@ pub fn decode_prefix_varint(buf: &[u8]) -> Result<(u64, usize), CbpError> {
     }
 
     if buf.len() < len {
-        return Err(CbpError::UnexpectedEof {
+        return Err(StitchError::UnexpectedEof {
             required: len,
             available: buf.len(),
         });

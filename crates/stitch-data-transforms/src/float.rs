@@ -4,7 +4,7 @@
 //! velocities, positions, and coordinates) without precision loss.
 
 use stitch_data_core::bitstream::{BitReader, BitWriter};
-use stitch_data_core::error::CbpError;
+use stitch_data_core::error::StitchError;
 
 /// Stateless compressor for floating-point streams using Gorilla XOR delta encoding.
 pub struct GorillaCompressor;
@@ -14,12 +14,12 @@ impl GorillaCompressor {
     ///
     /// Bit-exact: preserves all IEEE-754 bit representations including sign, mantissa,
     /// exponent, subnormals, NaNs, and infinities.
-    pub fn compress_f32(src: &[f32], dst: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn compress_f32(src: &[f32], dst: &mut [u8]) -> Result<usize, StitchError> {
         if src.is_empty() {
             return Ok(0);
         }
         if dst.len() < 4 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 4,
                 available: dst.len(),
             });
@@ -83,12 +83,12 @@ impl GorillaCompressor {
     }
 
     /// Decompresses an `f32` stream into `dst`.
-    pub fn decompress_f32(src: &[u8], dst: &mut [f32]) -> Result<usize, CbpError> {
+    pub fn decompress_f32(src: &[u8], dst: &mut [f32]) -> Result<usize, StitchError> {
         if dst.is_empty() {
             return Ok(0);
         }
         if src.len() < 4 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 4,
                 available: src.len(),
             });
@@ -124,7 +124,7 @@ impl GorillaCompressor {
                 };
 
                 if (leading as usize) + (len as usize) > 32 || len == 0 {
-                    return Err(CbpError::PayloadDecodeError);
+                    return Err(StitchError::PayloadDecodeError);
                 }
 
                 let meaningful_bits = reader.read_bits(len)? as u32;
@@ -141,12 +141,12 @@ impl GorillaCompressor {
     }
 
     /// Compresses a slice of `f64` values into `dst`.
-    pub fn compress_f64(src: &[f64], dst: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn compress_f64(src: &[f64], dst: &mut [u8]) -> Result<usize, StitchError> {
         if src.is_empty() {
             return Ok(0);
         }
         if dst.len() < 8 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 8,
                 available: dst.len(),
             });
@@ -204,12 +204,12 @@ impl GorillaCompressor {
     }
 
     /// Decompresses an `f64` stream into `dst`.
-    pub fn decompress_f64(src: &[u8], dst: &mut [f64]) -> Result<usize, CbpError> {
+    pub fn decompress_f64(src: &[u8], dst: &mut [f64]) -> Result<usize, StitchError> {
         if dst.is_empty() {
             return Ok(0);
         }
         if src.len() < 8 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: 8,
                 available: src.len(),
             });
@@ -244,7 +244,7 @@ impl GorillaCompressor {
                 };
 
                 if (leading as usize) + (len as usize) > 64 || len == 0 {
-                    return Err(CbpError::PayloadDecodeError);
+                    return Err(StitchError::PayloadDecodeError);
                 }
 
                 let meaningful_bits = reader.read_bits(len)?;

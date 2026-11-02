@@ -244,12 +244,12 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
             const SCHEMA_HASH: u64 = #schema_hash_val;
 
             #[inline]
-            fn encode_record(&self, dst: &mut [u8]) -> ::core::result::Result<usize, ::stitch_data::error::CbpError> {
+            fn encode_record(&self, dst: &mut [u8]) -> ::core::result::Result<usize, ::stitch_data::error::StitchError> {
                 self.encode_record_profile(::stitch_data::frame::OptimizationProfile::Balanced, dst)
             }
 
             #[inline]
-            fn decode_record(src: &[u8]) -> ::core::result::Result<(Self, usize), ::stitch_data::error::CbpError> {
+            fn decode_record(src: &[u8]) -> ::core::result::Result<(Self, usize), ::stitch_data::error::StitchError> {
                 Self::decode_record_profile(src, ::stitch_data::frame::OptimizationProfile::Balanced)
             }
 
@@ -257,7 +257,7 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
                 &self,
                 profile: ::stitch_data::frame::OptimizationProfile,
                 dst: &mut [u8],
-            ) -> ::core::result::Result<usize, ::stitch_data::error::CbpError> {
+            ) -> ::core::result::Result<usize, ::stitch_data::error::StitchError> {
                 let mut offset = 0usize;
                 match profile {
                     ::stitch_data::frame::OptimizationProfile::Direct => {
@@ -273,7 +273,7 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
             fn decode_record_profile(
                 src: &[u8],
                 profile: ::stitch_data::frame::OptimizationProfile,
-            ) -> ::core::result::Result<(Self, usize), ::stitch_data::error::CbpError> {
+            ) -> ::core::result::Result<(Self, usize), ::stitch_data::error::StitchError> {
                 let mut offset = 0usize;
                 match profile {
                     ::stitch_data::frame::OptimizationProfile::Direct => {
@@ -300,7 +300,7 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
             fn encode_columnar_batch(
                 records: &[Self],
                 dst: &mut [u8],
-            ) -> ::core::result::Result<usize, ::stitch_data::error::CbpError> {
+            ) -> ::core::result::Result<usize, ::stitch_data::error::StitchError> {
                 if records.is_empty() {
                     return Ok(0);
                 }
@@ -324,7 +324,7 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
             fn decode_columnar_batch(
                 src: &[u8],
                 dst: &mut [Self],
-            ) -> ::core::result::Result<usize, ::stitch_data::error::CbpError> {
+            ) -> ::core::result::Result<usize, ::stitch_data::error::StitchError> {
                 if src.is_empty() || dst.is_empty() {
                     return Ok(0);
                 }
@@ -334,7 +334,7 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
                     let mut reader = ::stitch_data::columnar::ColumnarBlockReader::new(&src[src_offset..])?;
                     let block_rows = reader.row_count();
                     if total_decoded + block_rows > dst.len() {
-                        return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                        return Err(::stitch_data::error::StitchError::UnexpectedEof {
                             required: total_decoded + block_rows,
                             available: dst.len(),
                         });
@@ -444,7 +444,7 @@ fn generate_bitstream_segment(
         encode_writes.push(quote! {
             let val = #val_expr;
             if val > #max_val {
-                return Err(::stitch_data::error::CbpError::InvalidBitWidth(#width));
+                return Err(::stitch_data::error::StitchError::InvalidBitWidth(#width));
             }
             bit_writer.write_bits(val, #width)?;
         });
@@ -453,14 +453,14 @@ fn generate_bitstream_segment(
             quote! { let #name = raw != 0; }
         } else {
             quote! {
-                let #name = <#ty>::try_from(raw).map_err(|_| ::stitch_data::error::CbpError::PayloadDecodeError)?;
+                let #name = <#ty>::try_from(raw).map_err(|_| ::stitch_data::error::StitchError::PayloadDecodeError)?;
             }
         };
 
         decode_reads.push(quote! {
             let raw = bit_reader.read_bits(#width)?;
             if raw > #max_val {
-                return Err(::stitch_data::error::CbpError::InvalidBitWidth(#width));
+                return Err(::stitch_data::error::StitchError::InvalidBitWidth(#width));
             }
             #decode_assignment
         });
@@ -494,7 +494,7 @@ fn generate_single_field(
         CodecKind::Varint => {
             let enc = quote! {
                 if dst.len() < offset + 9 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 9,
                         available: dst.len(),
                     });
@@ -505,14 +505,14 @@ fn generate_single_field(
             let dec = quote! {
                 let (val, vlen) = ::stitch_data::varint::decode_prefix_varint(&src[offset..])?;
                 offset += vlen;
-                let #field_name = <#field_type>::try_from(val).map_err(|_| ::stitch_data::error::CbpError::MalformedVarint)?;
+                let #field_name = <#field_type>::try_from(val).map_err(|_| ::stitch_data::error::StitchError::MalformedVarint)?;
             };
             (enc, dec)
         }
         CodecKind::ZigZag => {
             let enc = quote! {
                 if dst.len() < offset + 9 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 9,
                         available: dst.len(),
                     });
@@ -525,7 +525,7 @@ fn generate_single_field(
                 let (val, vlen) = ::stitch_data::varint::decode_prefix_varint(&src[offset..])?;
                 offset += vlen;
                 let zz = ::stitch_data::zigzag::decode_zigzag64(val);
-                let #field_name = <#field_type>::try_from(zz).map_err(|_| ::stitch_data::error::CbpError::MalformedVarint)?;
+                let #field_name = <#field_type>::try_from(zz).map_err(|_| ::stitch_data::error::StitchError::MalformedVarint)?;
             };
             (enc, dec)
         }
@@ -545,7 +545,7 @@ fn generate_direct_field(
         "bool" => {
             let enc = quote! {
                 if dst.len() < offset + 1 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 1,
                         available: dst.len(),
                     });
@@ -555,7 +555,7 @@ fn generate_direct_field(
             };
             let dec = quote! {
                 if src.len() < offset + 1 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 1,
                         available: src.len(),
                     });
@@ -568,7 +568,7 @@ fn generate_direct_field(
         "u8" => {
             let enc = quote! {
                 if dst.len() < offset + 1 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 1,
                         available: dst.len(),
                     });
@@ -578,7 +578,7 @@ fn generate_direct_field(
             };
             let dec = quote! {
                 if src.len() < offset + 1 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 1,
                         available: src.len(),
                     });
@@ -591,7 +591,7 @@ fn generate_direct_field(
         "i8" => {
             let enc = quote! {
                 if dst.len() < offset + 1 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 1,
                         available: dst.len(),
                     });
@@ -601,7 +601,7 @@ fn generate_direct_field(
             };
             let dec = quote! {
                 if src.len() < offset + 1 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 1,
                         available: src.len(),
                     });
@@ -614,7 +614,7 @@ fn generate_direct_field(
         "u16" | "i16" => {
             let enc = quote! {
                 if dst.len() < offset + 2 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 2,
                         available: dst.len(),
                     });
@@ -625,7 +625,7 @@ fn generate_direct_field(
             };
             let dec = quote! {
                 if src.len() < offset + 2 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 2,
                         available: src.len(),
                     });
@@ -639,7 +639,7 @@ fn generate_direct_field(
         "f32" | "u32" | "i32" => {
             let enc = quote! {
                 if dst.len() < offset + 4 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 4,
                         available: dst.len(),
                     });
@@ -650,7 +650,7 @@ fn generate_direct_field(
             };
             let dec = quote! {
                 if src.len() < offset + 4 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 4,
                         available: src.len(),
                     });
@@ -664,7 +664,7 @@ fn generate_direct_field(
         "f64" | "u64" | "i64" => {
             let enc = quote! {
                 if dst.len() < offset + 8 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 8,
                         available: dst.len(),
                     });
@@ -675,7 +675,7 @@ fn generate_direct_field(
             };
             let dec = quote! {
                 if src.len() < offset + 8 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 8,
                         available: src.len(),
                     });
@@ -689,7 +689,7 @@ fn generate_direct_field(
         "usize" => {
             let enc = quote! {
                 if dst.len() < offset + 8 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 8,
                         available: dst.len(),
                     });
@@ -700,7 +700,7 @@ fn generate_direct_field(
             };
             let dec = quote! {
                 if src.len() < offset + 8 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 8,
                         available: src.len(),
                     });
@@ -708,7 +708,7 @@ fn generate_direct_field(
                 let bytes: [u8; 8] = src[offset..offset + 8].try_into().unwrap();
                 offset += 8;
                 let raw = u64::from_le_bytes(bytes);
-                let #field_name = usize::try_from(raw).map_err(|_| ::stitch_data::error::CbpError::PayloadDecodeError)?;
+                let #field_name = usize::try_from(raw).map_err(|_| ::stitch_data::error::StitchError::PayloadDecodeError)?;
             };
             (enc, dec)
         }
@@ -716,7 +716,7 @@ fn generate_direct_field(
             // Fallback: Varint for unknown integer types or raw bytes
             let enc = quote! {
                 if dst.len() < offset + 9 {
-                    return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                    return Err(::stitch_data::error::StitchError::UnexpectedEof {
                         required: offset + 9,
                         available: dst.len(),
                     });
@@ -727,7 +727,7 @@ fn generate_direct_field(
             let dec = quote! {
                 let (val, vlen) = ::stitch_data::varint::decode_prefix_varint(&src[offset..])?;
                 offset += vlen;
-                let #field_name = <#field_type>::try_from(val).map_err(|_| ::stitch_data::error::CbpError::MalformedVarint)?;
+                let #field_name = <#field_type>::try_from(val).map_err(|_| ::stitch_data::error::StitchError::MalformedVarint)?;
             };
             (enc, dec)
         }
@@ -857,14 +857,14 @@ fn generate_columnar_field(
                         let start = i * item_size;
                         let end = start + item_size;
                         if col_payload.len() < end {
-                            return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                            return Err(::stitch_data::error::StitchError::UnexpectedEof {
                                 required: end,
                                 available: col_payload.len(),
                             });
                         }
                         let bytes = col_payload[start..end]
                             .try_into()
-                            .map_err(|_| ::stitch_data::error::CbpError::PayloadDecodeError)?;
+                            .map_err(|_| ::stitch_data::error::StitchError::PayloadDecodeError)?;
                         r.#name = <#ty>::from_le_bytes(bytes);
                     }
                 }
@@ -1029,14 +1029,14 @@ fn generate_columnar_field(
                         let start = i * 8;
                         let end = start + 8;
                         if col_payload.len() < end {
-                            return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                            return Err(::stitch_data::error::StitchError::UnexpectedEof {
                                 required: end,
                                 available: col_payload.len(),
                             });
                         }
                         let bytes: [u8; 8] = col_payload[start..end]
                             .try_into()
-                            .map_err(|_| ::stitch_data::error::CbpError::PayloadDecodeError)?;
+                            .map_err(|_| ::stitch_data::error::StitchError::PayloadDecodeError)?;
                         r.#name = <#ty>::from_le_bytes(bytes);
                     }
                 }
@@ -1067,14 +1067,14 @@ fn generate_columnar_field(
                         let start = i * item_size;
                         let end = start + item_size;
                         if col_payload.len() < end {
-                            return Err(::stitch_data::error::CbpError::UnexpectedEof {
+                            return Err(::stitch_data::error::StitchError::UnexpectedEof {
                                 required: end,
                                 available: col_payload.len(),
                             });
                         }
                         let bytes = col_payload[start..end]
                             .try_into()
-                            .map_err(|_| ::stitch_data::error::CbpError::PayloadDecodeError)?;
+                            .map_err(|_| ::stitch_data::error::StitchError::PayloadDecodeError)?;
                         r.#name = <#ty>::from_le_bytes(bytes);
                     }
                 }
@@ -1082,9 +1082,4 @@ fn generate_columnar_field(
             (enc, dec)
         }
     }
-}
-
-#[proc_macro_derive(CbpRecord, attributes(stitch, cbp))]
-pub fn derive_cbp_record(input: TokenStream) -> TokenStream {
-    derive_record(input)
 }

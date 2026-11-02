@@ -278,10 +278,10 @@ impl CbpReferenceIntervalContainer {
         scratch_u32: &mut [u32],
         payload_buf: &mut [u8],
         frame_out: &mut [u8],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         let count = intervals.len();
         if scratch_u32.len() < count * 2 {
-            return Err(CbpError::UnexpectedEof {
+            return Err(StitchError::UnexpectedEof {
                 required: count * 2,
                 available: scratch_u32.len(),
             });
@@ -383,7 +383,7 @@ impl CbpReferenceIntervalContainer {
         scratch_col2: &mut [u32],
         scratch_col3: &mut [u32],
         dst: &mut [Ipv4Interval],
-    ) -> Result<usize, CbpError> {
+    ) -> Result<usize, StitchError> {
         let (_header, payload) = unpack_frame(frame_buf)?;
 
         let mut offset = 0;
@@ -396,7 +396,7 @@ impl CbpReferenceIntervalContainer {
             || scratch_col2.len() < count
             || scratch_col3.len() < count
         {
-            return Err(CbpError::PayloadDecodeError);
+            return Err(StitchError::PayloadDecodeError);
         }
 
         // --- Column 1: ip_from ---
@@ -440,7 +440,7 @@ pub struct CbpReferenceSnapshot;
 
 impl CbpReferenceSnapshot {
     /// Encodes a single player snapshot into `out_frame`.
-    pub fn encode(snapshot: &PlayerSnapshot, out_frame: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn encode(snapshot: &PlayerSnapshot, out_frame: &mut [u8]) -> Result<usize, StitchError> {
         let mut payload = [0u8; 64];
         let mut offset = 0;
 
@@ -472,7 +472,7 @@ impl CbpReferenceSnapshot {
     }
 
     /// Decodes a single player snapshot from `frame_buf`.
-    pub fn decode(frame_buf: &[u8]) -> Result<PlayerSnapshot, CbpError> {
+    pub fn decode(frame_buf: &[u8]) -> Result<PlayerSnapshot, StitchError> {
         let (_header, payload) = unpack_frame(frame_buf)?;
 
         let mut offset = 0;
@@ -515,7 +515,10 @@ pub struct CbpReferenceSnapshotBatch;
 
 impl CbpReferenceSnapshotBatch {
     /// Encodes a slice of `PlayerSnapshot` into `out_frame`.
-    pub fn encode(snapshots: &[PlayerSnapshot], out_frame: &mut [u8]) -> Result<usize, CbpError> {
+    pub fn encode(
+        snapshots: &[PlayerSnapshot],
+        out_frame: &mut [u8],
+    ) -> Result<usize, StitchError> {
         let mut payload = vec![0u8; snapshots.len() * 48 + 32];
         let mut offset = 0;
 
@@ -549,7 +552,7 @@ impl CbpReferenceSnapshotBatch {
     }
 
     /// Decodes a batch of `PlayerSnapshot`s from `frame_buf`.
-    pub fn decode(frame_buf: &[u8], dst: &mut [PlayerSnapshot]) -> Result<usize, CbpError> {
+    pub fn decode(frame_buf: &[u8], dst: &mut [PlayerSnapshot]) -> Result<usize, StitchError> {
         let (_header, payload) = unpack_frame(frame_buf)?;
 
         let mut offset = 0;
@@ -558,7 +561,7 @@ impl CbpReferenceSnapshotBatch {
         let count = count as usize;
 
         if dst.len() < count {
-            return Err(CbpError::PayloadDecodeError);
+            return Err(StitchError::PayloadDecodeError);
         }
 
         for item in dst.iter_mut().take(count) {
