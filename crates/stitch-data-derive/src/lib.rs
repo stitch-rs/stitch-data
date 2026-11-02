@@ -147,22 +147,23 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
                         }
                         Ok(())
                     } else if meta.path.is_ident("column") {
-                        let value: Lit = meta.value()?.parse()?;
-                        if let Lit::Str(str_lit) = value {
-                            let val = str_lit.value();
-                            match val.as_str() {
-                                "dict" => column = ColumnStrategy::Dict,
-                                "rle" => column = ColumnStrategy::Rle,
-                                "gorilla" => column = ColumnStrategy::Gorilla,
-                                "adaptive" => column = ColumnStrategy::Adaptive,
-                                "raw" => column = ColumnStrategy::Raw,
-                                other => {
-                                    parse_err = Some(syn::Error::new_spanned(
-                                        &str_lit,
-                                        format!("Unknown columnar strategy '{other}': expected 'dict', 'rle', 'gorilla', 'adaptive', or 'raw'"),
-                                    ));
-                                }
-                            }
+                        let expr: Expr = meta.value()?.parse()?;
+                        let expr_str = quote!(#expr).to_string();
+                        if expr_str.contains("Dict") || expr_str == "\"dict\"" {
+                            column = ColumnStrategy::Dict;
+                        } else if expr_str.contains("Rle") || expr_str == "\"rle\"" {
+                            column = ColumnStrategy::Rle;
+                        } else if expr_str.contains("Gorilla") || expr_str == "\"gorilla\"" {
+                            column = ColumnStrategy::Gorilla;
+                        } else if expr_str.contains("Adaptive") || expr_str == "\"adaptive\"" {
+                            column = ColumnStrategy::Adaptive;
+                        } else if expr_str.contains("Raw") || expr_str == "\"raw\"" {
+                            column = ColumnStrategy::Raw;
+                        } else {
+                            parse_err = Some(syn::Error::new_spanned(
+                                &expr,
+                                format!("Unknown columnar strategy '{expr_str}': expected ColumnCodec::Dict, ColumnCodec::Rle, ColumnCodec::Gorilla, ColumnCodec::Adaptive, or ColumnCodec::Raw"),
+                            ));
                         }
                         Ok(())
                     } else if meta.path.is_ident("codec") {

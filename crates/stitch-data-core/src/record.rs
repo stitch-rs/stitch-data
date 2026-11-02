@@ -16,6 +16,24 @@ pub enum FieldCodec {
     BitPack(u8),
 }
 
+/// Explicit columnar transposition and compression strategy for a record field.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ColumnCodec {
+    /// Automatic selection based on field type and profile.
+    #[default]
+    Auto,
+    /// Bounded zero-allocation dictionary encoding for categorical symbols/enums.
+    Dict,
+    /// Run-Length Encoding for repetitive sequences and flags.
+    Rle,
+    /// Lossless IEEE-754 float XOR delta (Gorilla).
+    Gorilla,
+    /// Raw uncompressed bytes.
+    Raw,
+    /// Adaptive integer compression (Delta + BitPacking).
+    Adaptive,
+}
+
 /// Trait implemented by types serializable to and from Stitch Data representations.
 pub trait Record: Sized {
     /// 64-bit compile-time schema fingerprint computed from struct identifier and field definitions.
