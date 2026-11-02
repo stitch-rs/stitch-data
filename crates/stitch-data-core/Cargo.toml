@@ -1,0 +1,17 @@
+[package]
+name = "stitch-data-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Core #![no_std] framing, bitstream, PrefixVarint, and ZigZag primitives for the Stitch Data Engine"
+
+[dependencies]
+zerocopy = { workspace = true, optional = true }
+
+[features]
+default = ["std"]
+std = ["alloc"]
+alloc = []
+zero-copy = ["dep:zerocopy"]

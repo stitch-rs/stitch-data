@@ -1,0 +1,11 @@
+[package]
+name = "stitch-data-fuzz"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+stitch-data = { workspace = true, features = ["std", "zero-copy", "derive"] }

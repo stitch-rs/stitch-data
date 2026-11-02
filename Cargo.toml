@@ -1,11 +1,11 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/cbp-core",
-    "crates/cbp-transforms",
-    "crates/cbp-derive",
-    "crates/cbp",
-    "crates/cbp-fuzz",
+    "crates/stitch-data-core",
+    "crates/stitch-data-transforms",
+    "crates/stitch-data-derive",
+    "crates/stitch-data",
+    "crates/stitch-data-fuzz",
     "benches",
 ]
 exclude = [
@@ -17,16 +17,16 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"
-authors = ["GoldSrc Architecture Team"]
-repository = "https://github.com/ulquiorracode/compact-binary-protocol"
+authors = ["Stitch Contributors", "GoldSrc Architecture Team"]
+repository = "https://github.com/stitch-rs/stitch-data"
 
 [workspace.dependencies]
-cbp-core = { path = "crates/cbp-core", default-features = false }
-cbp-transforms = { path = "crates/cbp-transforms", default-features = false }
-cbp-derive = { path = "crates/cbp-derive" }
-cbp = { path = "crates/cbp", default-features = false }
+stitch-data-core = { path = "crates/stitch-data-core", default-features = false }
+stitch-data-transforms = { path = "crates/stitch-data-transforms", default-features = false }
+stitch-data-derive = { path = "crates/stitch-data-derive" }
+stitch-data = { path = "crates/stitch-data", default-features = false }
 
-stitch-core = { git = "https://github.com/ulquiorracode/stitch-rs.git", rev = "89de13aedcc61e13af97ccb8cc07f543080071ad", default-features = false }
+stitch-core = { git = "https://github.com/stitch-rs/stitch-framework.git", branch = "main", default-features = false }
 zerocopy = { version = "0.8", default-features = false, features = ["derive"] }
 criterion = { version = "0.8", default-features = false }
 prost = { version = "0.13", default-features = false, features = ["prost-derive"] }

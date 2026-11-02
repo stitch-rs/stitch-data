@@ -1,0 +1,20 @@
+[package]
+name = "stitch-data"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "High-density data layout, zero-allocation transformation engine and columnar codecs (Stitch Data Engine)"
+
+[dependencies]
+stitch-data-core = { workspace = true }
+stitch-data-transforms = { workspace = true }
+stitch-data-derive = { workspace = true, optional = true }
+
+[features]
+default = ["std", "derive"]
+std = ["stitch-data-core/std", "stitch-data-transforms/std"]
+alloc = ["stitch-data-core/alloc", "stitch-data-transforms/alloc"]
+zero-copy = ["stitch-data-core/zero-copy"]
+derive = ["dep:stitch-data-derive"]

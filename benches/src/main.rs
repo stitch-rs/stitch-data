@@ -6,9 +6,9 @@
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use cbp::prelude::*;
-use cbp_benches::scenarios::*;
 use prost::Message;
+use stitch_data::prelude::*;
+use stitch_data_benches::scenarios::*;
 
 // ============================================================================
 // Counting Allocator for Zero-Allocation Verification
@@ -176,7 +176,7 @@ fn main() {
     );
     println!("  [PASS] CbpReferenceSnapshotBatch roundtrip (64 records)");
 
-    // Test 4: Derived CbpRecord (PlayerSnapshot) roundtrip & framed schema verification
+    // Test 4: Derived StitchRecord (PlayerSnapshot) roundtrip & framed schema verification
     let mut derived_raw_buf = [0u8; 64];
     let derived_raw_len = snapshot
         .encode_record(&mut derived_raw_buf)
@@ -200,9 +200,9 @@ fn main() {
         PlayerSnapshot::unpack_from_frame(&derived_frame_buf[..derived_frame_len])
             .expect("Derived unpack_from_frame must succeed");
     assert_eq!(snapshot, unpacked_derived);
-    println!("  [PASS] #[derive(CbpRecord)] single record & framed roundtrip (PlayerSnapshot)");
+    println!("  [PASS] #[derive(StitchRecord)] single record & framed roundtrip (PlayerSnapshot)");
 
-    // Test 5: ColumnarBlockBuilder with CbpRecord
+    // Test 5: ColumnarBlockBuilder with StitchRecord
     let mut builder =
         ColumnarBlockBuilder::<PlayerSnapshot, 64>::new(OptimizationProfile::Balanced);
     for s in &snap_batch {
@@ -426,7 +426,7 @@ fn main() {
     }
     println!("  [PASS] CbpReferenceIntervalContainer::decode: 0 heap allocations");
 
-    // 2.9 Derived CbpRecord encode & decode
+    // 2.9 Derived StitchRecord encode & decode
     ALLOCATOR.reset();
     let _ = snapshot.encode_record(&mut derived_raw_buf).unwrap();
     let allocs_derived_enc = ALLOCATOR.alloc_count();

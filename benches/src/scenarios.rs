@@ -3,9 +3,9 @@
 //! Provides deterministic pseudo-random workload generators (Lehmer LCG),
 //! standard test domain models, and bench-only reference container implementations.
 
-use cbp::prelude::*;
 use prost::Message;
 use serde::{Deserialize, Serialize};
+use stitch_data::prelude::*;
 
 // ============================================================================
 // 1. Deterministic Pseudo-Random Generator (Lehmer LCG, 0 external deps)
@@ -58,14 +58,14 @@ impl Lcg {
 // ============================================================================
 
 /// Scenario A: IPAtlas Range Interval (12 bytes raw AoS).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, CbpRecord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, StitchRecord)]
 #[repr(C)]
 pub struct Ipv4Interval {
-    #[cbp(varint)]
+    #[stitch(varint)]
     pub ip_from: u32,
-    #[cbp(varint)]
+    #[stitch(varint)]
     pub ip_to: u32,
-    #[cbp(bits = 6)]
+    #[stitch(bits = 6)]
     pub profile_id: u32,
 }
 
@@ -81,17 +81,17 @@ pub struct ProtoIpv4IntervalList {
 }
 
 /// Scenario B: Multiplayer Real-Time Game Telemetry Snapshot (24 bytes raw AoS).
-#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, CbpRecord)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize, StitchRecord)]
 #[repr(C)]
 pub struct PlayerSnapshot {
-    #[cbp(varint)]
+    #[stitch(varint)]
     pub player_id: u32,
     pub x: f32,
     pub y: f32,
     pub z: f32,
     pub health: u16,
     pub flags: u16,
-    #[cbp(varint)]
+    #[stitch(varint)]
     pub tick: u32,
 }
 

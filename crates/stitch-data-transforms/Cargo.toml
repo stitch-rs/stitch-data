@@ -1,0 +1,17 @@
+[package]
+name = "stitch-data-transforms"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Monomorphic transform pipelines (Delta, BitPack, RLE) for the Stitch Data Engine"
+
+[dependencies]
+stitch-data-core = { workspace = true }
+stitch-core = { workspace = true }
+
+[features]
+default = ["std"]
+std = ["stitch-data-core/std", "stitch-core/std"]
+alloc = ["stitch-data-core/alloc"]

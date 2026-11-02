@@ -1,4 +1,4 @@
-# RFC: Compact Binary Protocol (CBP) Wire Format Specification v1.1
+# RFC: Stitch Data Wire Format Wire Format Specification v1.1
 
 - **Status**: Stable Specification
 - **Version**: 1.1.0
@@ -9,7 +9,7 @@
 
 ## 1. Abstract
 
-Compact Binary Protocol (CBP) is an adaptive, domain-aware, contract-oriented
+Stitch Data Wire Format is an adaptive, domain-aware, contract-oriented
 binary serialization and framing protocol engineered for ultra-low latency,
 high-throughput, and extreme entropy density across heterogeneous network
 and IPC substrates.
@@ -75,7 +75,7 @@ Upon observing `Magic == 0xCB` and `Version == 0x01`:
 | `[0]` **Magic** | 1 Byte | `0xCB` | CBP protocol identifier. |
 | `[1]` **Version** | 1 Byte | `0x01` | Protocol wire specification version 1. |
 | `[2]` **Profile/Flags** | 1 Byte | Bitfield | Bits 0..1: Profile, Bits 2..5: Flags, Bits 6..7: Reserved (0). |
-| `[3..]` **PayloadLength** | 1..9 B | `PrefixVarint` | Uncompressed payload size in bytes. Upper bound is strictly capped at `MAX_FRAME_PAYLOAD_LEN` = 64 MiB (67,108,864 bytes); frames exceeding this bound MUST be rejected with `CbpError::FrameTooLarge`. |
+| `[3..]` **PayloadLength** | 1..9 B | `PrefixVarint` | Uncompressed payload size in bytes. Upper bound is strictly capped at `MAX_FRAME_PAYLOAD_LEN` = 64 MiB (67,108,864 bytes); frames exceeding this bound MUST be rejected with `StitchError::FrameTooLarge`. |
 | `[..]` **SchemaHash** | 0 or 8 B | Little-Endian `u64` | Present if and only if `Flags.has_schema_hash == 1`. |
 <!-- markdownlint-enable MD013 -->
 
@@ -100,7 +100,7 @@ Upon observing `Magic == 0xCB` and `Version == 0x01`:
     `PayloadLength`.
   - Bit 5 (`0x20`): Reserved (must be 0).
 - **Bits 6..7 (Reserved)**:
-  - Must be zero. Non-zero values MUST be rejected with `CbpError::InvalidHeaderFlags`.
+  - Must be zero. Non-zero values MUST be rejected with `StitchError::InvalidHeaderFlags`.
 
 ### 2.3 Version 1 Footer Geometry
 
@@ -118,11 +118,11 @@ The frame concludes with a mandatory 4-byte integrity checksum:
 ## 3. Layered Optimization Profiles (-O0 .. -O3)
 
 CBP defines 4 operational profiles for streaming pipelines (`CompressionPipeline`),
-alongside dual-profile dispatch for individual records (`CbpRecord`):
+alongside dual-profile dispatch for individual records (`StitchRecord`):
 
 - Streaming pipelines in `cbp-transforms` execute monomorphic compile-time
   traversal across all 4 profiles (`-O0` through `-O3`).
-- Single-record serialization via `CbpRecord` dispatches between `-O0 Direct`
+- Single-record serialization via `StitchRecord` dispatches between `-O0 Direct`
   (zero-copy uncompressed POD byte layout) and `-O1..-O3 Compact` (branchless
   PrefixVarint, ZigZag, and sub-byte bit packing).
 
@@ -224,7 +224,7 @@ Gorilla XOR delta algorithm:
    - Decoders MUST enforce $\text{leading} + \text{length} \le 32$ (for `f32`) and
      $\text{leading} + \text{length} \le 64$ (for `f64`), and $\text{length} > 0$.
    - Any bitstream violating this invariant MUST be immediately rejected with
-     `CbpError::PayloadDecodeError` to prevent left-shift overflow attacks.
+     `StitchError::PayloadDecodeError` to prevent left-shift overflow attacks.
 
 ### 4.5 Bounded Bit-Packing
 
@@ -237,7 +237,7 @@ Bit-packed blocks store homogeneous integers packed at sub-byte bit widths:
 ```
 
 - `BitWidth` specifies the bit allocation per integer ($W \in [1, 32]$).
-- A `BitWidth` of $0$ or $> 32$ MUST yield `CbpError::InvalidBitWidth`.
+- A `BitWidth` of $0$ or $> 32$ MUST yield `StitchError::InvalidBitWidth`.
 - Decoders employ AVX2 vector zero-extension (`_mm256_cvtepu8_epi32` for $W=8$,
   `_mm256_cvtepu16_epi32` for $W=16$) and 64-bit SWAR register accumulators
   for unaligned widths.
@@ -263,11 +263,11 @@ direct submission to scatter-gather network system calls (`writev`, `sendmsg`,
 `FrameReader<'a>` decodes multi-frame streams (TCP buffers, shared memory rings)
 with zero allocations:
 
-- `next_frame(&mut self) -> Result<Option<FrameView<'a>>, CbpError>`:
+- `next_frame(&mut self) -> Result<Option<FrameView<'a>>, StitchError>`:
   - Returns `Ok(Some(FrameView))` upon encountering a complete, CRC-valid frame.
   - Advances the internal cursor by `frame_len`.
   - Returns `Ok(None)` when the buffer is cleanly exhausted.
-  - Returns `Err(CbpError::UnexpectedEof)` if a partial frame remains.
+  - Returns `Err(StitchError::UnexpectedEof)` if a partial frame remains.
 
 ### 5.3 Resilient Stream Resynchronization (`StreamResyncParser`)
 
@@ -288,14 +288,14 @@ On noisy or byte-corrupted transports:
 
 ### 6.1 Deterministic 64-bit FNV-1a Schema Hash
 
-Every struct annotated with `#[derive(CbpRecord)]` generates a compile-time
+Every struct annotated with `#[derive(StitchRecord)]` generates a compile-time
 canonical schema string:
 
 <!-- markdownlint-disable MD013 -->
 $$\text{SchemaString} = \text{StructName} + "\{" + \sum (\text{FieldName} + ":" + \text{FieldType} + "@" + \text{Codec} + ";") + "\}"$$
 <!-- markdownlint-enable MD013 -->
 
-The 64-bit FNV-1a hash of this UTF-8 string defines `CbpRecord::SCHEMA_HASH`.
+The 64-bit FNV-1a hash of this UTF-8 string defines `StitchRecord::SCHEMA_HASH`.
 
 ### 6.2 Fail-Fast ABI Compatibility Contract
 
@@ -303,13 +303,13 @@ The 64-bit FNV-1a hash of this UTF-8 string defines `CbpRecord::SCHEMA_HASH`.
 - Upon decoding, if `header.schema_hash != Some(Self::SCHEMA_HASH)`, the decoder
   MUST abort immediately and return:
 
-$$\text{CbpError::SchemaMismatch}\{\text{expected}, \text{actual}\}$$
+$$\text{StitchError::SchemaMismatch}\{\text{expected}, \text{actual}\}$$
 
 No unverified payload bytes are decoded when schemas diverge.
 
 ### 6.3 Record Batch Builder (`RecordBatchBuilder` / `ColumnarBlockBuilder`)
 
-`RecordBatchBuilder<T: CbpRecord, const CAPACITY: usize>` (aliased as
+`RecordBatchBuilder<T: StitchRecord, const CAPACITY: usize>` (aliased as
 `ColumnarBlockBuilder` for backward compatibility) buffers records in
 an inline stack array `[MaybeUninit<T>; CAPACITY]` with $O(1)$ push. Upon
 reaching capacity, `flush(&mut scratch, &mut dst)` serializes all records

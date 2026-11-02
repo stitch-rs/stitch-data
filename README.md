@@ -1,12 +1,12 @@
-# Compact Binary Protocol (CBP)
+# Stitch Data Engine (`stitch-data`)
 
-[![CI](https://github.com/ulquiorracode/compact-binary-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/ulquiorracode/compact-binary-protocol/actions/workflows/ci.yml)
+[![CI](https://github.com/stitch-rs/stitch-data/actions/workflows/ci.yml/badge.svg)](https://github.com/stitch-rs/stitch-data/actions/workflows/ci.yml)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 [![Rust: 2024](https://img.shields.io/badge/Language-Rust%202024-orange.svg)](https://www.rust-lang.org/)
 
-Compact Binary Protocol (CBP) is an adaptive, domain-aware, contract-oriented
-binary serialization and framing engine in Rust engineered for ultra-low latency,
-high-throughput, and extreme entropy density.
+The Stitch Data Engine (`stitch-data`) is an adaptive, domain-aware,
+contract-oriented data layout and serialization engine in Rust engineered for
+ultra-low latency, high-throughput, and extreme entropy density.
 
 ---
 
@@ -37,11 +37,12 @@ high-throughput, and extreme entropy density.
   - Fast-forward stream resynchronization (`find_magic` at 35.4 GiB/s, recovers
     from noise in 27 ns).
 - **Zero-Cost Derive Macros & Schema Fingerprinting**:
-  - `#[derive(CbpRecord)]` with field routing attributes (`#[cbp(varint)]`,
-    `#[cbp(zigzag)]`, `#[cbp(raw)]`, `#[cbp(bits = N)]`) and multi-profile dispatch
-    (`-O0 Direct` uncompressed memcpy vs `-O2 Balanced` bit-packed compression).
+  - `#[derive(StitchRecord)]` with field routing attributes
+    (`#[stitch(varint)]`, `#[stitch(zigzag)]`, `#[stitch(raw)]`,
+    `#[stitch(bits = N)]`) and multi-profile dispatch (`-O0 Direct`
+    uncompressed memcpy vs `-O2 Balanced` bit-packed compression).
   - 64-bit compile-time schema fingerprinting (`SCHEMA_HASH: u64`) and fail-fast
-    validation (`CbpError::SchemaMismatch`).
+    validation (`StitchError::SchemaMismatch`).
   - `RecordBatchBuilder<T, CAPACITY>` (aliased as `ColumnarBlockBuilder`) for
     stack-allocated batching with zero heap allocations (encode in 8.71 ns, 2.19x
     faster than Protobuf).
@@ -50,17 +51,18 @@ high-throughput, and extreme entropy density.
 
 ## Workspace Topology
 
-- **`crates/cbp-core`**: Core `#![no_std]` bitstream, branchless PrefixVarint,
+- **`crates/stitch-data-core`**: Core `#![no_std]` bitstream, branchless PrefixVarint,
   ZigZag, hardware-accelerated Castagnoli CRC32 (SSE4.2/ARM64), and frame
   pack/unpack logic.
-- **`crates/cbp-transforms`**: Monomorphic transform pipelines (Delta, BitPack,
+- **`crates/stitch-data-transforms`**: Monomorphic transform pipelines (Delta, BitPack,
   RLE, Gorilla Float) with AVX2 SIMD acceleration powered by `stitch-core`, and
   `RecordBatchBuilder`.
-- **`crates/cbp-derive`**: Procedural derive macro `#[derive(CbpRecord)]` with
-  field attribute routing and compile-time schema hashing.
-- **`crates/cbp`**: High-performance ergonomic facade.
-- **`crates/cbp-fuzz`**: Deterministic 100,000-iteration adversarial fuzzing test
-  suite and targets.
+- **`crates/stitch-data-derive`**: Procedural derive macro
+  `#[derive(StitchRecord)]` with field attribute routing and compile-time schema
+  hashing.
+- **`crates/stitch-data`**: High-performance ergonomic facade.
+- **`crates/stitch-data-fuzz`**: Deterministic 100,000-iteration adversarial
+  fuzzing test suite and targets.
 - **`fuzz`**: Native `cargo-fuzz` / `libFuzzer` target harnesses.
 - **`benches`**: Comprehensive benchmark suite against Protobuf, MessagePack,
   Bincode, and Postcard.
@@ -68,42 +70,35 @@ high-throughput, and extreme entropy density.
 ## Quickstart
 
 ```rust
-use cbp::prelude::*;
+use stitch_data::prelude::*;
 
-#[derive(CbpRecord, Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, StitchRecord)]
 pub struct PlayerSnapshot {
-    #[cbp(varint)]
-    pub player_id: u32,
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-    pub health: u16,
-    pub flags: u16,
-    #[cbp(varint)]
-    pub tick: u32,
+    pub tick: u64,
+    #[stitch(zigzag)]
+    pub delta_x: i32,
+    #[stitch(zigzag)]
+    pub delta_y: i32,
+    #[stitch(bits = 5)]
+    pub weapon_id: u8,
 }
 
-fn main() -> Result<(), CbpError> {
+fn main() -> Result<(), StitchError> {
     let snap = PlayerSnapshot {
-        player_id: 1042,
-        x: 12.5,
-        y: 64.0,
-        z: -120.0,
-        health: 100,
-        flags: 0x01,
-        tick: 58291,
+        tick: 14205,
+        delta_x: -12,
+        delta_y: 45,
+        weapon_id: 17,
     };
 
-    // 1. Zero-allocation single record encoding (8.71 ns)
-    let mut raw_buf = [0u8; 64];
-    let raw_len = snap.encode_record(&mut raw_buf)?;
+    // 1. Zero-allocation stack buffer
+    let mut payload_buf = [0u8; 64];
+    let mut frame_buf = [0u8; 128];
 
-    // 2. Framed packing with 64-bit schema hash & hardware CRC32 (18.43 ns)
-    let mut scratch = [0u8; 64];
-    let mut frame_buf = [0u8; 64];
+    // 2. Framed packing with Castagnoli CRC32 & schema fingerprint
     let frame_len = snap.pack_to_frame(
         OptimizationProfile::Balanced,
-        &mut scratch,
+        &mut payload_buf,
         &mut frame_buf,
     )?;
 
@@ -116,13 +111,13 @@ fn main() -> Result<(), CbpError> {
 
 ## Performance & Empirical Density
 
-CBP is benchmarked under strict empirical controls against leading binary formats
-on dedicated bare-metal hardware (Intel Core i9-11900H, Windows 11).
+stitch-data is benchmarked under strict empirical controls against leading
+binary formats on dedicated bare-metal hardware (Intel Core i9-11900H, Windows 11).
 
 ### Wire Size Scoreboard Summary
 
 <!-- markdownlint-disable MD013 -->
-| Workload Scenario | Raw AoS | Bincode | Postcard | Protobuf (`prost`) | MessagePack | CBP Engine |
+| Workload Scenario | Raw AoS | Bincode | Postcard | Protobuf (`prost`) | MessagePack | Stitch Data Engine |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **1,024 IP Routing Intervals (12 KB raw)** | 12,288 B | 12,296 B | 9,218 B | 9,225 B | 12,291 B | **3,098 B (3.97x denser, 33.6% of Protobuf)** |
 | **Single Game Tick Snapshot (24B raw)** | 24 B | 24 B | 19 B | 26 B | 26 B | **27 B (Includes 32-bit CRC32 checksum)** |
@@ -138,11 +133,11 @@ analysis, counting allocator zero-heap verification, and claims audit, see
 Runnable reference implementations demonstrating real-world integration:
 
 - **Real-Time UDP Game Telemetry**: Run
-  `cargo run -p cbp --example udp_game_telemetry` (64 players @ 128Hz,
+  `cargo run -p stitch-data --example udp_game_telemetry` (64 players @ 128Hz,
   high-throughput framed batching, and stream noise recovery).
 - **Constrained Embedded IoT Sensor Node**: Run
-  `cargo run -p cbp --example embedded_sensor_node` (stack-only 128-byte budget,
-  zero dynamic heap allocations, `#![no_std]`).
+  `cargo run -p stitch-data --example embedded_sensor_node` (stack budget
+  128 bytes, zero dynamic heap allocations, `#![no_std]`).
 
 ## Specifications
 
