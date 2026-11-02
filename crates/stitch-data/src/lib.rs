@@ -6,7 +6,7 @@ pub use stitch_data_core;
 pub use stitch_data_transforms;
 
 pub use stitch_data_core::{
-    CBP_MAGIC, CBP_VERSION_1, CbpError, CbpRecord, FieldCodec, FrameFlags, FrameHeader,
+    CBP_MAGIC, CBP_VERSION_1, CbpError, CbpRecord, ColumnCodec, FieldCodec, FrameFlags, FrameHeader,
     FrameReader, FrameView, MAX_HEADER_SIZE, OptimizationProfile, Record, ResyncStats, StitchError,
     StreamResyncParser, VectoredFrame, bitstream, crc, error, frame, record, resync, simd, varint,
     zigzag,
