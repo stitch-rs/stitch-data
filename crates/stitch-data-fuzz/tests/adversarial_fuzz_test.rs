@@ -85,7 +85,7 @@ fn test_adversarial_truncation_attacks_on_valid_frames() {
             "Truncated frame of len {trunc_len} must return Err, got Ok"
         );
         match result.unwrap_err() {
-            CbpError::UnexpectedEof { .. } => {}
+            StitchError::UnexpectedEof { .. } => {}
             other => panic!("Expected UnexpectedEof on truncated frame, got: {other:?}"),
         }
     }
@@ -120,13 +120,13 @@ fn test_adversarial_bit_flip_crc_rejection() {
             );
             // It must be either ChecksumMismatch, InvalidMagic, InvalidHeaderFlags, FrameTooLarge or UnexpectedEof
             match result.unwrap_err() {
-                CbpError::ChecksumMismatch { .. }
-                | CbpError::InvalidMagic(_)
-                | CbpError::UnsupportedVersion(_)
-                | CbpError::InvalidHeaderFlags(_)
-                | CbpError::FrameTooLarge { .. }
-                | CbpError::UnexpectedEof { .. }
-                | CbpError::MalformedVarint => {}
+                StitchError::ChecksumMismatch { .. }
+                | StitchError::InvalidMagic(_)
+                | StitchError::UnsupportedVersion(_)
+                | StitchError::InvalidHeaderFlags(_)
+                | StitchError::FrameTooLarge { .. }
+                | StitchError::UnexpectedEof { .. }
+                | StitchError::MalformedVarint => {}
                 other => panic!("Unexpected error on flipped bit: {other:?}"),
             }
         }
@@ -148,11 +148,11 @@ fn test_adversarial_huge_payload_length_dos_defense() {
     let res = unpack_frame(&fake_frame);
     assert!(res.is_err());
     match res.unwrap_err() {
-        CbpError::FrameTooLarge { size, limit } => {
+        StitchError::FrameTooLarge { size, limit } => {
             assert_eq!(size, 1 << 30);
             assert_eq!(limit, 64 * 1024 * 1024);
         }
-        CbpError::UnexpectedEof {
+        StitchError::UnexpectedEof {
             required,
             available,
         } => {
@@ -199,7 +199,7 @@ fn test_adversarial_schema_hash_spoofing() {
     let res = FuzzRecord::unpack_from_frame(&tampered_frame[..frame_len]);
     assert!(res.is_err());
     match res.unwrap_err() {
-        CbpError::SchemaMismatch { expected, actual } => {
+        StitchError::SchemaMismatch { expected, actual } => {
             assert_eq!(expected, FuzzRecord::SCHEMA_HASH);
             assert_ne!(actual, expected);
         }
