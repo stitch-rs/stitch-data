@@ -14,11 +14,12 @@ pub use stitch_data_core::{
 
 pub use stitch_data_transforms::{
     BitPacker, ColumnCodecTag, ColumnarBlockBuilder, ColumnarBlockReader, ColumnarBlockWriter,
-    CompressionPipeline, DecompressionPipeline, DeltaTransformer, GorillaCompressor,
-    RecordBatchBuilder, RleTransformer, bitpack, columnar, decode_columnar_frame,
-    decode_f32_column, decode_i32_column, decode_raw_column, decode_u32_column, delta,
-    encode_f32_column, encode_i32_column, encode_raw_column, encode_u32_column, float, pipeline,
-    rle,
+    CompressionPipeline, DecompressionPipeline, DeltaTransformer, DictTransformer,
+    GorillaCompressor, RecordBatchBuilder, RleTransformer, bitpack, columnar,
+    decode_columnar_frame, decode_dict_column, decode_f32_column, decode_i32_column,
+    decode_raw_column, decode_rle_column, decode_u32_column, delta, dict, encode_dict_column,
+    encode_f32_column, encode_i32_column, encode_raw_column, encode_rle_column, encode_u32_column,
+    float, pipeline, rle,
 };
 
 #[cfg(feature = "derive")]
@@ -53,14 +54,16 @@ pub mod prelude {
     pub use stitch_data_transforms::bitpack::BitPacker;
     pub use stitch_data_transforms::columnar::{
         ColumnCodecTag, ColumnarBlockBuilder, ColumnarBlockReader, ColumnarBlockWriter,
-        RecordBatchBuilder, decode_columnar_frame, decode_f32_column, decode_i32_column,
-        decode_raw_column, decode_u32_column, encode_f32_column, encode_i32_column,
-        encode_raw_column, encode_u32_column,
+        RecordBatchBuilder, decode_columnar_frame, decode_dict_column, decode_f32_column,
+        decode_i32_column, decode_raw_column, decode_rle_column, decode_u32_column,
+        encode_dict_column, encode_f32_column, encode_i32_column, encode_raw_column,
+        encode_rle_column, encode_u32_column,
     };
     pub use stitch_data_transforms::delta::{
         DeltaTransformer, delta_decode_i32, delta_decode_u32, delta_decode_with_base_u32,
         delta_encode_i32, delta_encode_u32, delta_encode_with_base_u32,
     };
+    pub use stitch_data_transforms::dict::DictTransformer;
     pub use stitch_data_transforms::float::GorillaCompressor;
     pub use stitch_data_transforms::pipeline::{CompressionPipeline, DecompressionPipeline};
     pub use stitch_data_transforms::rle::RleTransformer;

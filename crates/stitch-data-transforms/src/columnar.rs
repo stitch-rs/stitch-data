@@ -24,6 +24,10 @@ pub enum ColumnCodecTag {
     DeltaZigZagI32 = 0x02,
     /// Lossless IEEE-754 float XOR delta (Gorilla).
     GorillaF32 = 0x03,
+    /// Run-Length Encoding for repetitive sequences.
+    Rle = 0x04,
+    /// Bounded zero-allocation dictionary encoding for categorical symbols.
+    Dictionary = 0x05,
 }
 
 impl ColumnCodecTag {
@@ -34,6 +38,8 @@ impl ColumnCodecTag {
             0x01 => Some(Self::AdaptiveU32),
             0x02 => Some(Self::DeltaZigZagI32),
             0x03 => Some(Self::GorillaF32),
+            0x04 => Some(Self::Rle),
+            0x05 => Some(Self::Dictionary),
             _ => None,
         }
     }
@@ -257,6 +263,32 @@ pub fn decode_raw_column(src: &[u8], dst: &mut [u8]) -> Result<usize, CbpError> 
     }
     dst.copy_from_slice(&src[..dst.len()]);
     Ok(dst.len())
+}
+
+/// Encodes a slice of `u32` into `dst` using Run-Length Encoding.
+pub fn encode_rle_column(slice: &[u32], dst: &mut [u8]) -> Result<usize, CbpError> {
+    crate::rle::RleTransformer::encode_u32(slice, dst)
+}
+
+/// Decodes an RLE-encoded sequence from `src` into `dst`.
+///
+/// Returns the number of elements written to `dst`.
+pub fn decode_rle_column(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    let (elements, _bytes) = crate::rle::RleTransformer::decode_u32_ext(src, dst)?;
+    Ok(elements)
+}
+
+/// Encodes a categorical slice of `u32` symbols into `dst` using bounded Dictionary encoding.
+pub fn encode_dict_column(slice: &[u32], dst: &mut [u8]) -> Result<usize, CbpError> {
+    crate::dict::DictTransformer::encode_u32(slice, dst)
+}
+
+/// Decodes a dictionary-compressed column from `src` into `dst`.
+///
+/// Returns the number of elements written to `dst`.
+pub fn decode_dict_column(src: &[u8], dst: &mut [u32]) -> Result<usize, CbpError> {
+    let (elements, _bytes) = crate::dict::DictTransformer::decode_u32(src, dst)?;
+    Ok(elements)
 }
 
 // --- Batch Builder & Slicing ---
