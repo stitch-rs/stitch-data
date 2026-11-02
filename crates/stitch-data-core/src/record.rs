@@ -114,6 +114,23 @@ pub trait StitchRecord: Sized {
         Ok(total)
     }
 
+    /// Encodes a batch of records using Columnar (Structure-of-Arrays) layout into `dst`.
+    ///
+    /// By default, falls back to `encode_batch_profile(records, OptimizationProfile::MaxDensity, dst)`.
+    /// Types derived via `#[derive(StitchRecord)]` provide a zero-allocation transposed implementation.
+    #[inline]
+    fn encode_columnar_batch(records: &[Self], dst: &mut [u8]) -> Result<usize, StitchError> {
+        Self::encode_batch_profile(records, OptimizationProfile::MaxDensity, dst)
+    }
+
+    /// Decodes a batch of records from a Columnar (Structure-of-Arrays) stream in `src` into `dst`.
+    ///
+    /// Returns the number of records successfully decoded into `dst`.
+    #[inline]
+    fn decode_columnar_batch(src: &[u8], dst: &mut [Self]) -> Result<usize, StitchError> {
+        Self::decode_batch_profile(src, OptimizationProfile::MaxDensity, dst)
+    }
+
     /// Packs a single record into a framed Stitch envelope with schema validation header.
     fn pack_to_frame(
         &self,
