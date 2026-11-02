@@ -142,3 +142,27 @@ fn test_columnar_empty_and_single_record() {
     assert_eq!(dec_single_count, 1);
     assert_eq!(single_decoded, single);
 }
+
+#[test]
+fn test_columnar_dict_and_rle_codecs() {
+    // 1. Test Dict column codec
+    let categories = [10u32, 20, 10, 30, 20, 10, 10, 30, 40, 10];
+    let mut dict_buf = [0u8; 128];
+    let dict_len = encode_dict_column(&categories, &mut dict_buf).unwrap();
+
+    let mut decoded_categories = [0u32; 10];
+    let dec_dict_count =
+        decode_dict_column(&dict_buf[..dict_len], &mut decoded_categories).unwrap();
+    assert_eq!(dec_dict_count, 10);
+    assert_eq!(decoded_categories, categories);
+
+    // 2. Test RLE column codec
+    let repeated = [7u32, 7, 7, 7, 9, 9, 9, 9, 9, 9, 12, 12];
+    let mut rle_buf = [0u8; 128];
+    let rle_len = encode_rle_column(&repeated, &mut rle_buf).unwrap();
+
+    let mut decoded_repeated = [0u32; 12];
+    let dec_rle_count = decode_rle_column(&rle_buf[..rle_len], &mut decoded_repeated).unwrap();
+    assert_eq!(dec_rle_count, 12);
+    assert_eq!(decoded_repeated, repeated);
+}
