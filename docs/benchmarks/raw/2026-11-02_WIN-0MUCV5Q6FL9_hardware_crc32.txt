@@ -1,0 +1,1752 @@
+=== COMPACT BINARY PROTOCOL BENCHMARK RAW EXECUTION LOG (HARDWARE CRC32) ===
+Date: 2026-11-02
+Machine: WIN-0MUCV5Q6FL9 (Intel Core i9-11900H @ 2.50GHz, 8 Cores, 16 Threads)
+OS: Windows 11 Pro 64-bit
+Target: Hardware CRC32 (SSE4.2 _mm_crc32_u64) + CBP-01 unpack_u32 fix
+
+=== TARGET 1: PRIMITIVES ===
+   Compiling cbp-core v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp-core)
+   Compiling cbp-transforms v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp-transforms)
+   Compiling cbp v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp)
+   Compiling cbp-benches v0.1.0 (D:\Repo\compact-binary-protocol\benches)
+    Finished `bench` profile [optimized] target(s) in 10.94s
+     Running benches\primitives.rs (D:\Repo\compact-binary-protocol\target\release\deps\primitives-e939b01bd65f0011.exe)
+Benchmarking Primitives/PrefixVarint/encode/0_1B
+Benchmarking Primitives/PrefixVarint/encode/0_1B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/0_1B: Collecting 100 samples in estimated 5.0000 s (5.4B iterations)
+Benchmarking Primitives/PrefixVarint/encode/0_1B: Analyzing
+Primitives/PrefixVarint/encode/0_1B
+                        time:   [949.31 ps 971.89 ps 998.07 ps]
+                        change: [+3.0708% +5.8964% +9.3095%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 16 outliers among 100 measurements (16.00%)
+  15 (15.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Primitives/PrefixVarint/decode/0_1B
+Benchmarking Primitives/PrefixVarint/decode/0_1B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/0_1B: Collecting 100 samples in estimated 5.0000 s (6.1B iterations)
+Benchmarking Primitives/PrefixVarint/decode/0_1B: Analyzing
+Primitives/PrefixVarint/decode/0_1B
+                        time:   [758.54 ps 771.45 ps 783.88 ps]
+                        change: [âˆ’0.8271% +1.2247% +3.3194%] (p = 0.27 > 0.05)
+                        No change in performance detected.
+Benchmarking Primitives/PrefixVarint/encode/1_1B
+Benchmarking Primitives/PrefixVarint/encode/1_1B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/1_1B: Collecting 100 samples in estimated 5.0000 s (5.5B iterations)
+Benchmarking Primitives/PrefixVarint/encode/1_1B: Analyzing
+Primitives/PrefixVarint/encode/1_1B
+                        time:   [919.67 ps 940.63 ps 965.34 ps]
+                        change: [+2.9115% +6.3540% +9.5923%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 20 outliers among 100 measurements (20.00%)
+  1 (1.00%) high mild
+  19 (19.00%) high severe
+Benchmarking Primitives/PrefixVarint/decode/1_1B
+Benchmarking Primitives/PrefixVarint/decode/1_1B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/1_1B: Collecting 100 samples in estimated 5.0000 s (6.1B iterations)
+Benchmarking Primitives/PrefixVarint/decode/1_1B: Analyzing
+Primitives/PrefixVarint/decode/1_1B
+                        time:   [757.14 ps 768.33 ps 779.33 ps]
+                        change: [âˆ’1.4031% +1.2187% +3.6952%] (p = 0.36 > 0.05)
+                        No change in performance detected.
+Benchmarking Primitives/PrefixVarint/encode/127_1B
+Benchmarking Primitives/PrefixVarint/encode/127_1B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/127_1B: Collecting 100 samples in estimated 5.0000 s (5.6B iterations)
+Benchmarking Primitives/PrefixVarint/encode/127_1B: Analyzing
+Primitives/PrefixVarint/encode/127_1B
+                        time:   [919.82 ps 941.46 ps 967.56 ps]
+                        change: [+2.8408% +6.3100% +9.7338%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 18 outliers among 100 measurements (18.00%)
+  1 (1.00%) high mild
+  17 (17.00%) high severe
+Benchmarking Primitives/PrefixVarint/decode/127_1B
+Benchmarking Primitives/PrefixVarint/decode/127_1B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/127_1B: Collecting 100 samples in estimated 5.0000 s (6.1B iterations)
+Benchmarking Primitives/PrefixVarint/decode/127_1B: Analyzing
+Primitives/PrefixVarint/decode/127_1B
+                        time:   [773.09 ps 784.72 ps 795.87 ps]
+                        change: [âˆ’0.2998% +1.7576% +3.8694%] (p = 0.11 > 0.05)
+                        No change in performance detected.
+Found 4 outliers among 100 measurements (4.00%)
+  2 (2.00%) low mild
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Primitives/PrefixVarint/encode/128_2B
+Benchmarking Primitives/PrefixVarint/encode/128_2B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/128_2B: Collecting 100 samples in estimated 5.0000 s (5.0B iterations)
+Benchmarking Primitives/PrefixVarint/encode/128_2B: Analyzing
+Primitives/PrefixVarint/encode/128_2B
+                        time:   [1.0218 ns 1.0400 ns 1.0608 ns]
+                        change: [+3.3203% +5.8144% +8.4945%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 16 outliers among 100 measurements (16.00%)
+  16 (16.00%) high mild
+Benchmarking Primitives/PrefixVarint/decode/128_2B
+Benchmarking Primitives/PrefixVarint/decode/128_2B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/128_2B: Collecting 100 samples in estimated 5.0000 s (2.1B iterations)
+Benchmarking Primitives/PrefixVarint/decode/128_2B: Analyzing
+Primitives/PrefixVarint/decode/128_2B
+                        time:   [2.3507 ns 2.3688 ns 2.3879 ns]
+                        change: [âˆ’0.5767% +0.6772% +1.8827%] (p = 0.29 > 0.05)
+                        No change in performance detected.
+Benchmarking Primitives/PrefixVarint/encode/16383_2B
+Benchmarking Primitives/PrefixVarint/encode/16383_2B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/16383_2B: Collecting 100 samples in estimated 5.0000 s (5.0B iterations)
+Benchmarking Primitives/PrefixVarint/encode/16383_2B: Analyzing
+Primitives/PrefixVarint/encode/16383_2B
+                        time:   [1.0164 ns 1.0335 ns 1.0527 ns]
+                        change: [+3.8485% +6.2669% +8.7982%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 18 outliers among 100 measurements (18.00%)
+  12 (12.00%) high mild
+  6 (6.00%) high severe
+Benchmarking Primitives/PrefixVarint/decode/16383_2B
+Benchmarking Primitives/PrefixVarint/decode/16383_2B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/16383_2B: Collecting 100 samples in estimated 5.0000 s (2.1B iterations)
+Benchmarking Primitives/PrefixVarint/decode/16383_2B: Analyzing
+Primitives/PrefixVarint/decode/16383_2B
+                        time:   [2.3964 ns 2.4138 ns 2.4311 ns]
+                        change: [âˆ’1.2634% +0.5328% +2.1541%] (p = 0.56 > 0.05)
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Primitives/PrefixVarint/encode/16384_3B
+Benchmarking Primitives/PrefixVarint/encode/16384_3B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/16384_3B: Collecting 100 samples in estimated 5.0000 s (3.8B iterations)
+Benchmarking Primitives/PrefixVarint/encode/16384_3B: Analyzing
+Primitives/PrefixVarint/encode/16384_3B
+                        time:   [1.3037 ns 1.3197 ns 1.3363 ns]
+                        change: [âˆ’2.4066% âˆ’0.6884% +0.9401%] (p = 0.43 > 0.05)
+                        No change in performance detected.
+Benchmarking Primitives/PrefixVarint/decode/16384_3B
+Benchmarking Primitives/PrefixVarint/decode/16384_3B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/16384_3B: Collecting 100 samples in estimated 5.0000 s (1.7B iterations)
+Benchmarking Primitives/PrefixVarint/decode/16384_3B: Analyzing
+Primitives/PrefixVarint/decode/16384_3B
+                        time:   [2.9614 ns 3.0072 ns 3.0555 ns]
+                        change: [+0.6385% +2.3353% +4.0512%] (p = 0.01 < 0.05)
+                        Change within noise threshold.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking Primitives/PrefixVarint/encode/2097151_3B
+Benchmarking Primitives/PrefixVarint/encode/2097151_3B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/2097151_3B: Collecting 100 samples in estimated 5.0000 s (3.7B iterations)
+Benchmarking Primitives/PrefixVarint/encode/2097151_3B: Analyzing
+Primitives/PrefixVarint/encode/2097151_3B
+                        time:   [1.3286 ns 1.3456 ns 1.3637 ns]
+                        change: [âˆ’0.0327% +1.6892% +3.4419%] (p = 0.06 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Primitives/PrefixVarint/decode/2097151_3B
+Benchmarking Primitives/PrefixVarint/decode/2097151_3B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/2097151_3B: Collecting 100 samples in estimated 5.0000 s (1.7B iterations)
+Benchmarking Primitives/PrefixVarint/decode/2097151_3B: Analyzing
+Primitives/PrefixVarint/decode/2097151_3B
+                        time:   [2.8999 ns 2.9198 ns 2.9398 ns]
+                        change: [âˆ’1.7314% +0.0914% +1.8086%] (p = 0.94 > 0.05)
+                        No change in performance detected.
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Primitives/PrefixVarint/encode/2097152_4B
+Benchmarking Primitives/PrefixVarint/encode/2097152_4B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/2097152_4B: Collecting 100 samples in estimated 5.0000 s (3.0B iterations)
+Benchmarking Primitives/PrefixVarint/encode/2097152_4B: Analyzing
+Primitives/PrefixVarint/encode/2097152_4B
+                        time:   [1.6806 ns 1.6979 ns 1.7173 ns]
+                        change: [âˆ’4.3369% âˆ’2.7485% âˆ’1.2559%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) high mild
+  2 (2.00%) high severe
+Benchmarking Primitives/PrefixVarint/decode/2097152_4B
+Benchmarking Primitives/PrefixVarint/decode/2097152_4B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/2097152_4B: Collecting 100 samples in estimated 5.0000 s (1.7B iterations)
+Benchmarking Primitives/PrefixVarint/decode/2097152_4B: Analyzing
+Primitives/PrefixVarint/decode/2097152_4B
+                        time:   [2.8767 ns 2.9073 ns 2.9429 ns]
+                        change: [+0.2022% +1.3640% +2.5586%] (p = 0.03 < 0.05)
+                        Change within noise threshold.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking Primitives/PrefixVarint/encode/268435455_4B
+Benchmarking Primitives/PrefixVarint/encode/268435455_4B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/268435455_4B: Collecting 100 samples in estimated 5.0000 s (3.0B iterations)
+Benchmarking Primitives/PrefixVarint/encode/268435455_4B: Analyzing
+Primitives/PrefixVarint/encode/268435455_4B
+                        time:   [1.6661 ns 1.6811 ns 1.6990 ns]
+                        change: [âˆ’0.8245% +0.9954% +2.7885%] (p = 0.37 > 0.05)
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Primitives/PrefixVarint/decode/268435455_4B
+Benchmarking Primitives/PrefixVarint/decode/268435455_4B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/268435455_4B: Collecting 100 samples in estimated 5.0000 s (1.7B iterations)
+Benchmarking Primitives/PrefixVarint/decode/268435455_4B: Analyzing
+Primitives/PrefixVarint/decode/268435455_4B
+                        time:   [2.8739 ns 2.8991 ns 2.9247 ns]
+                        change: [+0.3846% +1.6501% +2.9164%] (p = 0.01 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+Benchmarking Primitives/PrefixVarint/encode/268435456_5B
+Benchmarking Primitives/PrefixVarint/encode/268435456_5B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/268435456_5B: Collecting 100 samples in estimated 5.0000 s (2.4B iterations)
+Benchmarking Primitives/PrefixVarint/encode/268435456_5B: Analyzing
+Primitives/PrefixVarint/encode/268435456_5B
+                        time:   [2.0867 ns 2.1090 ns 2.1350 ns]
+                        change: [+4.1608% +5.7834% +7.6968%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Primitives/PrefixVarint/decode/268435456_5B
+Benchmarking Primitives/PrefixVarint/decode/268435456_5B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/268435456_5B: Collecting 100 samples in estimated 5.0000 s (1.4B iterations)
+Benchmarking Primitives/PrefixVarint/decode/268435456_5B: Analyzing
+Primitives/PrefixVarint/decode/268435456_5B
+                        time:   [3.4703 ns 3.5173 ns 3.5701 ns]
+                        change: [âˆ’0.3406% +1.0147% +2.3610%] (p = 0.17 > 0.05)
+                        No change in performance detected.
+Found 15 outliers among 100 measurements (15.00%)
+  8 (8.00%) low mild
+  4 (4.00%) high mild
+  3 (3.00%) high severe
+Benchmarking Primitives/PrefixVarint/encode/u64_max_9B
+Benchmarking Primitives/PrefixVarint/encode/u64_max_9B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/encode/u64_max_9B: Collecting 100 samples in estimated 5.0000 s (2.8B iterations)
+Benchmarking Primitives/PrefixVarint/encode/u64_max_9B: Analyzing
+Primitives/PrefixVarint/encode/u64_max_9B
+                        time:   [1.7652 ns 1.7790 ns 1.7931 ns]
+                        change: [âˆ’3.0618% âˆ’1.5492% âˆ’0.2049%] (p = 0.03 < 0.05)
+                        Change within noise threshold.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Primitives/PrefixVarint/decode/u64_max_9B
+Benchmarking Primitives/PrefixVarint/decode/u64_max_9B: Warming up for 3.0000 s
+Benchmarking Primitives/PrefixVarint/decode/u64_max_9B: Collecting 100 samples in estimated 5.0000 s (5.1B iterations)
+Benchmarking Primitives/PrefixVarint/decode/u64_max_9B: Analyzing
+Primitives/PrefixVarint/decode/u64_max_9B
+                        time:   [975.57 ps 983.77 ps 991.73 ps]
+                        change: [âˆ’2.6107% âˆ’1.3328% âˆ’0.0242%] (p = 0.04 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Primitives/ZigZag/zigzag32/encode/0
+Benchmarking Primitives/ZigZag/zigzag32/encode/0: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag32/encode/0: Collecting 100 samples in estimated 5.0000 s (13B iterations)
+Benchmarking Primitives/ZigZag/zigzag32/encode/0: Analyzing
+Primitives/ZigZag/zigzag32/encode/0
+                        time:   [363.34 ps 366.48 ps 369.76 ps]
+                        change: [+0.1070% +1.6827% +3.3369%] (p = 0.05 < 0.05)
+                        Change within noise threshold.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+Benchmarking Primitives/ZigZag/zigzag32/decode/0
+Benchmarking Primitives/ZigZag/zigzag32/decode/0: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag32/decode/0: Collecting 100 samples in estimated 5.0000 s (10B iterations)
+Benchmarking Primitives/ZigZag/zigzag32/decode/0: Analyzing
+Primitives/ZigZag/zigzag32/decode/0
+                        time:   [471.85 ps 475.14 ps 478.42 ps]
+                        change: [âˆ’0.8427% +0.4845% +1.7326%] (p = 0.47 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Primitives/ZigZag/zigzag32/encode/neg_1
+Benchmarking Primitives/ZigZag/zigzag32/encode/neg_1: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag32/encode/neg_1: Collecting 100 samples in estimated 5.0000 s (14B iterations)
+Benchmarking Primitives/ZigZag/zigzag32/encode/neg_1: Analyzing
+Primitives/ZigZag/zigzag32/encode/neg_1
+                        time:   [366.55 ps 370.42 ps 374.50 ps]
+                        change: [âˆ’1.6369% âˆ’0.2090% +1.1236%] (p = 0.76 > 0.05)
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+Benchmarking Primitives/ZigZag/zigzag32/decode/neg_1
+Benchmarking Primitives/ZigZag/zigzag32/decode/neg_1: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag32/decode/neg_1: Collecting 100 samples in estimated 5.0000 s (10B iterations)
+Benchmarking Primitives/ZigZag/zigzag32/decode/neg_1: Analyzing
+Primitives/ZigZag/zigzag32/decode/neg_1
+                        time:   [481.09 ps 484.68 ps 488.77 ps]
+                        change: [âˆ’0.0942% +1.0041% +2.3967%] (p = 0.15 > 0.05)
+                        No change in performance detected.
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Primitives/ZigZag/zigzag32/encode/pos_1
+Benchmarking Primitives/ZigZag/zigzag32/encode/pos_1: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag32/encode/pos_1: Collecting 100 samples in estimated 5.0000 s (13B iterations)
+Benchmarking Primitives/ZigZag/zigzag32/encode/pos_1: Analyzing
+Primitives/ZigZag/zigzag32/encode/pos_1
+                        time:   [364.36 ps 367.58 ps 370.69 ps]
+                        change: [+0.3480% +1.5443% +2.8105%] (p = 0.02 < 0.05)
+                        Change within noise threshold.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+Benchmarking Primitives/ZigZag/zigzag32/decode/pos_1
+Benchmarking Primitives/ZigZag/zigzag32/decode/pos_1: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag32/decode/pos_1: Collecting 100 samples in estimated 5.0000 s (10B iterations)
+Benchmarking Primitives/ZigZag/zigzag32/decode/pos_1: Analyzing
+Primitives/ZigZag/zigzag32/decode/pos_1
+                        time:   [481.68 ps 486.14 ps 491.18 ps]
+                        change: [âˆ’3.3142% âˆ’1.4049% +0.3503%] (p = 0.13 > 0.05)
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+Benchmarking Primitives/ZigZag/zigzag32/encode/i32_min
+Benchmarking Primitives/ZigZag/zigzag32/encode/i32_min: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag32/encode/i32_min: Collecting 100 samples in estimated 5.0000 s (13B iterations)
+Benchmarking Primitives/ZigZag/zigzag32/encode/i32_min: Analyzing
+Primitives/ZigZag/zigzag32/encode/i32_min
+                        time:   [360.86 ps 364.41 ps 368.05 ps]
+                        change: [âˆ’4.5843% âˆ’2.3190% âˆ’0.2074%] (p = 0.03 < 0.05)
+                        Change within noise threshold.
+Benchmarking Primitives/ZigZag/zigzag32/decode/i32_min
+Benchmarking Primitives/ZigZag/zigzag32/decode/i32_min: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag32/decode/i32_min: Collecting 100 samples in estimated 5.0000 s (10B iterations)
+Benchmarking Primitives/ZigZag/zigzag32/decode/i32_min: Analyzing
+Primitives/ZigZag/zigzag32/decode/i32_min
+                        time:   [485.18 ps 489.06 ps 492.91 ps]
+                        change: [âˆ’0.3567% +1.0827% +2.6823%] (p = 0.20 > 0.05)
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high severe
+Benchmarking Primitives/ZigZag/zigzag32/encode/i32_max
+Benchmarking Primitives/ZigZag/zigzag32/encode/i32_max: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag32/encode/i32_max: Collecting 100 samples in estimated 5.0000 s (14B iterations)
+Benchmarking Primitives/ZigZag/zigzag32/encode/i32_max: Analyzing
+Primitives/ZigZag/zigzag32/encode/i32_max
+                        time:   [369.32 ps 372.95 ps 376.44 ps]
+                        change: [âˆ’2.2500% +0.0248% +2.2063%] (p = 1.00 > 0.05)
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Primitives/ZigZag/zigzag32/decode/i32_max
+Benchmarking Primitives/ZigZag/zigzag32/decode/i32_max: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag32/decode/i32_max: Collecting 100 samples in estimated 5.0000 s (10B iterations)
+Benchmarking Primitives/ZigZag/zigzag32/decode/i32_max: Analyzing
+Primitives/ZigZag/zigzag32/decode/i32_max
+                        time:   [482.99 ps 491.36 ps 500.18 ps]
+                        change: [âˆ’1.5214% +0.1292% +1.9893%] (p = 0.93 > 0.05)
+                        No change in performance detected.
+Found 7 outliers among 100 measurements (7.00%)
+  4 (4.00%) high mild
+  3 (3.00%) high severe
+Benchmarking Primitives/ZigZag/zigzag64/encode/0
+Benchmarking Primitives/ZigZag/zigzag64/encode/0: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag64/encode/0: Collecting 100 samples in estimated 5.0000 s (13B iterations)
+Benchmarking Primitives/ZigZag/zigzag64/encode/0: Analyzing
+Primitives/ZigZag/zigzag64/encode/0
+                        time:   [365.15 ps 368.34 ps 371.68 ps]
+                        change: [âˆ’21.324% âˆ’19.880% âˆ’18.317%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) low mild
+  1 (1.00%) high mild
+Benchmarking Primitives/ZigZag/zigzag64/decode/0
+Benchmarking Primitives/ZigZag/zigzag64/decode/0: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag64/decode/0: Collecting 100 samples in estimated 5.0000 s (10B iterations)
+Benchmarking Primitives/ZigZag/zigzag64/decode/0: Analyzing
+Primitives/ZigZag/zigzag64/decode/0
+                        time:   [472.90 ps 475.90 ps 478.99 ps]
+                        change: [âˆ’2.6852% âˆ’1.5582% âˆ’0.4319%] (p = 0.01 < 0.05)
+                        Change within noise threshold.
+Benchmarking Primitives/ZigZag/zigzag64/encode/neg_1
+Benchmarking Primitives/ZigZag/zigzag64/encode/neg_1: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag64/encode/neg_1: Collecting 100 samples in estimated 5.0000 s (13B iterations)
+Benchmarking Primitives/ZigZag/zigzag64/encode/neg_1: Analyzing
+Primitives/ZigZag/zigzag64/encode/neg_1
+                        time:   [369.63 ps 373.01 ps 376.23 ps]
+                        change: [âˆ’21.998% âˆ’20.317% âˆ’18.638%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) low mild
+Benchmarking Primitives/ZigZag/zigzag64/decode/neg_1
+Benchmarking Primitives/ZigZag/zigzag64/decode/neg_1: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag64/decode/neg_1: Collecting 100 samples in estimated 5.0000 s (10B iterations)
+Benchmarking Primitives/ZigZag/zigzag64/decode/neg_1: Analyzing
+Primitives/ZigZag/zigzag64/decode/neg_1
+                        time:   [477.05 ps 481.38 ps 485.84 ps]
+                        change: [âˆ’2.4973% âˆ’1.2865% âˆ’0.0619%] (p = 0.05 < 0.05)
+                        Change within noise threshold.
+Benchmarking Primitives/ZigZag/zigzag64/encode/pos_1
+Benchmarking Primitives/ZigZag/zigzag64/encode/pos_1: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag64/encode/pos_1: Collecting 100 samples in estimated 5.0000 s (14B iterations)
+Benchmarking Primitives/ZigZag/zigzag64/encode/pos_1: Analyzing
+Primitives/ZigZag/zigzag64/encode/pos_1
+                        time:   [363.58 ps 366.75 ps 369.91 ps]
+                        change: [âˆ’22.371% âˆ’21.239% âˆ’20.052%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Benchmarking Primitives/ZigZag/zigzag64/decode/pos_1
+Benchmarking Primitives/ZigZag/zigzag64/decode/pos_1: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag64/decode/pos_1: Collecting 100 samples in estimated 5.0000 s (10B iterations)
+Benchmarking Primitives/ZigZag/zigzag64/decode/pos_1: Analyzing
+Primitives/ZigZag/zigzag64/decode/pos_1
+                        time:   [474.85 ps 479.87 ps 485.25 ps]
+                        change: [âˆ’1.8714% âˆ’0.1045% +1.5721%] (p = 0.89 > 0.05)
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Primitives/ZigZag/zigzag64/encode/i64_min
+Benchmarking Primitives/ZigZag/zigzag64/encode/i64_min: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag64/encode/i64_min: Collecting 100 samples in estimated 5.0000 s (14B iterations)
+Benchmarking Primitives/ZigZag/zigzag64/encode/i64_min: Analyzing
+Primitives/ZigZag/zigzag64/encode/i64_min
+                        time:   [377.89 ps 382.93 ps 387.99 ps]
+                        change: [âˆ’21.365% âˆ’19.524% âˆ’17.675%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 5 outliers among 100 measurements (5.00%)
+  5 (5.00%) high mild
+Benchmarking Primitives/ZigZag/zigzag64/decode/i64_min
+Benchmarking Primitives/ZigZag/zigzag64/decode/i64_min: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag64/decode/i64_min: Collecting 100 samples in estimated 5.0000 s (10B iterations)
+Benchmarking Primitives/ZigZag/zigzag64/decode/i64_min: Analyzing
+Primitives/ZigZag/zigzag64/decode/i64_min
+                        time:   [478.49 ps 483.40 ps 488.44 ps]
+                        change: [âˆ’1.6267% +0.2165% +2.0576%] (p = 0.84 > 0.05)
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+Benchmarking Primitives/ZigZag/zigzag64/encode/i64_max
+Benchmarking Primitives/ZigZag/zigzag64/encode/i64_max: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag64/encode/i64_max: Collecting 100 samples in estimated 5.0000 s (13B iterations)
+Benchmarking Primitives/ZigZag/zigzag64/encode/i64_max: Analyzing
+Primitives/ZigZag/zigzag64/encode/i64_max
+                        time:   [368.69 ps 371.70 ps 374.62 ps]
+                        change: [âˆ’22.332% âˆ’21.079% âˆ’19.680%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking Primitives/ZigZag/zigzag64/decode/i64_max
+Benchmarking Primitives/ZigZag/zigzag64/decode/i64_max: Warming up for 3.0000 s
+Benchmarking Primitives/ZigZag/zigzag64/decode/i64_max: Collecting 100 samples in estimated 5.0000 s (10B iterations)
+Benchmarking Primitives/ZigZag/zigzag64/decode/i64_max: Analyzing
+Primitives/ZigZag/zigzag64/decode/i64_max
+                        time:   [482.03 ps 486.24 ps 490.65 ps]
+                        change: [âˆ’7.8127% âˆ’5.1197% âˆ’2.5882%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 4 outliers among 100 measurements (4.00%)
+  1 (1.00%) high mild
+  3 (3.00%) high severe
+
+Benchmarking Primitives/CRC32_Castagnoli/crc32/8B
+Benchmarking Primitives/CRC32_Castagnoli/crc32/8B: Warming up for 3.0000 s
+Benchmarking Primitives/CRC32_Castagnoli/crc32/8B: Collecting 100 samples in estimated 5.0000 s (2.2B iterations)
+Benchmarking Primitives/CRC32_Castagnoli/crc32/8B: Analyzing
+Primitives/CRC32_Castagnoli/crc32/8B
+                        time:   [2.2546 ns 2.2786 ns 2.3051 ns]
+                        thrpt:  [3.2323 GiB/s 3.2699 GiB/s 3.3046 GiB/s]
+                 change:
+                        time:   [âˆ’92.369% âˆ’92.284% âˆ’92.183%] (p = 0.00 < 0.05)
+                        thrpt:  [+1179.3% +1196.0% +1210.5%]
+                        Performance has improved.
+Found 4 outliers among 100 measurements (4.00%)
+  2 (2.00%) high mild
+  2 (2.00%) high severe
+Benchmarking Primitives/CRC32_Castagnoli/crc32/24B
+Benchmarking Primitives/CRC32_Castagnoli/crc32/24B: Warming up for 3.0000 s
+Benchmarking Primitives/CRC32_Castagnoli/crc32/24B: Collecting 100 samples in estimated 5.0000 s (1.5B iterations)
+Benchmarking Primitives/CRC32_Castagnoli/crc32/24B: Analyzing
+Primitives/CRC32_Castagnoli/crc32/24B
+                        time:   [3.2176 ns 3.2444 ns 3.2703 ns]
+                        thrpt:  [6.8348 GiB/s 6.8892 GiB/s 6.9468 GiB/s]
+                 change:
+                        time:   [âˆ’96.724% âˆ’96.665% âˆ’96.615%] (p = 0.00 < 0.05)
+                        thrpt:  [+2853.8% +2898.8% +2953.0%]
+                        Performance has improved.
+Benchmarking Primitives/CRC32_Castagnoli/crc32/64B
+Benchmarking Primitives/CRC32_Castagnoli/crc32/64B: Warming up for 3.0000 s
+Benchmarking Primitives/CRC32_Castagnoli/crc32/64B: Collecting 100 samples in estimated 5.0000 s (1.9B iterations)
+Benchmarking Primitives/CRC32_Castagnoli/crc32/64B: Analyzing
+Primitives/CRC32_Castagnoli/crc32/64B
+                        time:   [2.6079 ns 2.6363 ns 2.6643 ns]
+                        thrpt:  [22.372 GiB/s 22.610 GiB/s 22.855 GiB/s]
+                 change:
+                        time:   [âˆ’98.965% âˆ’98.952% âˆ’98.941%] (p = 0.00 < 0.05)
+                        thrpt:  [+9343.0% +9442.5% +9557.3%]
+                        Performance has improved.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) low mild
+  1 (1.00%) high mild
+Benchmarking Primitives/CRC32_Castagnoli/crc32/1KiB
+Benchmarking Primitives/CRC32_Castagnoli/crc32/1KiB: Warming up for 3.0000 s
+Benchmarking Primitives/CRC32_Castagnoli/crc32/1KiB: Collecting 100 samples in estimated 5.0002 s (103M iterations)
+Benchmarking Primitives/CRC32_Castagnoli/crc32/1KiB: Analyzing
+Primitives/CRC32_Castagnoli/crc32/1KiB
+                        time:   [47.673 ns 47.920 ns 48.201 ns]
+                        thrpt:  [19.785 GiB/s 19.901 GiB/s 20.004 GiB/s]
+                 change:
+                        time:   [âˆ’98.799% âˆ’98.786% âˆ’98.775%] (p = 0.00 < 0.05)
+                        thrpt:  [+8060.3% +8139.6% +8225.2%]
+                        Performance has improved.
+Found 15 outliers among 100 measurements (15.00%)
+  7 (7.00%) high mild
+  8 (8.00%) high severe
+Benchmarking Primitives/CRC32_Castagnoli/crc32/64KiB
+Benchmarking Primitives/CRC32_Castagnoli/crc32/64KiB: Warming up for 3.0000 s
+Benchmarking Primitives/CRC32_Castagnoli/crc32/64KiB: Collecting 100 samples in estimated 5.0219 s (904k iterations)
+Benchmarking Primitives/CRC32_Castagnoli/crc32/64KiB: Analyzing
+Primitives/CRC32_Castagnoli/crc32/64KiB
+                        time:   [5.5391 Âµs 5.5505 Âµs 5.5619 Âµs]
+                        thrpt:  [10.974 GiB/s 10.996 GiB/s 11.019 GiB/s]
+                 change:
+                        time:   [âˆ’97.848% âˆ’97.825% âˆ’97.805%] (p = 0.00 < 0.05)
+                        thrpt:  [+4455.3% +4498.1% +4547.4%]
+                        Performance has improved.
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) low mild
+  1 (1.00%) high mild
+Benchmarking Primitives/CRC32_Castagnoli/crc32/1MiB
+Benchmarking Primitives/CRC32_Castagnoli/crc32/1MiB: Warming up for 3.0000 s
+Benchmarking Primitives/CRC32_Castagnoli/crc32/1MiB: Collecting 100 samples in estimated 5.4519 s (61k iterations)
+Benchmarking Primitives/CRC32_Castagnoli/crc32/1MiB: Analyzing
+Primitives/CRC32_Castagnoli/crc32/1MiB
+                        time:   [89.732 Âµs 89.973 Âµs 90.228 Âµs]
+                        thrpt:  [10.823 GiB/s 10.854 GiB/s 10.883 GiB/s]
+                 change:
+                        time:   [âˆ’97.794% âˆ’97.778% âˆ’97.764%] (p = 0.00 < 0.05)
+                        thrpt:  [+4372.0% +4400.1% +4432.2%]
+                        Performance has improved.
+Found 12 outliers among 100 measurements (12.00%)
+  3 (3.00%) low mild
+  4 (4.00%) high mild
+  5 (5.00%) high severe
+
+
+
+=== TARGET 2: FRAMING ===
+   Compiling cbp-benches v0.1.0 (D:\Repo\compact-binary-protocol\benches)
+    Finished `bench` profile [optimized] target(s) in 9.57s
+     Running benches\framing.rs (D:\Repo\compact-binary-protocol\target\release\deps\framing-58a356972889cb45.exe)
+Benchmarking Framing/Pack_Unpack/pack_frame/24B
+Benchmarking Framing/Pack_Unpack/pack_frame/24B: Warming up for 3.0000 s
+Benchmarking Framing/Pack_Unpack/pack_frame/24B: Collecting 100 samples in estimated 5.0001 s (358M iterations)
+Benchmarking Framing/Pack_Unpack/pack_frame/24B: Analyzing
+Framing/Pack_Unpack/pack_frame/24B
+                        time:   [14.156 ns 14.329 ns 14.515 ns]
+                        thrpt:  [1.5399 GiB/s 1.5599 GiB/s 1.5790 GiB/s]
+                 change:
+                        time:   [âˆ’88.286% âˆ’88.133% âˆ’87.965%] (p = 0.00 < 0.05)
+                        thrpt:  [+730.89% +742.65% +753.71%]
+                        Performance has improved.
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Framing/Pack_Unpack/unpack_frame/24B
+Benchmarking Framing/Pack_Unpack/unpack_frame/24B: Warming up for 3.0000 s
+Benchmarking Framing/Pack_Unpack/unpack_frame/24B: Collecting 100 samples in estimated 5.0000 s (545M iterations)
+Benchmarking Framing/Pack_Unpack/unpack_frame/24B: Analyzing
+Framing/Pack_Unpack/unpack_frame/24B
+                        time:   [8.9602 ns 9.0386 ns 9.1178 ns]
+                        thrpt:  [2.4515 GiB/s 2.4729 GiB/s 2.4946 GiB/s]
+                 change:
+                        time:   [âˆ’92.108% âˆ’92.013% âˆ’91.914%] (p = 0.00 < 0.05)
+                        thrpt:  [+1136.7% +1152.0% +1167.1%]
+                        Performance has improved.
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) low mild
+  2 (2.00%) high severe
+Benchmarking Framing/Pack_Unpack/pack_frame/1KiB
+Benchmarking Framing/Pack_Unpack/pack_frame/1KiB: Warming up for 3.0000 s
+Benchmarking Framing/Pack_Unpack/pack_frame/1KiB: Collecting 100 samples in estimated 5.0005 s (48M iterations)
+Benchmarking Framing/Pack_Unpack/pack_frame/1KiB: Analyzing
+Framing/Pack_Unpack/pack_frame/1KiB
+                        time:   [103.12 ns 103.44 ns 103.79 ns]
+                        thrpt:  [9.1884 GiB/s 9.2193 GiB/s 9.2482 GiB/s]
+                 change:
+                        time:   [âˆ’97.581% âˆ’97.549% âˆ’97.517%] (p = 0.00 < 0.05)
+                        thrpt:  [+3927.9% +3979.9% +4034.1%]
+                        Performance has improved.
+Found 10 outliers among 100 measurements (10.00%)
+  5 (5.00%) high mild
+  5 (5.00%) high severe
+Benchmarking Framing/Pack_Unpack/unpack_frame/1KiB
+Benchmarking Framing/Pack_Unpack/unpack_frame/1KiB: Warming up for 3.0000 s
+Benchmarking Framing/Pack_Unpack/unpack_frame/1KiB: Collecting 100 samples in estimated 5.0001 s (86M iterations)
+Benchmarking Framing/Pack_Unpack/unpack_frame/1KiB: Analyzing
+Framing/Pack_Unpack/unpack_frame/1KiB
+                        time:   [57.633 ns 57.868 ns 58.139 ns]
+                        thrpt:  [16.403 GiB/s 16.480 GiB/s 16.547 GiB/s]
+                 change:
+                        time:   [âˆ’98.590% âˆ’98.551% âˆ’98.510%] (p = 0.00 < 0.05)
+                        thrpt:  [+6611.1% +6801.9% +6992.9%]
+                        Performance has improved.
+Found 10 outliers among 100 measurements (10.00%)
+  1 (1.00%) high mild
+  9 (9.00%) high severe
+Benchmarking Framing/Pack_Unpack/pack_frame/64KiB
+Benchmarking Framing/Pack_Unpack/pack_frame/64KiB: Warming up for 3.0000 s
+Benchmarking Framing/Pack_Unpack/pack_frame/64KiB: Collecting 100 samples in estimated 5.0124 s (742k iterations)
+Benchmarking Framing/Pack_Unpack/pack_frame/64KiB: Analyzing
+Framing/Pack_Unpack/pack_frame/64KiB
+                        time:   [6.7358 Âµs 6.7577 Âµs 6.7809 Âµs]
+                        thrpt:  [9.0011 GiB/s 9.0319 GiB/s 9.0613 GiB/s]
+                 change:
+                        time:   [âˆ’97.433% âˆ’97.406% âˆ’97.383%] (p = 0.00 < 0.05)
+                        thrpt:  [+3720.5% +3755.2% +3795.5%]
+                        Performance has improved.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+Benchmarking Framing/Pack_Unpack/unpack_frame/64KiB
+Benchmarking Framing/Pack_Unpack/unpack_frame/64KiB: Warming up for 3.0000 s
+Benchmarking Framing/Pack_Unpack/unpack_frame/64KiB: Collecting 100 samples in estimated 5.0234 s (904k iterations)
+Benchmarking Framing/Pack_Unpack/unpack_frame/64KiB: Analyzing
+Framing/Pack_Unpack/unpack_frame/64KiB
+                        time:   [5.5875 Âµs 5.6306 Âµs 5.6890 Âµs]
+                        thrpt:  [10.729 GiB/s 10.840 GiB/s 10.923 GiB/s]
+                 change:
+                        time:   [âˆ’97.812% âˆ’97.797% âˆ’97.782%] (p = 0.00 < 0.05)
+                        thrpt:  [+4408.0% +4438.9% +4469.7%]
+                        Performance has improved.
+Found 15 outliers among 100 measurements (15.00%)
+  4 (4.00%) low mild
+  8 (8.00%) high mild
+  3 (3.00%) high severe
+Benchmarking Framing/Pack_Unpack/pack_frame/1MiB
+Benchmarking Framing/Pack_Unpack/pack_frame/1MiB: Warming up for 3.0000 s
+Benchmarking Framing/Pack_Unpack/pack_frame/1MiB: Collecting 100 samples in estimated 5.1456 s (40k iterations)
+Benchmarking Framing/Pack_Unpack/pack_frame/1MiB: Analyzing
+Framing/Pack_Unpack/pack_frame/1MiB
+                        time:   [126.28 Âµs 128.65 Âµs 131.72 Âµs]
+                        thrpt:  [7.4139 GiB/s 7.5909 GiB/s 7.7331 GiB/s]
+                 change:
+                        time:   [âˆ’96.959% âˆ’96.916% âˆ’96.869%] (p = 0.00 < 0.05)
+                        thrpt:  [+3093.4% +3142.4% +3188.6%]
+                        Performance has improved.
+Found 12 outliers among 100 measurements (12.00%)
+  3 (3.00%) high mild
+  9 (9.00%) high severe
+Benchmarking Framing/Pack_Unpack/unpack_frame/1MiB
+Benchmarking Framing/Pack_Unpack/unpack_frame/1MiB: Warming up for 3.0000 s
+Benchmarking Framing/Pack_Unpack/unpack_frame/1MiB: Collecting 100 samples in estimated 5.0185 s (56k iterations)
+Benchmarking Framing/Pack_Unpack/unpack_frame/1MiB: Analyzing
+Framing/Pack_Unpack/unpack_frame/1MiB
+                        time:   [89.472 Âµs 89.697 Âµs 89.930 Âµs]
+                        thrpt:  [10.859 GiB/s 10.887 GiB/s 10.915 GiB/s]
+                 change:
+                        time:   [âˆ’97.795% âˆ’97.781% âˆ’97.767%] (p = 0.00 < 0.05)
+                        thrpt:  [+4379.1% +4407.3% +4435.3%]
+                        Performance has improved.
+Found 11 outliers among 100 measurements (11.00%)
+  5 (5.00%) high mild
+  6 (6.00%) high severe
+
+Benchmarking Framing/Header_Variations/pack/no_schema_hash_64B
+Benchmarking Framing/Header_Variations/pack/no_schema_hash_64B: Warming up for 3.0000 s
+Benchmarking Framing/Header_Variations/pack/no_schema_hash_64B: Collecting 100 samples in estimated 5.0001 s (265M iterations)
+Benchmarking Framing/Header_Variations/pack/no_schema_hash_64B: Analyzing
+Framing/Header_Variations/pack/no_schema_hash_64B
+                        time:   [18.612 ns 18.760 ns 18.910 ns]
+                        change: [âˆ’93.339% âˆ’93.246% âˆ’93.167%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Framing/Header_Variations/pack/with_schema_hash_64B
+Benchmarking Framing/Header_Variations/pack/with_schema_hash_64B: Warming up for 3.0000 s
+Benchmarking Framing/Header_Variations/pack/with_schema_hash_64B: Collecting 100 samples in estimated 5.0001 s (263M iterations)
+Benchmarking Framing/Header_Variations/pack/with_schema_hash_64B: Analyzing
+Framing/Header_Variations/pack/with_schema_hash_64B
+                        time:   [18.666 ns 18.801 ns 18.936 ns]
+                        change: [âˆ’94.074% âˆ’94.006% âˆ’93.942%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking Framing/Header_Variations/pack/profile_Direct_64B
+Benchmarking Framing/Header_Variations/pack/profile_Direct_64B: Warming up for 3.0000 s
+Benchmarking Framing/Header_Variations/pack/profile_Direct_64B: Collecting 100 samples in estimated 5.0000 s (265M iterations)
+Benchmarking Framing/Header_Variations/pack/profile_Direct_64B: Analyzing
+Framing/Header_Variations/pack/profile_Direct_64B
+                        time:   [18.452 ns 18.593 ns 18.739 ns]
+                        change: [âˆ’93.538% âˆ’93.412% âˆ’93.295%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 4 outliers among 100 measurements (4.00%)
+  2 (2.00%) high mild
+  2 (2.00%) high severe
+Benchmarking Framing/Header_Variations/pack/profile_Realtime_64B
+Benchmarking Framing/Header_Variations/pack/profile_Realtime_64B: Warming up for 3.0000 s
+Benchmarking Framing/Header_Variations/pack/profile_Realtime_64B: Collecting 100 samples in estimated 5.0001 s (265M iterations)
+Benchmarking Framing/Header_Variations/pack/profile_Realtime_64B: Analyzing
+Framing/Header_Variations/pack/profile_Realtime_64B
+                        time:   [18.528 ns 18.692 ns 18.856 ns]
+                        change: [âˆ’93.350% âˆ’93.287% âˆ’93.220%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Benchmarking Framing/Header_Variations/pack/profile_Balanced_64B
+Benchmarking Framing/Header_Variations/pack/profile_Balanced_64B: Warming up for 3.0000 s
+Benchmarking Framing/Header_Variations/pack/profile_Balanced_64B: Collecting 100 samples in estimated 5.0001 s (268M iterations)
+Benchmarking Framing/Header_Variations/pack/profile_Balanced_64B: Analyzing
+Framing/Header_Variations/pack/profile_Balanced_64B
+                        time:   [18.797 ns 18.938 ns 19.083 ns]
+                        change: [âˆ’93.352% âˆ’93.268% âˆ’93.187%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Framing/Header_Variations/pack/profile_MaxDensity_64B
+Benchmarking Framing/Header_Variations/pack/profile_MaxDensity_64B: Warming up for 3.0000 s
+Benchmarking Framing/Header_Variations/pack/profile_MaxDensity_64B: Collecting 100 samples in estimated 5.0001 s (261M iterations)
+Benchmarking Framing/Header_Variations/pack/profile_MaxDensity_64B: Analyzing
+Framing/Header_Variations/pack/profile_MaxDensity_64B
+                        time:   [18.735 ns 18.901 ns 19.065 ns]
+                        change: [âˆ’93.171% âˆ’93.093% âˆ’93.008%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+
+Benchmarking Framing/CRC_Overhead_Breakdown/total_pack_frame_64KiB
+Benchmarking Framing/CRC_Overhead_Breakdown/total_pack_frame_64KiB: Warming up for 3.0000 s
+Benchmarking Framing/CRC_Overhead_Breakdown/total_pack_frame_64KiB: Collecting 100 samples in estimated 5.0038 s (737k iterations)
+Benchmarking Framing/CRC_Overhead_Breakdown/total_pack_frame_64KiB: Analyzing
+Framing/CRC_Overhead_Breakdown/total_pack_frame_64KiB
+                        time:   [6.7396 Âµs 6.7605 Âµs 6.7827 Âµs]
+                        thrpt:  [8.9987 GiB/s 9.0283 GiB/s 9.0562 GiB/s]
+                 change:
+                        time:   [âˆ’97.470% âˆ’97.420% âˆ’97.377%] (p = 0.00 < 0.05)
+                        thrpt:  [+3712.1% +3775.8% +3853.0%]
+                        Performance has improved.
+Found 6 outliers among 100 measurements (6.00%)
+  1 (1.00%) low mild
+  3 (3.00%) high mild
+  2 (2.00%) high severe
+Benchmarking Framing/CRC_Overhead_Breakdown/pure_crc32_component_64KiB
+Benchmarking Framing/CRC_Overhead_Breakdown/pure_crc32_component_64KiB: Warming up for 3.0000 s
+Benchmarking Framing/CRC_Overhead_Breakdown/pure_crc32_component_64KiB: Collecting 100 samples in estimated 5.0222 s (904k iterations)
+Benchmarking Framing/CRC_Overhead_Breakdown/pure_crc32_component_64KiB: Analyzing
+Framing/CRC_Overhead_Breakdown/pure_crc32_component_64KiB
+                        time:   [5.5310 Âµs 5.5509 Âµs 5.5770 Âµs]
+                        thrpt:  [10.944 GiB/s 10.996 GiB/s 11.035 GiB/s]
+                 change:
+                        time:   [âˆ’97.849% âˆ’97.833% âˆ’97.818%] (p = 0.00 < 0.05)
+                        thrpt:  [+4483.9% +4514.6% +4548.3%]
+                        Performance has improved.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high severe
+Benchmarking Framing/CRC_Overhead_Breakdown/payload_copy_and_header_only_64KiB
+Benchmarking Framing/CRC_Overhead_Breakdown/payload_copy_and_header_only_64KiB: Warming up for 3.0000 s
+Benchmarking Framing/CRC_Overhead_Breakdown/payload_copy_and_header_only_64KiB: Collecting 100 samples in estimated 5.0034 s (4.1M iterations)
+Benchmarking Framing/CRC_Overhead_Breakdown/payload_copy_and_header_only_64KiB: Analyzing
+Framing/CRC_Overhead_Breakdown/payload_copy_and_header_only_64KiB
+                        time:   [1.2213 Âµs 1.2254 Âµs 1.2301 Âµs]
+                        thrpt:  [49.618 GiB/s 49.807 GiB/s 49.975 GiB/s]
+                 change:
+                        time:   [âˆ’4.9370% âˆ’4.0934% âˆ’3.4069%] (p = 0.00 < 0.05)
+                        thrpt:  [+3.5270% +4.2681% +5.1934%]
+                        Performance has improved.
+Found 6 outliers among 100 measurements (6.00%)
+  1 (1.00%) low mild
+  3 (3.00%) high mild
+  2 (2.00%) high severe
+
+
+
+=== TARGET 3: CROSS-SERIALIZER ===
+   Compiling cbp-benches v0.1.0 (D:\Repo\compact-binary-protocol\benches)
+    Finished `bench` profile [optimized] target(s) in 12.45s
+     Running benches\cross_serializer.rs (D:\Repo\compact-binary-protocol\target\release\deps\cross_serializer-b554b9ba69e280b8.exe)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Raw_Memory_AoS
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Raw_Memory_AoS: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Raw_Memory_AoS: Collecting 100 samples in estimated 5.0003 s (53M iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Raw_Memory_AoS: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/encode/Raw_Memory_AoS
+                        time:   [92.366 ns 92.748 ns 93.167 ns]
+                        thrpt:  [122.83 GiB/s 123.39 GiB/s 123.90 GiB/s]
+                 change:
+                        time:   [+19.976% +21.584% +23.267%] (p = 0.00 < 0.05)
+                        thrpt:  [âˆ’18.875% âˆ’17.752% âˆ’16.650%]
+                        Performance has regressed.
+Found 14 outliers among 100 measurements (14.00%)
+  3 (3.00%) low severe
+  2 (2.00%) low mild
+  5 (5.00%) high mild
+  4 (4.00%) high severe
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Bincode
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Bincode: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Bincode: Collecting 100 samples in estimated 5.0013 s (2.9M iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Bincode: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/encode/Bincode
+                        time:   [1.6955 Âµs 1.7081 Âµs 1.7216 Âµs]
+                        thrpt:  [6.6472 GiB/s 6.7001 GiB/s 6.7497 GiB/s]
+                 change:
+                        time:   [âˆ’1.8419% âˆ’0.2720% +1.2915%] (p = 0.73 > 0.05)
+                        thrpt:  [âˆ’1.2750% +0.2728% +1.8765%]
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Postcard
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Postcard: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Postcard: Collecting 100 samples in estimated 5.0565 s (364k iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Postcard: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/encode/Postcard
+                        time:   [13.857 Âµs 13.970 Âµs 14.085 Âµs]
+                        thrpt:  [832.00 MiB/s 838.83 MiB/s 845.71 MiB/s]
+                 change:
+                        time:   [âˆ’0.2277% +0.6716% +1.6125%] (p = 0.16 > 0.05)
+                        thrpt:  [âˆ’1.5869% âˆ’0.6672% +0.2283%]
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Protobuf_prost
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Protobuf_prost: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Protobuf_prost: Collecting 100 samples in estimated 5.0372 s (384k iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Protobuf_prost: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/encode/Protobuf_prost
+                        time:   [13.043 Âµs 13.167 Âµs 13.301 Âµs]
+                        thrpt:  [881.03 MiB/s 889.98 MiB/s 898.49 MiB/s]
+                 change:
+                        time:   [+4.0484% +5.2150% +6.3925%] (p = 0.00 < 0.05)
+                        thrpt:  [âˆ’6.0084% âˆ’4.9565% âˆ’3.8908%]
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/MessagePack
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/MessagePack: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/MessagePack: Collecting 100 samples in estimated 5.0286 s (384k iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/MessagePack: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/encode/MessagePack
+                        time:   [12.913 Âµs 13.032 Âµs 13.155 Âµs]
+                        thrpt:  [890.84 MiB/s 899.22 MiB/s 907.49 MiB/s]
+                 change:
+                        time:   [âˆ’0.7979% +0.4722% +1.8215%] (p = 0.48 > 0.05)
+                        thrpt:  [âˆ’1.7889% âˆ’0.4700% +0.8043%]
+                        No change in performance detected.
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/CBP_Reference_Container
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/CBP_Reference_Container: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/CBP_Reference_Container: Collecting 100 samples in estimated 5.0468 s (389k iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/CBP_Reference_Container: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/encode/CBP_Reference_Container
+                        time:   [12.764 Âµs 12.875 Âµs 12.988 Âµs]
+                        thrpt:  [902.25 MiB/s 910.22 MiB/s 918.12 MiB/s]
+                 change:
+                        time:   [âˆ’49.172% âˆ’48.590% âˆ’47.993%] (p = 0.00 < 0.05)
+                        thrpt:  [+92.282% +94.517% +96.742%]
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Bincode
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Bincode: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Bincode: Collecting 100 samples in estimated 5.0017 s (5.7M iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Bincode: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/decode/Bincode
+                        time:   [856.57 ns 864.02 ns 871.64 ns]
+                        thrpt:  [13.129 GiB/s 13.245 GiB/s 13.360 GiB/s]
+                 change:
+                        time:   [âˆ’0.4080% +0.6882% +1.8010%] (p = 0.22 > 0.05)
+                        thrpt:  [âˆ’1.7691% âˆ’0.6835% +0.4097%]
+                        No change in performance detected.
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Postcard
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Postcard: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Postcard: Collecting 100 samples in estimated 5.0147 s (1.2M iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Postcard: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/decode/Postcard
+                        time:   [4.0254 Âµs 4.0597 Âµs 4.0953 Âµs]
+                        thrpt:  [2.7944 GiB/s 2.8190 GiB/s 2.8429 GiB/s]
+                 change:
+                        time:   [âˆ’3.5030% âˆ’1.9707% âˆ’0.4500%] (p = 0.01 < 0.05)
+                        thrpt:  [+0.4521% +2.0103% +3.6301%]
+                        Change within noise threshold.
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) low mild
+  1 (1.00%) high mild
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Protobuf_prost
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Protobuf_prost: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Protobuf_prost: Collecting 100 samples in estimated 5.0368 s (525k iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/Protobuf_prost: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/decode/Protobuf_prost
+                        time:   [9.3755 Âµs 9.4862 Âµs 9.5940 Âµs]
+                        thrpt:  [1.1928 GiB/s 1.2064 GiB/s 1.2206 GiB/s]
+                 change:
+                        time:   [+1.3792% +3.1067% +4.7831%] (p = 0.00 < 0.05)
+                        thrpt:  [âˆ’4.5647% âˆ’3.0131% âˆ’1.3605%]
+                        Performance has regressed.
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/MessagePack
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/MessagePack: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/MessagePack: Collecting 100 samples in estimated 5.0460 s (399k iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/MessagePack: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/decode/MessagePack
+                        time:   [12.292 Âµs 12.423 Âµs 12.560 Âµs]
+                        thrpt:  [933.02 MiB/s 943.34 MiB/s 953.35 MiB/s]
+                 change:
+                        time:   [âˆ’4.5115% âˆ’1.8590% +0.9377%] (p = 0.16 > 0.05)
+                        thrpt:  [âˆ’0.9290% +1.8942% +4.7247%]
+                        No change in performance detected.
+Found 7 outliers among 100 measurements (7.00%)
+  4 (4.00%) high mild
+  3 (3.00%) high severe
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/CBP_Reference_Container
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/CBP_Reference_Container: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/CBP_Reference_Container: Collecting 100 samples in estimated 5.0071 s (328k iterations)
+Benchmarking CrossSerializer/ScenarioA_1024Intervals/decode/CBP_Reference_Container: Analyzing
+CrossSerializer/ScenarioA_1024Intervals/decode/CBP_Reference_Container
+                        time:   [15.390 Âµs 15.495 Âµs 15.595 Âµs]
+                        thrpt:  [751.45 MiB/s 756.31 MiB/s 761.44 MiB/s]
+                 change:
+                        time:   [âˆ’41.649% âˆ’41.193% âˆ’40.743%] (p = 0.00 < 0.05)
+                        thrpt:  [+68.758% +70.049% +71.377%]
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Raw_Memory_AoS
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Raw_Memory_AoS: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Raw_Memory_AoS: Collecting 100 samples in estimated 5.0000 s (5.1B iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Raw_Memory_AoS: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Raw_Memory_AoS
+                        time:   [994.21 ps 1.0071 ns 1.0214 ns]
+                        thrpt:  [21.883 GiB/s 22.195 GiB/s 22.482 GiB/s]
+                 change:
+                        time:   [+0.5213% +2.3302% +4.1217%] (p = 0.02 < 0.05)
+                        thrpt:  [âˆ’3.9586% âˆ’2.2771% âˆ’0.5186%]
+                        Change within noise threshold.
+Found 15 outliers among 100 measurements (15.00%)
+  14 (14.00%) high mild
+  1 (1.00%) high severe
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Bincode
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Bincode: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Bincode: Collecting 100 samples in estimated 5.0001 s (130M iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Bincode: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Bincode
+                        time:   [37.860 ns 38.385 ns 38.951 ns]
+                        thrpt:  [587.61 MiB/s 596.27 MiB/s 604.55 MiB/s]
+                 change:
+                        time:   [+5.5682% +7.2497% +8.8463%] (p = 0.00 < 0.05)
+                        thrpt:  [âˆ’8.1273% âˆ’6.7596% âˆ’5.2745%]
+                        Performance has regressed.
+Found 14 outliers among 100 measurements (14.00%)
+  5 (5.00%) low mild
+  8 (8.00%) high mild
+  1 (1.00%) high severe
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Postcard
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Postcard: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Postcard: Collecting 100 samples in estimated 5.0000 s (30M iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Postcard: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Postcard
+                        time:   [167.97 ns 170.03 ns 172.17 ns]
+                        thrpt:  [132.94 MiB/s 134.61 MiB/s 136.26 MiB/s]
+                 change:
+                        time:   [+2.9287% +4.4860% +6.0086%] (p = 0.00 < 0.05)
+                        thrpt:  [âˆ’5.6680% âˆ’4.2934% âˆ’2.8454%]
+                        Performance has regressed.
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Protobuf_prost
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Protobuf_prost: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Protobuf_prost: Collecting 100 samples in estimated 5.0001 s (269M iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/Protobuf_prost: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Protobuf_prost
+                        time:   [18.034 ns 18.253 ns 18.482 ns]
+                        thrpt:  [1.2094 GiB/s 1.2246 GiB/s 1.2394 GiB/s]
+                 change:
+                        time:   [âˆ’0.7647% +0.6506% +2.1113%] (p = 0.38 > 0.05)
+                        thrpt:  [âˆ’2.0676% âˆ’0.6464% +0.7706%]
+                        No change in performance detected.
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/MessagePack
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/MessagePack: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/MessagePack: Collecting 100 samples in estimated 5.0004 s (32M iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/MessagePack: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/encode/MessagePack
+                        time:   [152.85 ns 154.26 ns 155.75 ns]
+                        thrpt:  [146.95 MiB/s 148.37 MiB/s 149.74 MiB/s]
+                 change:
+                        time:   [âˆ’2.7277% âˆ’1.0176% +0.6193%] (p = 0.24 > 0.05)
+                        thrpt:  [âˆ’0.6155% +1.0280% +2.8042%]
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/CBP_Reference_Snapshot
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/CBP_Reference_Snapshot: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/CBP_Reference_Snapshot: Collecting 100 samples in estimated 5.0001 s (311M iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/encode/CBP_Reference_Snapshot: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/encode/CBP_Reference_Snapshot
+                        time:   [16.111 ns 16.279 ns 16.467 ns]
+                        thrpt:  [1.3574 GiB/s 1.3730 GiB/s 1.3874 GiB/s]
+                 change:
+                        time:   [âˆ’84.602% âˆ’84.443% âˆ’84.293%] (p = 0.00 < 0.05)
+                        thrpt:  [+536.65% +542.79% +549.45%]
+                        Performance has improved.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) low mild
+  1 (1.00%) high severe
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Bincode
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Bincode: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Bincode: Collecting 100 samples in estimated 5.0000 s (500M iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Bincode: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/decode/Bincode
+                        time:   [10.014 ns 10.041 ns 10.069 ns]
+                        thrpt:  [2.2198 GiB/s 2.2260 GiB/s 2.2321 GiB/s]
+                 change:
+                        time:   [âˆ’0.1251% +0.5687% +1.2260%] (p = 0.11 > 0.05)
+                        thrpt:  [âˆ’1.2111% âˆ’0.5655% +0.1252%]
+                        No change in performance detected.
+Found 15 outliers among 100 measurements (15.00%)
+  10 (10.00%) low mild
+  4 (4.00%) high mild
+  1 (1.00%) high severe
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Postcard
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Postcard: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Postcard: Collecting 100 samples in estimated 5.0000 s (414M iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Postcard: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/decode/Postcard
+                        time:   [11.950 ns 12.087 ns 12.225 ns]
+                        thrpt:  [1.8284 GiB/s 1.8492 GiB/s 1.8705 GiB/s]
+                 change:
+                        time:   [âˆ’3.8359% âˆ’2.6754% âˆ’1.3468%] (p = 0.00 < 0.05)
+                        thrpt:  [+1.3652% +2.7490% +3.9889%]
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Protobuf_prost
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Protobuf_prost: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Protobuf_prost: Collecting 100 samples in estimated 5.0000 s (156M iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/Protobuf_prost: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/decode/Protobuf_prost
+                        time:   [31.484 ns 31.843 ns 32.204 ns]
+                        thrpt:  [710.72 MiB/s 718.77 MiB/s 726.97 MiB/s]
+                 change:
+                        time:   [âˆ’0.3972% +0.8385% +2.0991%] (p = 0.20 > 0.05)
+                        thrpt:  [âˆ’2.0559% âˆ’0.8315% +0.3988%]
+                        No change in performance detected.
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/MessagePack
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/MessagePack: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/MessagePack: Collecting 100 samples in estimated 5.0001 s (156M iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/MessagePack: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/decode/MessagePack
+                        time:   [31.577 ns 31.938 ns 32.308 ns]
+                        thrpt:  [708.45 MiB/s 716.65 MiB/s 724.83 MiB/s]
+                 change:
+                        time:   [âˆ’0.1703% +1.4678% +3.2599%] (p = 0.11 > 0.05)
+                        thrpt:  [âˆ’3.1569% âˆ’1.4466% +0.1705%]
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/CBP_Reference_Snapshot
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/CBP_Reference_Snapshot: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/CBP_Reference_Snapshot: Collecting 100 samples in estimated 5.0001 s (266M iterations)
+Benchmarking CrossSerializer/ScenarioB_SingleSnapshot/decode/CBP_Reference_Snapshot: Analyzing
+CrossSerializer/ScenarioB_SingleSnapshot/decode/CBP_Reference_Snapshot
+                        time:   [18.629 ns 18.838 ns 19.051 ns]
+                        thrpt:  [1.1732 GiB/s 1.1865 GiB/s 1.1998 GiB/s]
+                 change:
+                        time:   [âˆ’83.932% âˆ’83.593% âˆ’83.278%] (p = 0.00 < 0.05)
+                        thrpt:  [+498.00% +509.49% +522.36%]
+                        Performance has improved.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Bincode
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Bincode: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Bincode: Collecting 100 samples in estimated 5.0016 s (14M iterations)
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Bincode: Analyzing
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/Bincode
+                        time:   [353.06 ns 356.62 ns 360.18 ns]
+                        thrpt:  [3.9717 GiB/s 4.0113 GiB/s 4.0517 GiB/s]
+                 change:
+                        time:   [âˆ’7.0654% âˆ’4.7532% âˆ’2.6745%] (p = 0.00 < 0.05)
+                        thrpt:  [+2.7480% +4.9904% +7.6026%]
+                        Performance has improved.
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Postcard
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Postcard: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Postcard: Collecting 100 samples in estimated 5.0040 s (3.1M iterations)
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Postcard: Analyzing
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/Postcard
+                        time:   [1.6004 Âµs 1.6175 Âµs 1.6344 Âµs]
+                        thrpt:  [896.26 MiB/s 905.62 MiB/s 915.29 MiB/s]
+                 change:
+                        time:   [âˆ’0.2558% +1.1751% +2.5998%] (p = 0.12 > 0.05)
+                        thrpt:  [âˆ’2.5339% âˆ’1.1615% +0.2565%]
+                        No change in performance detected.
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Protobuf_prost
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Protobuf_prost: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Protobuf_prost: Collecting 100 samples in estimated 5.0027 s (3.4M iterations)
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/Protobuf_prost: Analyzing
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/Protobuf_prost
+                        time:   [1.4619 Âµs 1.4755 Âµs 1.4892 Âµs]
+                        thrpt:  [983.61 MiB/s 992.76 MiB/s 1002.0 MiB/s]
+                 change:
+                        time:   [âˆ’1.1577% +0.4391% +2.0960%] (p = 0.61 > 0.05)
+                        thrpt:  [âˆ’2.0530% âˆ’0.4372% +1.1712%]
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/MessagePack
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/MessagePack: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/MessagePack: Collecting 100 samples in estimated 5.0063 s (2.8M iterations)
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/MessagePack: Analyzing
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/MessagePack
+                        time:   [1.7922 Âµs 1.8090 Âµs 1.8268 Âµs]
+                        thrpt:  [801.88 MiB/s 809.77 MiB/s 817.34 MiB/s]
+                 change:
+                        time:   [+0.1314% +1.6171% +3.1451%] (p = 0.04 < 0.05)
+                        thrpt:  [âˆ’3.0492% âˆ’1.5914% âˆ’0.1312%]
+                        Change within noise threshold.
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/CBP_Reference_Batch
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/CBP_Reference_Batch: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/CBP_Reference_Batch: Collecting 100 samples in estimated 5.0022 s (8.9M iterations)
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/encode/CBP_Reference_Batch: Analyzing
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/CBP_Reference_Batch
+                        time:   [563.12 ns 568.38 ns 573.81 ns]
+                        thrpt:  [2.4930 GiB/s 2.5168 GiB/s 2.5403 GiB/s]
+                 change:
+                        time:   [âˆ’89.398% âˆ’89.316% âˆ’89.232%] (p = 0.00 < 0.05)
+                        thrpt:  [+828.69% +836.01% +843.20%]
+                        Performance has improved.
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Bincode
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Bincode: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Bincode: Collecting 100 samples in estimated 5.0008 s (13M iterations)
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Bincode: Analyzing
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/Bincode
+                        time:   [381.44 ns 382.56 ns 383.70 ns]
+                        thrpt:  [3.7282 GiB/s 3.7394 GiB/s 3.7503 GiB/s]
+                 change:
+                        time:   [+0.0046% +0.4963% +0.9473%] (p = 0.05 > 0.05)
+                        thrpt:  [âˆ’0.9384% âˆ’0.4938% âˆ’0.0046%]
+                        No change in performance detected.
+Found 4 outliers among 100 measurements (4.00%)
+  4 (4.00%) high mild
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Postcard
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Postcard: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Postcard: Collecting 100 samples in estimated 5.0021 s (5.2M iterations)
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Postcard: Analyzing
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/Postcard
+                        time:   [970.75 ns 977.26 ns 984.02 ns]
+                        thrpt:  [1.4537 GiB/s 1.4638 GiB/s 1.4736 GiB/s]
+                 change:
+                        time:   [âˆ’0.1729% +0.9295% +2.0880%] (p = 0.12 > 0.05)
+                        thrpt:  [âˆ’2.0453% âˆ’0.9209% +0.1732%]
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Protobuf_prost
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Protobuf_prost: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Protobuf_prost: Collecting 100 samples in estimated 5.0032 s (1.9M iterations)
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/Protobuf_prost: Analyzing
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/Protobuf_prost
+                        time:   [2.5852 Âµs 2.6096 Âµs 2.6343 Âµs]
+                        thrpt:  [556.07 MiB/s 561.34 MiB/s 566.63 MiB/s]
+                 change:
+                        time:   [+1.9738% +3.5819% +5.2950%] (p = 0.00 < 0.05)
+                        thrpt:  [âˆ’5.0288% âˆ’3.4581% âˆ’1.9356%]
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high severe
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/MessagePack
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/MessagePack: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/MessagePack: Collecting 100 samples in estimated 5.0043 s (2.1M iterations)
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/MessagePack: Analyzing
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/MessagePack
+                        time:   [2.3608 Âµs 2.3871 Âµs 2.4141 Âµs]
+                        thrpt:  [606.78 MiB/s 613.66 MiB/s 620.48 MiB/s]
+                 change:
+                        time:   [âˆ’3.1427% âˆ’0.3875% +2.0926%] (p = 0.76 > 0.05)
+                        thrpt:  [âˆ’2.0497% +0.3890% +3.2446%]
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/CBP_Reference_Batch
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/CBP_Reference_Batch: Warming up for 3.0000 s
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/CBP_Reference_Batch: Collecting 100 samples in estimated 5.0001 s (7.0M iterations)
+Benchmarking CrossSerializer/ScenarioB_Batch64Snapshots/decode/CBP_Reference_Batch: Analyzing
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/CBP_Reference_Batch
+                        time:   [720.17 ns 726.83 ns 733.68 ns]
+                        thrpt:  [1.9498 GiB/s 1.9681 GiB/s 1.9863 GiB/s]
+                 change:
+                        time:   [âˆ’87.132% âˆ’86.937% âˆ’86.754%] (p = 0.00 < 0.05)
+                        thrpt:  [+654.95% +665.53% +677.15%]
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+
+
+
+=== TARGET 4: PIPELINE PROFILES (-O0 to -O3) ===
+   Compiling cbp-core v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp-core)
+   Compiling cbp-transforms v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp-transforms)
+   Compiling cbp v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp)
+   Compiling cbp-benches v0.1.0 (D:\Repo\compact-binary-protocol\benches)
+    Finished `bench` profile [optimized] target(s) in 9.97s
+     Running benches\pipeline.rs (D:\Repo\compact-binary-protocol\target\release\deps\pipeline-21b847315c221328.exe)
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=16_64B_L1Line
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=16_64B_L1Line: Warming up for 3.0000 s
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=16_64B_L1Line: Collecting 100 samples in estimated 5.0001 s (76M iterations)
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=16_64B_L1Line: Analyzing
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=16_64B_L1Line
+                        time:   [64.162 ns 64.759 ns 65.352 ns]
+                        thrpt:  [933.95 MiB/s 942.50 MiB/s 951.26 MiB/s]
+                 change:
+                        time:   [âˆ’6.8914% âˆ’5.6433% âˆ’4.3039%] (p = 0.00 < 0.05)
+                        thrpt:  [+4.4975% +5.9809% +7.4015%]
+                        Performance has improved.
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=16_64B_L1Line
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=16_64B_L1Line: Warming up for 3.0000 s
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=16_64B_L1Line: Collecting 100 samples in estimated 5.0002 s (90M iterations)
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=16_64B_L1Line: Analyzing
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=16_64B_L1Line
+                        time:   [56.110 ns 56.828 ns 57.711 ns]
+                        thrpt:  [1.0328 GiB/s 1.0489 GiB/s 1.0623 GiB/s]
+                 change:
+                        time:   [âˆ’2.4680% âˆ’0.4514% +1.7291%] (p = 0.66 > 0.05)
+                        thrpt:  [âˆ’1.6997% +0.4535% +2.5304%]
+                        No change in performance detected.
+Found 8 outliers among 100 measurements (8.00%)
+  4 (4.00%) high mild
+  4 (4.00%) high severe
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=256_1KiB_L1Cache
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=256_1KiB_L1Cache: Warming up for 3.0000 s
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=256_1KiB_L1Cache: Collecting 100 samples in estimated 5.0011 s (6.9M iterations)
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=256_1KiB_L1Cache: Analyzing
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=256_1KiB_L1Cache
+                        time:   [710.89 ns 715.45 ns 720.14 ns]
+                        thrpt:  [1.3243 GiB/s 1.3330 GiB/s 1.3415 GiB/s]
+                 change:
+                        time:   [âˆ’2.8477% âˆ’1.2595% +0.5328%] (p = 0.12 > 0.05)
+                        thrpt:  [âˆ’0.5299% +1.2755% +2.9311%]
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high severe
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=256_1KiB_L1Cache
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=256_1KiB_L1Cache: Warming up for 3.0000 s
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=256_1KiB_L1Cache: Collecting 100 samples in estimated 5.0022 s (5.6M iterations)
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=256_1KiB_L1Cache: Analyzing
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=256_1KiB_L1Cache
+                        time:   [872.32 ns 879.13 ns 886.60 ns]
+                        thrpt:  [1.0757 GiB/s 1.0848 GiB/s 1.0933 GiB/s]
+                 change:
+                        time:   [âˆ’3.1030% âˆ’1.2137% +0.6111%] (p = 0.19 > 0.05)
+                        thrpt:  [âˆ’0.6074% +1.2286% +3.2024%]
+                        No change in performance detected.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=4096_16KiB_L1dBound
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=4096_16KiB_L1dBound: Warming up for 3.0000 s
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=4096_16KiB_L1dBound: Collecting 100 samples in estimated 5.0324 s (465k iterations)
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=4096_16KiB_L1dBound: Analyzing
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=4096_16KiB_L1dBound
+                        time:   [10.936 Âµs 11.021 Âµs 11.104 Âµs]
+                        thrpt:  [1.3742 GiB/s 1.3845 GiB/s 1.3953 GiB/s]
+                 change:
+                        time:   [âˆ’2.6693% âˆ’1.6190% âˆ’0.4727%] (p = 0.01 < 0.05)
+                        thrpt:  [+0.4749% +1.6457% +2.7425%]
+                        Change within noise threshold.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=4096_16KiB_L1dBound
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=4096_16KiB_L1dBound: Warming up for 3.0000 s
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=4096_16KiB_L1dBound: Collecting 100 samples in estimated 5.0468 s (369k iterations)
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=4096_16KiB_L1dBound: Analyzing
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=4096_16KiB_L1dBound
+                        time:   [13.534 Âµs 13.617 Âµs 13.707 Âµs]
+                        thrpt:  [1.1132 GiB/s 1.1205 GiB/s 1.1274 GiB/s]
+                 change:
+                        time:   [âˆ’2.0521% âˆ’0.9522% +0.1869%] (p = 0.10 > 0.05)
+                        thrpt:  [âˆ’0.1866% +0.9614% +2.0951%]
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=65536_256KiB_L2Bound
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=65536_256KiB_L2Bound: Warming up for 3.0000 s
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=65536_256KiB_L2Bound: Collecting 100 samples in estimated 5.4056 s (30k iterations)
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=65536_256KiB_L2Bound: Analyzing
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=65536_256KiB_L2Bound
+                        time:   [177.50 Âµs 178.91 Âµs 180.40 Âµs]
+                        thrpt:  [1.3533 GiB/s 1.3646 GiB/s 1.3754 GiB/s]
+                 change:
+                        time:   [âˆ’2.1267% +0.1394% +2.2803%] (p = 0.92 > 0.05)
+                        thrpt:  [âˆ’2.2295% âˆ’0.1392% +2.1729%]
+                        No change in performance detected.
+Found 6 outliers among 100 measurements (6.00%)
+  3 (3.00%) high mild
+  3 (3.00%) high severe
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=65536_256KiB_L2Bound
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=65536_256KiB_L2Bound: Warming up for 3.0000 s
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=65536_256KiB_L2Bound: Collecting 100 samples in estimated 5.4875 s (25k iterations)
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=65536_256KiB_L2Bound: Analyzing
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=65536_256KiB_L2Bound
+                        time:   [217.67 Âµs 219.23 Âµs 220.88 Âµs]
+                        thrpt:  [1.1053 GiB/s 1.1136 GiB/s 1.1216 GiB/s]
+                 change:
+                        time:   [âˆ’1.9749% âˆ’0.7157% +0.6658%] (p = 0.26 > 0.05)
+                        thrpt:  [âˆ’0.6614% +0.7209% +2.0147%]
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=1048576_4MiB_L3Bound
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=1048576_4MiB_L3Bound: Warming up for 3.0000 s
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=1048576_4MiB_L3Bound: Collecting 100 samples in estimated 5.1609 s (1600 iterations)
+Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=1048576_4MiB_L3Bound: Analyzing
+Pipeline/Monomorphic_U_Cycle/compress_u32/N=1048576_4MiB_L3Bound
+                        time:   [3.1145 ms 3.1347 ms 3.1580 ms]
+                        thrpt:  [1.2369 GiB/s 1.2462 GiB/s 1.2542 GiB/s]
+                 change:
+                        time:   [âˆ’3.3804% âˆ’2.0928% âˆ’0.7713%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.7773% +2.1376% +3.4986%]
+                        Change within noise threshold.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=1048576_4MiB_L3Bound
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=1048576_4MiB_L3Bound: Warming up for 3.0000 s
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=1048576_4MiB_L3Bound: Collecting 100 samples in estimated 5.2444 s (1500 iterations)
+Benchmarking Pipeline/Monomorphic_U_Cycle/decompress_u32/N=1048576_4MiB_L3Bound: Analyzing
+Pipeline/Monomorphic_U_Cycle/decompress_u32/N=1048576_4MiB_L3Bound
+                        time:   [3.5450 ms 3.5695 ms 3.5948 ms]
+                        thrpt:  [1.0866 GiB/s 1.0943 GiB/s 1.1019 GiB/s]
+                 change:
+                        time:   [âˆ’2.2854% âˆ’1.1348% +0.1098%] (p = 0.07 > 0.05)
+                        thrpt:  [âˆ’0.1096% +1.1478% +2.3389%]
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+
+Benchmarking Pipeline/Profile_Comparison/compress/Direct_O0
+Benchmarking Pipeline/Profile_Comparison/compress/Direct_O0: Warming up for 3.0000 s
+Benchmarking Pipeline/Profile_Comparison/compress/Direct_O0: Collecting 100 samples in estimated 5.0003 s (74M iterations)
+Benchmarking Pipeline/Profile_Comparison/compress/Direct_O0: Analyzing
+Pipeline/Profile_Comparison/compress/Direct_O0
+                        time:   [67.950 ns 68.574 ns 69.212 ns]
+                        thrpt:  [55.116 GiB/s 55.629 GiB/s 56.139 GiB/s]
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Pipeline/Profile_Comparison/decompress/Direct_O0
+Benchmarking Pipeline/Profile_Comparison/decompress/Direct_O0: Warming up for 3.0000 s
+Benchmarking Pipeline/Profile_Comparison/decompress/Direct_O0: Collecting 100 samples in estimated 5.0001 s (63M iterations)
+Benchmarking Pipeline/Profile_Comparison/decompress/Direct_O0: Analyzing
+Pipeline/Profile_Comparison/decompress/Direct_O0
+                        time:   [76.701 ns 77.275 ns 77.869 ns]
+                        thrpt:  [48.988 GiB/s 49.365 GiB/s 49.735 GiB/s]
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) low mild
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Pipeline/Profile_Comparison/compress/Realtime_O1
+Benchmarking Pipeline/Profile_Comparison/compress/Realtime_O1: Warming up for 3.0000 s
+Benchmarking Pipeline/Profile_Comparison/compress/Realtime_O1: Collecting 100 samples in estimated 5.0009 s (18M iterations)
+Benchmarking Pipeline/Profile_Comparison/compress/Realtime_O1: Analyzing
+Pipeline/Profile_Comparison/compress/Realtime_O1
+                        time:   [271.16 ns 272.44 ns 273.84 ns]
+                        thrpt:  [13.930 GiB/s 14.002 GiB/s 14.068 GiB/s]
+Benchmarking Pipeline/Profile_Comparison/decompress/Realtime_O1
+Benchmarking Pipeline/Profile_Comparison/decompress/Realtime_O1: Warming up for 3.0000 s
+Benchmarking Pipeline/Profile_Comparison/decompress/Realtime_O1: Collecting 100 samples in estimated 5.0002 s (66M iterations)
+Benchmarking Pipeline/Profile_Comparison/decompress/Realtime_O1: Analyzing
+Pipeline/Profile_Comparison/decompress/Realtime_O1
+                        time:   [74.357 ns 75.001 ns 75.704 ns]
+                        thrpt:  [50.390 GiB/s 50.862 GiB/s 51.303 GiB/s]
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high severe
+Benchmarking Pipeline/Profile_Comparison/compress/Balanced_O2
+Benchmarking Pipeline/Profile_Comparison/compress/Balanced_O2: Warming up for 3.0000 s
+Benchmarking Pipeline/Profile_Comparison/compress/Balanced_O2: Collecting 100 samples in estimated 5.0062 s (2.3M iterations)
+Benchmarking Pipeline/Profile_Comparison/compress/Balanced_O2: Analyzing
+Pipeline/Profile_Comparison/compress/Balanced_O2
+                        time:   [2.2028 Âµs 2.2191 Âµs 2.2356 Âµs]
+                        thrpt:  [1.7063 GiB/s 1.7190 GiB/s 1.7317 GiB/s]
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Pipeline/Profile_Comparison/decompress/Balanced_O2
+Benchmarking Pipeline/Profile_Comparison/decompress/Balanced_O2: Warming up for 3.0000 s
+Benchmarking Pipeline/Profile_Comparison/decompress/Balanced_O2: Collecting 100 samples in estimated 5.0030 s (1.8M iterations)
+Benchmarking Pipeline/Profile_Comparison/decompress/Balanced_O2: Analyzing
+Pipeline/Profile_Comparison/decompress/Balanced_O2
+                        time:   [2.8560 Âµs 2.8708 Âµs 2.8879 Âµs]
+                        thrpt:  [1.3209 GiB/s 1.3288 GiB/s 1.3357 GiB/s]
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high severe
+Benchmarking Pipeline/Profile_Comparison/compress/MaxDensity_O3
+Benchmarking Pipeline/Profile_Comparison/compress/MaxDensity_O3: Warming up for 3.0000 s
+Benchmarking Pipeline/Profile_Comparison/compress/MaxDensity_O3: Collecting 100 samples in estimated 5.0089 s (1.6M iterations)
+Benchmarking Pipeline/Profile_Comparison/compress/MaxDensity_O3: Analyzing
+Pipeline/Profile_Comparison/compress/MaxDensity_O3
+                        time:   [3.2324 Âµs 3.2586 Âµs 3.2840 Âµs]
+                        thrpt:  [1.1616 GiB/s 1.1707 GiB/s 1.1801 GiB/s]
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) high mild
+  2 (2.00%) high severe
+Benchmarking Pipeline/Profile_Comparison/decompress/MaxDensity_O3
+Benchmarking Pipeline/Profile_Comparison/decompress/MaxDensity_O3: Warming up for 3.0000 s
+Benchmarking Pipeline/Profile_Comparison/decompress/MaxDensity_O3: Collecting 100 samples in estimated 5.0128 s (1.7M iterations)
+Benchmarking Pipeline/Profile_Comparison/decompress/MaxDensity_O3: Analyzing
+Pipeline/Profile_Comparison/decompress/MaxDensity_O3
+                        time:   [2.8722 Âµs 2.8903 Âµs 2.9108 Âµs]
+                        thrpt:  [1.3105 GiB/s 1.3198 GiB/s 1.3281 GiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+
+
+
+=== TARGET 5: TRANSFORMS (GORILLA FLOAT & SIGNED DELTA) ===
+   Compiling cbp-benches v0.1.0 (D:\Repo\compact-binary-protocol\benches)
+    Finished `bench` profile [optimized] target(s) in 9.81s
+     Running benches\transforms.rs (D:\Repo\compact-binary-protocol\target\release\deps\transforms-b6bbf94e5efc5fad.exe)
+Benchmarking Transforms/Delta/encode/monotone_step_1/1K
+Benchmarking Transforms/Delta/encode/monotone_step_1/1K: Warming up for 3.0000 s
+Benchmarking Transforms/Delta/encode/monotone_step_1/1K: Collecting 100 samples in estimated 5.0003 s (48M iterations)
+Benchmarking Transforms/Delta/encode/monotone_step_1/1K: Analyzing
+Transforms/Delta/encode/monotone_step_1/1K
+                        time:   [106.15 ns 107.51 ns 109.15 ns]
+                        thrpt:  [34.950 GiB/s 35.482 GiB/s 35.935 GiB/s]
+Found 5 outliers among 100 measurements (5.00%)
+  2 (2.00%) high mild
+  3 (3.00%) high severe
+Benchmarking Transforms/Delta/encode/monotone_step_1/1M
+Benchmarking Transforms/Delta/encode/monotone_step_1/1M: Warming up for 3.0000 s
+Benchmarking Transforms/Delta/encode/monotone_step_1/1M: Collecting 100 samples in estimated 5.2442 s (45k iterations)
+Benchmarking Transforms/Delta/encode/monotone_step_1/1M: Analyzing
+Transforms/Delta/encode/monotone_step_1/1M
+                        time:   [115.04 Âµs 116.42 Âµs 117.76 Âµs]
+                        thrpt:  [33.172 GiB/s 33.554 GiB/s 33.955 GiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Transforms/Delta/encode/monotone_step_256/1K
+Benchmarking Transforms/Delta/encode/monotone_step_256/1K: Warming up for 3.0000 s
+Benchmarking Transforms/Delta/encode/monotone_step_256/1K: Collecting 100 samples in estimated 5.0002 s (47M iterations)
+Benchmarking Transforms/Delta/encode/monotone_step_256/1K: Analyzing
+Transforms/Delta/encode/monotone_step_256/1K
+                        time:   [104.20 ns 105.10 ns 105.93 ns]
+                        thrpt:  [36.012 GiB/s 36.295 GiB/s 36.610 GiB/s]
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) low mild
+  2 (2.00%) high mild
+Benchmarking Transforms/Delta/encode/monotone_step_256/1M
+Benchmarking Transforms/Delta/encode/monotone_step_256/1M: Warming up for 3.0000 s
+Benchmarking Transforms/Delta/encode/monotone_step_256/1M: Collecting 100 samples in estimated 5.2136 s (45k iterations)
+Benchmarking Transforms/Delta/encode/monotone_step_256/1M: Analyzing
+Transforms/Delta/encode/monotone_step_256/1M
+                        time:   [111.97 Âµs 113.19 Âµs 114.45 Âµs]
+                        thrpt:  [34.131 GiB/s 34.510 GiB/s 34.885 GiB/s]
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Transforms/Delta/encode/constant/1K
+Benchmarking Transforms/Delta/encode/constant/1K: Warming up for 3.0000 s
+Benchmarking Transforms/Delta/encode/constant/1K: Collecting 100 samples in estimated 5.0001 s (48M iterations)
+Benchmarking Transforms/Delta/encode/constant/1K: Analyzing
+Transforms/Delta/encode/constant/1K
+                        time:   [104.42 ns 105.48 ns 106.54 ns]
+                        thrpt:  [35.805 GiB/s 36.165 GiB/s 36.532 GiB/s]
+Benchmarking Transforms/Delta/encode/constant/1M
+Benchmarking Transforms/Delta/encode/constant/1M: Warming up for 3.0000 s
+Benchmarking Transforms/Delta/encode/constant/1M: Collecting 100 samples in estimated 5.2683 s (45k iterations)
+Benchmarking Transforms/Delta/encode/constant/1M: Analyzing
+Transforms/Delta/encode/constant/1M
+                        time:   [113.42 Âµs 114.74 Âµs 116.04 Âµs]
+                        thrpt:  [33.664 GiB/s 34.045 GiB/s 34.441 GiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking Transforms/Delta/encode/random/1K
+Benchmarking Transforms/Delta/encode/random/1K: Warming up for 3.0000 s
+Benchmarking Transforms/Delta/encode/random/1K: Collecting 100 samples in estimated 5.0004 s (47M iterations)
+Benchmarking Transforms/Delta/encode/random/1K: Analyzing
+Transforms/Delta/encode/random/1K
+                        time:   [105.60 ns 106.64 ns 107.70 ns]
+                        thrpt:  [35.420 GiB/s 35.773 GiB/s 36.123 GiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking Transforms/Delta/encode/random/1M
+Benchmarking Transforms/Delta/encode/random/1M: Warming up for 3.0000 s
+Benchmarking Transforms/Delta/encode/random/1M: Collecting 100 samples in estimated 5.3978 s (45k iterations)
+Benchmarking Transforms/Delta/encode/random/1M: Analyzing
+Transforms/Delta/encode/random/1M
+                        time:   [116.12 Âµs 117.54 Âµs 119.00 Âµs]
+                        thrpt:  [32.825 GiB/s 33.234 GiB/s 33.641 GiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking Transforms/Delta/encode/signed_i32/1K
+Benchmarking Transforms/Delta/encode/signed_i32/1K: Warming up for 3.0000 s
+Benchmarking Transforms/Delta/encode/signed_i32/1K: Collecting 100 samples in estimated 5.0002 s (47M iterations)
+Benchmarking Transforms/Delta/encode/signed_i32/1K: Analyzing
+Transforms/Delta/encode/signed_i32/1K
+                        time:   [103.22 ns 104.78 ns 106.58 ns]
+                        thrpt:  [35.792 GiB/s 36.408 GiB/s 36.956 GiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Transforms/Delta/decode/signed_i32/1K
+Benchmarking Transforms/Delta/decode/signed_i32/1K: Warming up for 3.0000 s
+Benchmarking Transforms/Delta/decode/signed_i32/1K: Collecting 100 samples in estimated 5.0003 s (21M iterations)
+Benchmarking Transforms/Delta/decode/signed_i32/1K: Analyzing
+Transforms/Delta/decode/signed_i32/1K
+                        time:   [236.34 ns 237.78 ns 239.26 ns]
+                        thrpt:  [15.944 GiB/s 16.043 GiB/s 16.141 GiB/s]
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+
+Benchmarking Transforms/BitPack/pack_u32/width_1b
+Benchmarking Transforms/BitPack/pack_u32/width_1b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/pack_u32/width_1b: Collecting 100 samples in estimated 5.0033 s (1.7M iterations)
+Benchmarking Transforms/BitPack/pack_u32/width_1b: Analyzing
+Transforms/BitPack/pack_u32/width_1b
+                        time:   [2.7803 Âµs 2.8090 Âµs 2.8342 Âµs]
+                        thrpt:  [1.3460 GiB/s 1.3580 GiB/s 1.3720 GiB/s]
+                 change:
+                        time:   [âˆ’0.4618% +1.4070% +3.4670%] (p = 0.14 > 0.05)
+                        thrpt:  [âˆ’3.3509% âˆ’1.3875% +0.4640%]
+                        No change in performance detected.
+Found 4 outliers among 100 measurements (4.00%)
+  4 (4.00%) low mild
+Benchmarking Transforms/BitPack/unpack_u32/width_1b
+Benchmarking Transforms/BitPack/unpack_u32/width_1b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/unpack_u32/width_1b: Collecting 100 samples in estimated 5.0097 s (2.1M iterations)
+Benchmarking Transforms/BitPack/unpack_u32/width_1b: Analyzing
+Transforms/BitPack/unpack_u32/width_1b
+                        time:   [2.3398 Âµs 2.3548 Âµs 2.3723 Âµs]
+                        thrpt:  [1.6080 GiB/s 1.6200 GiB/s 1.6304 GiB/s]
+                 change:
+                        time:   [âˆ’2.3233% âˆ’1.4805% âˆ’0.6644%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.6688% +1.5028% +2.3786%]
+                        Change within noise threshold.
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Transforms/BitPack/pack_u32/width_4b
+Benchmarking Transforms/BitPack/pack_u32/width_4b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/pack_u32/width_4b: Collecting 100 samples in estimated 5.0068 s (2.3M iterations)
+Benchmarking Transforms/BitPack/pack_u32/width_4b: Analyzing
+Transforms/BitPack/pack_u32/width_4b
+                        time:   [2.1672 Âµs 2.1881 Âµs 2.2086 Âµs]
+                        thrpt:  [1.7272 GiB/s 1.7434 GiB/s 1.7602 GiB/s]
+                 change:
+                        time:   [+1.9576% +3.7535% +5.5834%] (p = 0.00 < 0.05)
+                        thrpt:  [âˆ’5.2881% âˆ’3.6177% âˆ’1.9201%]
+                        Performance has regressed.
+Benchmarking Transforms/BitPack/unpack_u32/width_4b
+Benchmarking Transforms/BitPack/unpack_u32/width_4b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/unpack_u32/width_4b: Collecting 100 samples in estimated 5.0119 s (2.1M iterations)
+Benchmarking Transforms/BitPack/unpack_u32/width_4b: Analyzing
+Transforms/BitPack/unpack_u32/width_4b
+                        time:   [2.3517 Âµs 2.3615 Âµs 2.3710 Âµs]
+                        thrpt:  [1.6089 GiB/s 1.6154 GiB/s 1.6221 GiB/s]
+                 change:
+                        time:   [âˆ’1.5131% âˆ’0.4816% +0.4492%] (p = 0.33 > 0.05)
+                        thrpt:  [âˆ’0.4472% +0.4839% +1.5364%]
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Transforms/BitPack/pack_u32/width_8b
+Benchmarking Transforms/BitPack/pack_u32/width_8b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/pack_u32/width_8b: Collecting 100 samples in estimated 5.0106 s (2.4M iterations)
+Benchmarking Transforms/BitPack/pack_u32/width_8b: Analyzing
+Transforms/BitPack/pack_u32/width_8b
+                        time:   [2.0724 Âµs 2.0906 Âµs 2.1168 Âµs]
+                        thrpt:  [1.8021 GiB/s 1.8247 GiB/s 1.8407 GiB/s]
+                 change:
+                        time:   [âˆ’1.3421% âˆ’0.2343% +0.9033%] (p = 0.67 > 0.05)
+                        thrpt:  [âˆ’0.8952% +0.2349% +1.3603%]
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high severe
+Benchmarking Transforms/BitPack/unpack_u32/width_8b
+Benchmarking Transforms/BitPack/unpack_u32/width_8b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/unpack_u32/width_8b: Collecting 100 samples in estimated 5.0009 s (2.1M iterations)
+Benchmarking Transforms/BitPack/unpack_u32/width_8b: Analyzing
+Transforms/BitPack/unpack_u32/width_8b
+                        time:   [2.3389 Âµs 2.3519 Âµs 2.3651 Âµs]
+                        thrpt:  [1.6129 GiB/s 1.6220 GiB/s 1.6310 GiB/s]
+                 change:
+                        time:   [âˆ’5.9222% âˆ’4.8318% âˆ’3.7820%] (p = 0.00 < 0.05)
+                        thrpt:  [+3.9306% +5.0771% +6.2950%]
+                        Performance has improved.
+Benchmarking Transforms/BitPack/pack_u32/width_12b
+Benchmarking Transforms/BitPack/pack_u32/width_12b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/pack_u32/width_12b: Collecting 100 samples in estimated 5.0020 s (1.2M iterations)
+Benchmarking Transforms/BitPack/pack_u32/width_12b: Analyzing
+Transforms/BitPack/pack_u32/width_12b
+                        time:   [4.1448 Âµs 4.1750 Âµs 4.2029 Âµs]
+                        thrpt:  [929.41 MiB/s 935.63 MiB/s 942.44 MiB/s]
+                 change:
+                        time:   [âˆ’4.2552% âˆ’3.3529% âˆ’2.3367%] (p = 0.00 < 0.05)
+                        thrpt:  [+2.3926% +3.4692% +4.4444%]
+                        Performance has improved.
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Transforms/BitPack/unpack_u32/width_12b
+Benchmarking Transforms/BitPack/unpack_u32/width_12b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/unpack_u32/width_12b: Collecting 100 samples in estimated 5.0126 s (1.0M iterations)
+Benchmarking Transforms/BitPack/unpack_u32/width_12b: Analyzing
+Transforms/BitPack/unpack_u32/width_12b
+                        time:   [4.9153 Âµs 4.9432 Âµs 4.9686 Âµs]
+                        thrpt:  [786.18 MiB/s 790.23 MiB/s 794.71 MiB/s]
+                 change:
+                        time:   [âˆ’5.6289% âˆ’3.9026% âˆ’2.4399%] (p = 0.00 < 0.05)
+                        thrpt:  [+2.5009% +4.0611% +5.9646%]
+                        Performance has improved.
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Transforms/BitPack/pack_u32/width_16b
+Benchmarking Transforms/BitPack/pack_u32/width_16b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/pack_u32/width_16b: Collecting 100 samples in estimated 5.0098 s (1.2M iterations)
+Benchmarking Transforms/BitPack/pack_u32/width_16b: Analyzing
+Transforms/BitPack/pack_u32/width_16b
+                        time:   [4.0642 Âµs 4.1055 Âµs 4.1468 Âµs]
+                        thrpt:  [942.00 MiB/s 951.47 MiB/s 961.14 MiB/s]
+                 change:
+                        time:   [âˆ’1.5249% +0.1948% +1.7694%] (p = 0.83 > 0.05)
+                        thrpt:  [âˆ’1.7386% âˆ’0.1944% +1.5485%]
+                        No change in performance detected.
+Benchmarking Transforms/BitPack/unpack_u32/width_16b
+Benchmarking Transforms/BitPack/unpack_u32/width_16b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/unpack_u32/width_16b: Collecting 100 samples in estimated 5.0124 s (1.0M iterations)
+Benchmarking Transforms/BitPack/unpack_u32/width_16b: Analyzing
+Transforms/BitPack/unpack_u32/width_16b
+                        time:   [4.9329 Âµs 4.9591 Âµs 4.9856 Âµs]
+                        thrpt:  [783.50 MiB/s 787.69 MiB/s 791.87 MiB/s]
+                 change:
+                        time:   [âˆ’2.3946% âˆ’1.3274% âˆ’0.2559%] (p = 0.02 < 0.05)
+                        thrpt:  [+0.2566% +1.3453% +2.4534%]
+                        Change within noise threshold.
+Benchmarking Transforms/BitPack/pack_u32/width_32b
+Benchmarking Transforms/BitPack/pack_u32/width_32b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/pack_u32/width_32b: Collecting 100 samples in estimated 5.0406 s (616k iterations)
+Benchmarking Transforms/BitPack/pack_u32/width_32b: Analyzing
+Transforms/BitPack/pack_u32/width_32b
+                        time:   [8.0991 Âµs 8.1659 Âµs 8.2284 Âµs]
+                        thrpt:  [474.73 MiB/s 478.36 MiB/s 482.31 MiB/s]
+                 change:
+                        time:   [âˆ’2.0001% âˆ’0.7799% +0.4305%] (p = 0.21 > 0.05)
+                        thrpt:  [âˆ’0.4286% +0.7860% +2.0409%]
+                        No change in performance detected.
+Benchmarking Transforms/BitPack/unpack_u32/width_32b
+Benchmarking Transforms/BitPack/unpack_u32/width_32b: Warming up for 3.0000 s
+Benchmarking Transforms/BitPack/unpack_u32/width_32b: Collecting 100 samples in estimated 5.0294 s (505k iterations)
+Benchmarking Transforms/BitPack/unpack_u32/width_32b: Analyzing
+Transforms/BitPack/unpack_u32/width_32b
+                        time:   [9.9193 Âµs 9.9734 Âµs 10.035 Âµs]
+                        thrpt:  [389.26 MiB/s 391.67 MiB/s 393.80 MiB/s]
+                 change:
+                        time:   [âˆ’2.3799% âˆ’0.6869% +0.8873%] (p = 0.39 > 0.05)
+                        thrpt:  [âˆ’0.8794% +0.6917% +2.4379%]
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+
+Benchmarking Transforms/RLE/encode_u32/run_256
+Benchmarking Transforms/RLE/encode_u32/run_256: Warming up for 3.0000 s
+Benchmarking Transforms/RLE/encode_u32/run_256: Collecting 100 samples in estimated 5.0020 s (8.8M iterations)
+Benchmarking Transforms/RLE/encode_u32/run_256: Analyzing
+Transforms/RLE/encode_u32/run_256
+                        time:   [561.47 ns 564.11 ns 567.04 ns]
+                        thrpt:  [6.7274 GiB/s 6.7623 GiB/s 6.7941 GiB/s]
+                 change:
+                        time:   [âˆ’3.0192% âˆ’1.7522% âˆ’0.3148%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.3158% +1.7834% +3.1132%]
+                        Change within noise threshold.
+Found 4 outliers among 100 measurements (4.00%)
+  2 (2.00%) high mild
+  2 (2.00%) high severe
+Benchmarking Transforms/RLE/decode_u32/run_256
+Benchmarking Transforms/RLE/decode_u32/run_256: Warming up for 3.0000 s
+Benchmarking Transforms/RLE/decode_u32/run_256: Collecting 100 samples in estimated 5.0000 s (98M iterations)
+Benchmarking Transforms/RLE/decode_u32/run_256: Analyzing
+Transforms/RLE/decode_u32/run_256
+                        time:   [50.710 ns 51.142 ns 51.585 ns]
+                        thrpt:  [73.950 GiB/s 74.590 GiB/s 75.225 GiB/s]
+                 change:
+                        time:   [âˆ’6.4894% âˆ’5.1983% âˆ’3.9356%] (p = 0.00 < 0.05)
+                        thrpt:  [+4.0969% +5.4833% +6.9398%]
+                        Performance has improved.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Transforms/RLE/encode_u32/run_16
+Benchmarking Transforms/RLE/encode_u32/run_16: Warming up for 3.0000 s
+Benchmarking Transforms/RLE/encode_u32/run_16: Collecting 100 samples in estimated 5.0005 s (8.8M iterations)
+Benchmarking Transforms/RLE/encode_u32/run_16: Analyzing
+Transforms/RLE/encode_u32/run_16
+                        time:   [563.60 ns 568.60 ns 573.65 ns]
+                        thrpt:  [6.6498 GiB/s 6.7089 GiB/s 6.7684 GiB/s]
+                 change:
+                        time:   [âˆ’3.6305% âˆ’1.3961% +0.7463%] (p = 0.20 > 0.05)
+                        thrpt:  [âˆ’0.7408% +1.4159% +3.7673%]
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Transforms/RLE/decode_u32/run_16
+Benchmarking Transforms/RLE/decode_u32/run_16: Warming up for 3.0000 s
+Benchmarking Transforms/RLE/decode_u32/run_16: Collecting 100 samples in estimated 5.0007 s (16M iterations)
+Benchmarking Transforms/RLE/decode_u32/run_16: Analyzing
+Transforms/RLE/decode_u32/run_16
+                        time:   [295.66 ns 299.37 ns 303.27 ns]
+                        thrpt:  [12.579 GiB/s 12.742 GiB/s 12.902 GiB/s]
+                 change:
+                        time:   [+1.4491% +3.0501% +4.7105%] (p = 0.00 < 0.05)
+                        thrpt:  [âˆ’4.4986% âˆ’2.9598% âˆ’1.4284%]
+                        Performance has regressed.
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Transforms/RLE/encode_u32/run_1_unique
+Benchmarking Transforms/RLE/encode_u32/run_1_unique: Warming up for 3.0000 s
+Benchmarking Transforms/RLE/encode_u32/run_1_unique: Collecting 100 samples in estimated 5.0028 s (4.3M iterations)
+Benchmarking Transforms/RLE/encode_u32/run_1_unique: Analyzing
+Transforms/RLE/encode_u32/run_1_unique
+                        time:   [1.1084 Âµs 1.1167 Âµs 1.1257 Âµs]
+                        thrpt:  [3.3887 GiB/s 3.4159 GiB/s 3.4416 GiB/s]
+                 change:
+                        time:   [âˆ’6.9453% âˆ’5.1838% âˆ’3.4785%] (p = 0.00 < 0.05)
+                        thrpt:  [+3.6039% +5.4672% +7.4637%]
+                        Performance has improved.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking Transforms/RLE/decode_u32/run_1_unique
+Benchmarking Transforms/RLE/decode_u32/run_1_unique: Warming up for 3.0000 s
+Benchmarking Transforms/RLE/decode_u32/run_1_unique: Collecting 100 samples in estimated 5.0052 s (2.6M iterations)
+Benchmarking Transforms/RLE/decode_u32/run_1_unique: Analyzing
+Transforms/RLE/decode_u32/run_1_unique
+                        time:   [1.9166 Âµs 1.9293 Âµs 1.9427 Âµs]
+                        thrpt:  [1.9636 GiB/s 1.9772 GiB/s 1.9904 GiB/s]
+                 change:
+                        time:   [+0.1869% +1.1513% +2.0700%] (p = 0.02 < 0.05)
+                        thrpt:  [âˆ’2.0280% âˆ’1.1382% âˆ’0.1866%]
+                        Change within noise threshold.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+
+Benchmarking Transforms/Gorilla_Float/compress_f32/trajectory_1K
+Benchmarking Transforms/Gorilla_Float/compress_f32/trajectory_1K: Warming up for 3.0000 s
+Benchmarking Transforms/Gorilla_Float/compress_f32/trajectory_1K: Collecting 100 samples in estimated 5.0328 s (556k iterations)
+Benchmarking Transforms/Gorilla_Float/compress_f32/trajectory_1K: Analyzing
+Transforms/Gorilla_Float/compress_f32/trajectory_1K
+                        time:   [9.0131 Âµs 9.0879 Âµs 9.1630 Âµs]
+                        thrpt:  [426.31 MiB/s 429.83 MiB/s 433.40 MiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking Transforms/Gorilla_Float/decompress_f32/trajectory_1K
+Benchmarking Transforms/Gorilla_Float/decompress_f32/trajectory_1K: Warming up for 3.0000 s
+Benchmarking Transforms/Gorilla_Float/decompress_f32/trajectory_1K: Collecting 100 samples in estimated 5.0484 s (384k iterations)
+Benchmarking Transforms/Gorilla_Float/decompress_f32/trajectory_1K: Analyzing
+Transforms/Gorilla_Float/decompress_f32/trajectory_1K
+                        time:   [13.270 Âµs 13.366 Âµs 13.479 Âµs]
+                        thrpt:  [289.79 MiB/s 292.26 MiB/s 294.37 MiB/s]
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) high mild
+  2 (2.00%) high severe
+Benchmarking Transforms/Gorilla_Float/compress_f64/trajectory_1K
+Benchmarking Transforms/Gorilla_Float/compress_f64/trajectory_1K: Warming up for 3.0000 s
+Benchmarking Transforms/Gorilla_Float/compress_f64/trajectory_1K: Collecting 100 samples in estimated 5.0310 s (389k iterations)
+Benchmarking Transforms/Gorilla_Float/compress_f64/trajectory_1K: Analyzing
+Transforms/Gorilla_Float/compress_f64/trajectory_1K
+                        time:   [12.689 Âµs 12.813 Âµs 12.937 Âµs]
+                        thrpt:  [603.89 MiB/s 609.73 MiB/s 615.71 MiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking Transforms/Gorilla_Float/decompress_f64/trajectory_1K
+Benchmarking Transforms/Gorilla_Float/decompress_f64/trajectory_1K: Warming up for 3.0000 s
+Benchmarking Transforms/Gorilla_Float/decompress_f64/trajectory_1K: Collecting 100 samples in estimated 5.0562 s (273k iterations)
+Benchmarking Transforms/Gorilla_Float/decompress_f64/trajectory_1K: Analyzing
+Transforms/Gorilla_Float/decompress_f64/trajectory_1K
+                        time:   [18.404 Âµs 18.513 Âµs 18.629 Âµs]
+                        thrpt:  [419.38 MiB/s 421.99 MiB/s 424.51 MiB/s]
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+
+

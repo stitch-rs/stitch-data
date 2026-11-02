@@ -29,8 +29,22 @@ pub enum CbpError {
     },
     /// Specified bit width is out of range for the data type.
     InvalidBitWidth(u8),
+    /// Schema hash mismatch: frame header schema hash does not match expected struct schema fingerprint.
+    SchemaMismatch {
+        /// Expected schema hash from compiled struct definition.
+        expected: u64,
+        /// Actual schema hash present in the frame header.
+        actual: u64,
+    },
     /// General payload decoding or unpacking failure.
     PayloadDecodeError,
+    /// Frame payload length exceeds maximum permitted limit.
+    FrameTooLarge {
+        /// Specified payload length in bytes.
+        size: u64,
+        /// Maximum permitted payload length in bytes.
+        limit: usize,
+    },
 }
 
 impl fmt::Display for CbpError {
@@ -56,7 +70,19 @@ impl fmt::Display for CbpError {
                 )
             }
             Self::InvalidBitWidth(w) => write!(f, "invalid bit width: {w}"),
+            Self::SchemaMismatch { expected, actual } => {
+                write!(
+                    f,
+                    "schema fingerprint mismatch: expected 0x{expected:016X}, actual 0x{actual:016X}"
+                )
+            }
             Self::PayloadDecodeError => write!(f, "payload decode error"),
+            Self::FrameTooLarge { size, limit } => {
+                write!(
+                    f,
+                    "frame payload size {size} bytes exceeds maximum limit of {limit} bytes"
+                )
+            }
         }
     }
 }

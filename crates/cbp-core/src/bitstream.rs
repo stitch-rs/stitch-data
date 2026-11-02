@@ -169,6 +169,16 @@ impl<'a> BitReader<'a> {
         };
         &self.buf[offset..]
     }
+
+    /// Returns the number of bytes read from the underlying buffer so far.
+    #[inline]
+    pub fn bytes_read(&self) -> usize {
+        if self.bit_pos > 0 {
+            (self.byte_pos + 1).min(self.buf.len())
+        } else {
+            self.byte_pos.min(self.buf.len())
+        }
+    }
 }
 
 #[cfg(test)]

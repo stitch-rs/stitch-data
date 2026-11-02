@@ -10,9 +10,11 @@ description = "Compact Binary Protocol (CBP) high-performance facade"
 [dependencies]
 cbp-core = { workspace = true }
 cbp-transforms = { workspace = true }
+cbp-derive = { workspace = true, optional = true }
 
 [features]
-default = ["std"]
+default = ["std", "derive"]
 std = ["cbp-core/std", "cbp-transforms/std"]
 alloc = ["cbp-core/alloc", "cbp-transforms/alloc"]
 zero-copy = ["cbp-core/zero-copy"]
+derive = ["dep:cbp-derive"]

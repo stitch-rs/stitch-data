@@ -6,6 +6,30 @@
 
 use crate::error::CbpError;
 
+/// Returns the number of bytes required to encode `value` as a PrefixVarint.
+#[inline]
+pub const fn prefix_varint_len(value: u64) -> usize {
+    if value < (1 << 7) {
+        1
+    } else if value < (1 << 14) {
+        2
+    } else if value < (1 << 21) {
+        3
+    } else if value < (1 << 28) {
+        4
+    } else if value < (1 << 35) {
+        5
+    } else if value < (1 << 42) {
+        6
+    } else if value < (1 << 49) {
+        7
+    } else if value < (1 << 56) {
+        8
+    } else {
+        9
+    }
+}
+
 /// Encodes a `u64` into a prefix-varint byte buffer, returning the number of bytes written.
 /// Buffer must have at least 9 bytes available.
 #[inline]

@@ -1,0 +1,44 @@
+[workspace]
+
+[package]
+name = "cbp-cargo-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+cbp-fuzz = { path = "../crates/cbp-fuzz" }
+
+[[bin]]
+name = "fuzz_frame"
+path = "fuzz_targets/fuzz_frame.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_stream"
+path = "fuzz_targets/fuzz_stream.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_varint"
+path = "fuzz_targets/fuzz_varint.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_bitpack"
+path = "fuzz_targets/fuzz_bitpack.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_float"
+path = "fuzz_targets/fuzz_float.rs"
+test = false
+doc = false

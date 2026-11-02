@@ -1,4 +1,5 @@
 target/
 _legacy_csharp/
 **/*.rs.bk
-Cargo.lock
+fuzz/target/
+fuzz/Cargo.lock

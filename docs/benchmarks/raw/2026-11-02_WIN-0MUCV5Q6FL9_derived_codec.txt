@@ -1,0 +1,224 @@
+﻿CrossSerializer/ScenarioB_SingleSnapshot/encode/Raw_Memory_AoS
+                        time:   [1.0261 ns 1.0415 ns 1.0587 ns]
+                        thrpt:  [21.112 GiB/s 21.461 GiB/s 21.784 GiB/s]
+                 change:
+                        time:   [+4.5310% +6.2100% +7.8007%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ7.2362% ΓêÆ5.8469% ΓêÆ4.3346%]
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) low mild
+  2 (2.00%) high mild
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Bincode
+                        time:   [42.540 ns 42.886 ns 43.253 ns]
+                        thrpt:  [529.17 MiB/s 533.70 MiB/s 538.04 MiB/s]
+                 change:
+                        time:   [+17.064% +18.593% +20.102%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ16.737% ΓêÆ15.678% ΓêÆ14.577%]
+                        Performance has regressed.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Postcard
+                        time:   [177.17 ns 178.95 ns 180.79 ns]
+                        thrpt:  [126.60 MiB/s 127.90 MiB/s 129.19 MiB/s]
+                 change:
+                        time:   [+8.2391% +9.6479% +11.013%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ9.9205% ΓêÆ8.7990% ΓêÆ7.6119%]
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+CrossSerializer/ScenarioB_SingleSnapshot/encode/Protobuf_prost
+                        time:   [18.637 ns 19.053 ns 19.660 ns]
+                        thrpt:  [1.1369 GiB/s 1.1732 GiB/s 1.1993 GiB/s]
+                 change:
+                        time:   [+4.6261% +6.1667% +7.7397%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ7.1837% ΓêÆ5.8085% ΓêÆ4.4215%]
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) high mild
+  2 (2.00%) high severe
+CrossSerializer/ScenarioB_SingleSnapshot/encode/MessagePack
+                        time:   [161.93 ns 163.19 ns 164.46 ns]
+                        thrpt:  [139.17 MiB/s 140.26 MiB/s 141.35 MiB/s]
+                 change:
+                        time:   [+9.7948% +10.969% +12.318%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ10.967% ΓêÆ9.8847% ΓêÆ8.9210%]
+                        Performance has regressed.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+CrossSerializer/ScenarioB_SingleSnapshot/encode/CBP_Reference_Snapshot
+                        time:   [17.990 ns 18.337 ns 18.766 ns]
+                        thrpt:  [1.1911 GiB/s 1.2190 GiB/s 1.2425 GiB/s]
+                 change:
+                        time:   [+11.395% +13.305% +15.363%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ13.317% ΓêÆ11.743% ΓêÆ10.230%]
+                        Performance has regressed.
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+CrossSerializer/ScenarioB_SingleSnapshot/encode/CBP_Derived_Record
+                        time:   [8.6342 ns 8.7070 ns 8.7805 ns]
+                        thrpt:  [2.5456 GiB/s 2.5671 GiB/s 2.5887 GiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+CrossSerializer/ScenarioB_SingleSnapshot/encode/CBP_Derived_Pack_With_Schema
+                        time:   [18.246 ns 18.432 ns 18.630 ns]
+                        thrpt:  [1.1997 GiB/s 1.2127 GiB/s 1.2250 GiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+CrossSerializer/ScenarioB_SingleSnapshot/decode/Bincode
+                        time:   [9.8474 ns 9.8979 ns 9.9479 ns]
+                        thrpt:  [2.2469 GiB/s 2.2582 GiB/s 2.2698 GiB/s]
+                 change:
+                        time:   [ΓêÆ1.9488% ΓêÆ1.2993% ΓêÆ0.5860%] (p = 0.00 < 0.05)
+                        thrpt:  [+0.5895% +1.3164% +1.9875%]
+                        Change within noise threshold.
+Found 8 outliers among 100 measurements (8.00%)
+  3 (3.00%) high mild
+  5 (5.00%) high severe
+CrossSerializer/ScenarioB_SingleSnapshot/decode/Postcard
+                        time:   [12.246 ns 12.338 ns 12.431 ns]
+                        thrpt:  [1.7981 GiB/s 1.8116 GiB/s 1.8253 GiB/s]
+                 change:
+                        time:   [+2.2072% +3.2623% +4.3553%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ4.1735% ΓêÆ3.1593% ΓêÆ2.1596%]
+                        Performance has regressed.
+CrossSerializer/ScenarioB_SingleSnapshot/decode/Protobuf_prost
+                        time:   [31.706 ns 31.977 ns 32.277 ns]
+                        thrpt:  [709.11 MiB/s 715.77 MiB/s 721.89 MiB/s]
+                 change:
+                        time:   [+1.6027% +3.2471% +4.7992%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ4.5794% ΓêÆ3.1450% ΓêÆ1.5774%]
+                        Performance has regressed.
+CrossSerializer/ScenarioB_SingleSnapshot/decode/MessagePack
+                        time:   [32.512 ns 33.056 ns 33.743 ns]
+                        thrpt:  [678.32 MiB/s 692.40 MiB/s 704.00 MiB/s]
+                 change:
+                        time:   [+7.0620% +11.177% +15.859%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ13.688% ΓêÆ10.053% ΓêÆ6.5962%]
+                        Performance has regressed.
+Found 9 outliers among 100 measurements (9.00%)
+  2 (2.00%) low mild
+  1 (1.00%) high mild
+  6 (6.00%) high severe
+CrossSerializer/ScenarioB_SingleSnapshot/decode/CBP_Reference_Snapshot
+                        time:   [19.550 ns 19.752 ns 19.962 ns]
+                        thrpt:  [1.1197 GiB/s 1.1316 GiB/s 1.1433 GiB/s]
+                 change:
+                        time:   [+8.3729% +9.9328% +11.521%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ10.331% ΓêÆ9.0354% ΓêÆ7.7260%]
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  2 (2.00%) high mild
+  1 (1.00%) high severe
+CrossSerializer/ScenarioB_SingleSnapshot/decode/CBP_Derived_Record
+                        time:   [14.087 ns 14.227 ns 14.373 ns]
+                        thrpt:  [1.5551 GiB/s 1.5711 GiB/s 1.5867 GiB/s]
+Found 8 outliers among 100 measurements (8.00%)
+  7 (7.00%) high mild
+  1 (1.00%) high severe
+CrossSerializer/ScenarioB_SingleSnapshot/decode/CBP_Derived_Unpack_With_Schema
+                        time:   [26.169 ns 26.406 ns 26.645 ns]
+                        thrpt:  [859.00 MiB/s 866.78 MiB/s 874.64 MiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/Bincode
+                        time:   [363.19 ns 366.03 ns 369.05 ns]
+                        thrpt:  [3.8762 GiB/s 3.9081 GiB/s 3.9387 GiB/s]
+                 change:
+                        time:   [+3.8905% +5.2094% +6.5374%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ6.1362% ΓêÆ4.9515% ΓêÆ3.7448%]
+                        Performance has regressed.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) low mild
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/Postcard
+                        time:   [1.6660 ┬╡s 1.6778 ┬╡s 1.6894 ┬╡s]
+                        thrpt:  [867.05 MiB/s 873.09 MiB/s 879.25 MiB/s]
+                 change:
+                        time:   [+4.9372% +6.0535% +7.2442%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ6.7549% ΓêÆ5.7080% ΓêÆ4.7049%]
+                        Performance has regressed.
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/Protobuf_prost
+                        time:   [1.4980 ┬╡s 1.5129 ┬╡s 1.5280 ┬╡s]
+                        thrpt:  [958.67 MiB/s 968.25 MiB/s 977.84 MiB/s]
+                 change:
+                        time:   [+6.5610% +7.8575% +9.1400%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ8.3746% ΓêÆ7.2851% ΓêÆ6.1570%]
+                        Performance has regressed.
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/MessagePack
+                        time:   [1.9401 ┬╡s 1.9557 ┬╡s 1.9723 ┬╡s]
+                        thrpt:  [742.70 MiB/s 749.00 MiB/s 755.05 MiB/s]
+                 change:
+                        time:   [+7.2330% +8.9836% +11.160%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ10.039% ΓêÆ8.2431% ΓêÆ6.7451%]
+                        Performance has regressed.
+Found 4 outliers among 100 measurements (4.00%)
+  1 (1.00%) high mild
+  3 (3.00%) high severe
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/CBP_Reference_Batch
+                        time:   [616.25 ns 621.52 ns 626.80 ns]
+                        thrpt:  [2.2823 GiB/s 2.3016 GiB/s 2.3213 GiB/s]
+                 change:
+                        time:   [+11.864% +13.004% +14.106%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ12.362% ΓêÆ11.507% ΓêÆ10.606%]
+                        Performance has regressed.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+CrossSerializer/ScenarioB_Batch64Snapshots/encode/CBP_ColumnarBlockBuilder_64
+                        time:   [718.38 ns 726.69 ns 735.27 ns]
+                        thrpt:  [1.9456 GiB/s 1.9685 GiB/s 1.9913 GiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/Bincode
+                        time:   [384.26 ns 386.74 ns 389.50 ns]
+                        thrpt:  [3.6727 GiB/s 3.6989 GiB/s 3.7227 GiB/s]
+                 change:
+                        time:   [+2.0947% +3.5970% +5.2585%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ4.9958% ΓêÆ3.4721% ΓêÆ2.0517%]
+                        Performance has regressed.
+Found 14 outliers among 100 measurements (14.00%)
+  5 (5.00%) high mild
+  9 (9.00%) high severe
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/Postcard
+                        time:   [997.33 ns 1.0066 ┬╡s 1.0169 ┬╡s]
+                        thrpt:  [1.4067 GiB/s 1.4212 GiB/s 1.4343 GiB/s]
+                 change:
+                        time:   [+5.3274% +6.2450% +7.3077%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ6.8101% ΓêÆ5.8779% ΓêÆ5.0580%]
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/Protobuf_prost
+                        time:   [2.6315 ┬╡s 2.6554 ┬╡s 2.6825 ┬╡s]
+                        thrpt:  [546.07 MiB/s 551.66 MiB/s 556.67 MiB/s]
+                 change:
+                        time:   [+2.2755% +3.5345% +4.9098%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ4.6800% ΓêÆ3.4138% ΓêÆ2.2249%]
+                        Performance has regressed.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high severe
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/MessagePack
+                        time:   [2.5106 ┬╡s 2.5424 ┬╡s 2.5778 ┬╡s]
+                        thrpt:  [568.26 MiB/s 576.17 MiB/s 583.47 MiB/s]
+                 change:
+                        time:   [+4.6391% +5.9486% +7.4035%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ6.8931% ΓêÆ5.6146% ΓêÆ4.4334%]
+                        Performance has regressed.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/CBP_Reference_Batch
+                        time:   [731.62 ns 738.69 ns 746.14 ns]
+                        thrpt:  [1.9172 GiB/s 1.9365 GiB/s 1.9553 GiB/s]
+                 change:
+                        time:   [+3.5969% +4.9211% +6.3540%] (p = 0.00 < 0.05)
+                        thrpt:  [ΓêÆ5.9743% ΓêÆ4.6903% ΓêÆ3.4720%]
+                        Performance has regressed.
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) high mild
+  2 (2.00%) high severe
+CrossSerializer/ScenarioB_Batch64Snapshots/decode/CBP_ColumnarBlockBuilder_64
+                        time:   [1.3655 ┬╡s 1.3753 ┬╡s 1.3856 ┬╡s]
+                        thrpt:  [1.0324 GiB/s 1.0401 GiB/s 1.0476 GiB/s]
+
