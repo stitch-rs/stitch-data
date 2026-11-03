@@ -298,6 +298,83 @@ impl BitPacker {
 
         Ok(total_required)
     }
+
+    /// Reads a single unpacked `u32` at `index` in $O(1)$ time directly from packed buffer `src`.
+    ///
+    /// This allows zero-allocation, random-access lookups without unpacking the entire column.
+    #[inline]
+    pub fn read_at(src: &[u8], index: usize, total_count: usize) -> Result<u32, StitchError> {
+        if index >= total_count {
+            return Err(StitchError::PayloadDecodeError);
+        }
+        if src.is_empty() {
+            return Err(StitchError::UnexpectedEof {
+                required: 1,
+                available: 0,
+            });
+        }
+        let bit_width = src[0];
+        if bit_width == 0 || bit_width > 32 {
+            return Err(StitchError::InvalidBitWidth(bit_width));
+        }
+
+        let bit_offset = index
+            .checked_mul(bit_width as usize)
+            .ok_or(StitchError::PayloadDecodeError)?;
+        let body_byte_pos = bit_offset / 8;
+        let bit_in_byte = (bit_offset % 8) as u8;
+
+        let body = &src[1..];
+        if body_byte_pos >= body.len() {
+            return Err(StitchError::UnexpectedEof {
+                required: body_byte_pos + 1,
+                available: body.len(),
+            });
+        }
+
+        if bit_width == 32 {
+            let offset = index * 4;
+            if body.len() < offset + 4 {
+                return Err(StitchError::UnexpectedEof {
+                    required: offset + 4,
+                    available: body.len(),
+                });
+            }
+            let bytes = [
+                body[offset],
+                body[offset + 1],
+                body[offset + 2],
+                body[offset + 3],
+            ];
+            return Ok(u32::from_le_bytes(bytes));
+        }
+
+        if bit_width == 16 {
+            let offset = index * 2;
+            if body.len() < offset + 2 {
+                return Err(StitchError::UnexpectedEof {
+                    required: offset + 2,
+                    available: body.len(),
+                });
+            }
+            return Ok(u16::from_le_bytes([body[offset], body[offset + 1]]) as u32);
+        }
+
+        if bit_width == 8 {
+            return Ok(body[index] as u32);
+        }
+
+        // General arbitrary bit-width extraction in little-endian bit order.
+        let remaining = &body[body_byte_pos..];
+        let mut bytes = [0u8; 8];
+        let copy_len = remaining.len().min(8);
+        bytes[..copy_len].copy_from_slice(&remaining[..copy_len]);
+        let val_le = u64::from_le_bytes(bytes);
+
+        let mask = (1u64 << bit_width) - 1;
+        let val = (val_le >> bit_in_byte) & mask;
+        Ok(val as u32)
+    }
 }
 
 #[cfg(test)]
@@ -373,6 +450,31 @@ mod tests {
                     len
                 );
             }
+        }
+    }
+
+    #[test]
+    fn test_bitpack_read_at_random_access() {
+        for bit_width in 1..=32 {
+            let max_val = if bit_width == 32 {
+                u32::MAX
+            } else {
+                (1u32 << bit_width) - 1
+            };
+
+            let data: [u32; 33] =
+                core::array::from_fn(|i| ((i as u64 * 47 + 7) % (max_val as u64 + 1)) as u32);
+
+            let mut packed = [0u8; 256];
+            let written = BitPacker::pack_u32(&data, &mut packed).unwrap();
+
+            for (idx, &expected) in data.iter().enumerate() {
+                let actual = BitPacker::read_at(&packed[..written], idx, data.len()).unwrap();
+                assert_eq!(actual, expected, "bit_width {} at index {}", bit_width, idx);
+            }
+
+            // Out of bounds check
+            assert!(BitPacker::read_at(&packed[..written], data.len(), data.len()).is_err());
         }
     }
 }

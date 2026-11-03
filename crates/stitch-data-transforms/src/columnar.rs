@@ -447,6 +447,120 @@ impl<T: Record, const CAPACITY: usize> Drop for RecordBatchBuilder<T, CAPACITY> 
     }
 }
 
+// --- Column Slicing & Random Access Primitives ---
+
+/// Borrowed column slice descriptor containing its codec tag and payload bytes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ColumnSlice<'a> {
+    /// Column encoding codec tag.
+    pub codec: ColumnCodecTag,
+    /// Borrowed raw column bytes.
+    pub payload: &'a [u8],
+}
+
+/// Zero-allocation, cache-friendly random-access index for a columnar block.
+///
+/// Pre-indexes column offsets in $O(K)$ time where $K$ is the number of columns,
+/// allowing subsequent $O(1)$ random-access lookups to any column and fast
+/// single-value extraction without decoding full blocks.
+pub struct ColumnSliceIndex<'a, const MAX_COLUMNS: usize = 16> {
+    row_count: usize,
+    num_columns: usize,
+    columns: [Option<ColumnSlice<'a>>; MAX_COLUMNS],
+}
+
+impl<'a, const MAX_COLUMNS: usize> ColumnSliceIndex<'a, MAX_COLUMNS> {
+    /// Indexes a serialized columnar block for $O(1)$ column access.
+    pub fn new(src: &'a [u8]) -> Result<Self, StitchError> {
+        let mut reader = ColumnarBlockReader::new(src)?;
+        let row_count = reader.row_count();
+        let num_columns = reader.num_columns();
+
+        if num_columns > MAX_COLUMNS {
+            return Err(StitchError::PayloadDecodeError);
+        }
+
+        let mut columns = [None; MAX_COLUMNS];
+        for col_slot in columns.iter_mut().take(num_columns) {
+            let (codec, payload) = reader.next_column()?;
+            *col_slot = Some(ColumnSlice { codec, payload });
+        }
+
+        Ok(Self {
+            row_count,
+            num_columns,
+            columns,
+        })
+    }
+
+    /// Returns the number of rows contained in this block.
+    #[inline(always)]
+    pub const fn row_count(&self) -> usize {
+        self.row_count
+    }
+
+    /// Returns the number of columns in this block.
+    #[inline(always)]
+    pub const fn num_columns(&self) -> usize {
+        self.num_columns
+    }
+
+    /// Returns the column descriptor and payload slice for `column_idx` in $O(1)$ time.
+    #[inline(always)]
+    pub fn column(&self, column_idx: usize) -> Option<ColumnSlice<'a>> {
+        if column_idx < self.num_columns {
+            self.columns[column_idx]
+        } else {
+            None
+        }
+    }
+
+    /// Reads a raw POD value of type `T` from a `Raw` column at `row_idx` in $O(1)$ time.
+    pub fn read_raw_at<T: Copy>(
+        &self,
+        column_idx: usize,
+        row_idx: usize,
+    ) -> Result<T, StitchError> {
+        if row_idx >= self.row_count {
+            return Err(StitchError::PayloadDecodeError);
+        }
+        let col = self
+            .column(column_idx)
+            .ok_or(StitchError::PayloadDecodeError)?;
+        if col.codec != ColumnCodecTag::Raw {
+            return Err(StitchError::PayloadDecodeError);
+        }
+
+        let item_size = core::mem::size_of::<T>();
+        let offset = row_idx
+            .checked_mul(item_size)
+            .ok_or(StitchError::PayloadDecodeError)?;
+        if col.payload.len() < offset + item_size {
+            return Err(StitchError::UnexpectedEof {
+                required: offset + item_size,
+                available: col.payload.len(),
+            });
+        }
+
+        // SAFETY: Pointer is within bounds of col.payload and T is Copy.
+        // We use read_unaligned in case byte alignment is not guaranteed.
+        unsafe {
+            let ptr = col.payload.as_ptr().add(offset) as *const T;
+            Ok(core::ptr::read_unaligned(ptr))
+        }
+    }
+}
+
+/// Reads a single unpacked `u32` value directly from a bitpacked column payload at `row_idx` in $O(1)$ time.
+#[inline(always)]
+pub fn read_bitpacked_u32_at(
+    payload: &[u8],
+    row_idx: usize,
+    total_count: usize,
+) -> Result<u32, StitchError> {
+    crate::bitpack::BitPacker::read_at(payload, row_idx, total_count)
+}
+
 /// Decodes a framed columnar batch packet into `dst`.
 pub fn decode_columnar_frame<T: Record>(frame: &[u8], dst: &mut [T]) -> Result<usize, StitchError> {
     let (header, payload) = unpack_frame(frame)?;
@@ -464,6 +578,55 @@ pub fn decode_columnar_frame<T: Record>(frame: &[u8], dst: &mut [T]) -> Result<u
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_column_slice_index_and_random_access() {
+        let mut buf = [0u8; 512];
+        let mut writer = ColumnarBlockWriter::new(4, 2, &mut buf).unwrap();
+
+        // Col 0: Bitpacked u32 (3-bit values: 0..7)
+        let col0_raw = [3u32, 7, 1, 5];
+        let mut col0_packed = [0u8; 64];
+        let col0_len = crate::bitpack::BitPacker::pack_u32(&col0_raw, &mut col0_packed).unwrap();
+        writer
+            .write_column(ColumnCodecTag::AdaptiveU32, &col0_packed[..col0_len])
+            .unwrap();
+
+        // Col 1: Raw f64 values
+        let col1_raw = [10.5f64, 20.25, 30.125, 40.0625];
+        let col1_bytes = unsafe {
+            core::slice::from_raw_parts(
+                col1_raw.as_ptr() as *const u8,
+                core::mem::size_of_val(&col1_raw),
+            )
+        };
+        let mut col1_buf = [0u8; 64];
+        let col1_len = encode_raw_column(col1_bytes, &mut col1_buf).unwrap();
+        writer
+            .write_column(ColumnCodecTag::Raw, &col1_buf[..col1_len])
+            .unwrap();
+
+        let total_written = writer.finish().unwrap();
+
+        // Build index in O(K) time
+        let index = ColumnSliceIndex::<4>::new(&buf[..total_written]).unwrap();
+        assert_eq!(index.row_count(), 4);
+        assert_eq!(index.num_columns(), 2);
+
+        // O(1) Raw column read
+        for (i, &expected) in col1_raw.iter().enumerate() {
+            let actual: f64 = index.read_raw_at(1, i).unwrap();
+            assert_eq!(actual, expected);
+        }
+
+        // O(1) Bitpacked column read
+        let col0_slice = index.column(0).unwrap();
+        assert_eq!(col0_slice.codec, ColumnCodecTag::AdaptiveU32);
+        for (i, &expected) in col0_raw.iter().enumerate() {
+            let actual = read_bitpacked_u32_at(col0_slice.payload, i, index.row_count()).unwrap();
+            assert_eq!(actual, expected);
+        }
+    }
 
     #[test]
     fn test_columnar_block_writer_and_reader() {

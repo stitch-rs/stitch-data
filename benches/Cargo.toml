@@ -13,8 +13,8 @@ criterion = { workspace = true, features = ["html_reports"] }
 prost = { workspace = true }
 rmp-serde = { workspace = true }
 bincode = { workspace = true }
-postcard = { workspace = true }
-serde = { workspace = true }
+postcard = { workspace = true, features = ["use-std"] }
+serde = { workspace = true, features = ["std"] }
 
 [lib]
 name = "stitch_data_benches"

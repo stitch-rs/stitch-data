@@ -16,10 +16,11 @@ pub mod simd;
 
 pub use bitpack::BitPacker;
 pub use columnar::{
-    ColumnCodecTag, ColumnarBlockBuilder, ColumnarBlockReader, ColumnarBlockWriter,
-    RecordBatchBuilder, decode_columnar_frame, decode_dict_column, decode_f32_column,
-    decode_i32_column, decode_raw_column, decode_rle_column, decode_u32_column, encode_dict_column,
-    encode_f32_column, encode_i32_column, encode_raw_column, encode_rle_column, encode_u32_column,
+    ColumnCodecTag, ColumnSlice, ColumnSliceIndex, ColumnarBlockBuilder, ColumnarBlockReader,
+    ColumnarBlockWriter, RecordBatchBuilder, decode_columnar_frame, decode_dict_column,
+    decode_f32_column, decode_i32_column, decode_raw_column, decode_rle_column, decode_u32_column,
+    encode_dict_column, encode_f32_column, encode_i32_column, encode_raw_column, encode_rle_column,
+    encode_u32_column, read_bitpacked_u32_at,
 };
 pub use delta::DeltaTransformer;
 pub use dict::DictTransformer;
