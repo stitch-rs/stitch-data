@@ -2,7 +2,7 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{Data, DeriveInput, Expr, Fields, Lit, Type, parse_macro_input};
+use syn::{Data, DeriveInput, Expr, ExprLit, Fields, Lit, Type, parse_macro_input};
 
 /// 64-bit FNV-1a compile-time hashing helper.
 const fn fnv1a_64(data: &[u8]) -> u64 {
@@ -148,33 +148,54 @@ pub fn derive_record(input: TokenStream) -> TokenStream {
                         Ok(())
                     } else if meta.path.is_ident("column") {
                         let expr: Expr = meta.value()?.parse()?;
-                        let expr_str = quote!(#expr).to_string();
-                        if expr_str.contains("Dict") || expr_str == "\"dict\"" {
+                        if let Expr::Lit(ExprLit { lit: Lit::Str(s), .. }) = &expr {
+                            parse_err = Some(syn::Error::new_spanned(
+                                s,
+                                "String literals are strictly forbidden in macro attributes under SMA / Scrooge standard. Use type-safe enum variant or path instead (e.g. `column = ColumnCodec::Dict` or `column = Dict`).",
+                            ));
+                            return Ok(());
+                        }
+                        let raw_str = quote!(#expr).to_string();
+                        let expr_str = raw_str.replace(' ', "");
+                        if expr_str == "Dict" || expr_str.ends_with("::Dict") {
                             column = ColumnStrategy::Dict;
-                        } else if expr_str.contains("Rle") || expr_str == "\"rle\"" {
+                        } else if expr_str == "Rle" || expr_str.ends_with("::Rle") {
                             column = ColumnStrategy::Rle;
-                        } else if expr_str.contains("Gorilla") || expr_str == "\"gorilla\"" {
+                        } else if expr_str == "Gorilla" || expr_str.ends_with("::Gorilla") {
                             column = ColumnStrategy::Gorilla;
-                        } else if expr_str.contains("Adaptive") || expr_str == "\"adaptive\"" {
+                        } else if expr_str == "Adaptive" || expr_str.ends_with("::Adaptive") {
                             column = ColumnStrategy::Adaptive;
-                        } else if expr_str.contains("Raw") || expr_str == "\"raw\"" {
+                        } else if expr_str == "Raw" || expr_str.ends_with("::Raw") {
                             column = ColumnStrategy::Raw;
                         } else {
                             parse_err = Some(syn::Error::new_spanned(
                                 &expr,
-                                format!("Unknown columnar strategy '{expr_str}': expected ColumnCodec::Dict, ColumnCodec::Rle, ColumnCodec::Gorilla, ColumnCodec::Adaptive, or ColumnCodec::Raw"),
+                                format!("Unknown columnar strategy '{raw_str}': expected ColumnCodec::Dict, ColumnCodec::Rle, ColumnCodec::Gorilla, ColumnCodec::Adaptive, or ColumnCodec::Raw"),
                             ));
                         }
                         Ok(())
                     } else if meta.path.is_ident("codec") {
                         let expr: Expr = meta.value()?.parse()?;
-                        let expr_str = quote!(#expr).to_string();
-                        if expr_str.contains("Varint") {
+                        if let Expr::Lit(ExprLit { lit: Lit::Str(s), .. }) = &expr {
+                            parse_err = Some(syn::Error::new_spanned(
+                                s,
+                                "String literals are strictly forbidden in macro attributes under SMA / Scrooge standard. Use type-safe enum variant or path instead (e.g. `codec = FieldCodec::Varint` or `codec = Varint` or shorthand `#[stitch(varint)]`).",
+                            ));
+                            return Ok(());
+                        }
+                        let raw_str = quote!(#expr).to_string();
+                        let expr_str = raw_str.replace(' ', "");
+                        if expr_str == "Varint" || expr_str.ends_with("::Varint") || expr_str == "varint" {
                             codec = CodecKind::Varint;
-                        } else if expr_str.contains("ZigZag") {
+                        } else if expr_str == "ZigZag" || expr_str.ends_with("::ZigZag") || expr_str == "zigzag" {
                             codec = CodecKind::ZigZag;
-                        } else if expr_str.contains("Raw") {
+                        } else if expr_str == "Raw" || expr_str.ends_with("::Raw") || expr_str == "raw" {
                             codec = CodecKind::Raw;
+                        } else {
+                            parse_err = Some(syn::Error::new_spanned(
+                                &expr,
+                                format!("Unknown codec variant '{raw_str}': expected FieldCodec::Varint, FieldCodec::ZigZag, or FieldCodec::Raw (or shorthand flags #[stitch(varint)], #[stitch(zigzag)], #[stitch(raw)])"),
+                            ));
                         }
                         Ok(())
                     } else {

@@ -4,9 +4,9 @@ use stitch_data::prelude::*;
 
 #[derive(Record, Debug, PartialEq, Clone, Copy, Default)]
 struct TelemetryRecord {
-    #[stitch(codec = "varint")]
+    #[stitch(codec = Varint)]
     pub timestamp_ms: u32,
-    #[stitch(codec = "zigzag")]
+    #[stitch(codec = ZigZag)]
     pub temperature_c: i32,
     pub voltage: f32,
     pub alarm: bool,
