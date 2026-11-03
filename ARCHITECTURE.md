@@ -30,6 +30,11 @@ This document serves as the **sole normative technical specification** for the `
    - By default, all profiles (`Direct`, `Realtime`, `Balanced`, `MaxDensity`) execute strictly lossless transformations.
    - Float compression utilizes lossless IEEE-754 XOR delta compression (Gorilla algorithm) preserving NaN bit-patterns and signed zeroes.
 
+4. **Type-Safe Macro Attributes (Anti-Stringly-Typed Invariant)**:
+   - Procedural macros (`#[derive(Record)]`, `#[stitch(...)]`) strictly forbid string literals for selecting options, codecs, algorithms, or profiles.
+   - All options must be represented as first-class Rust symbols (typed Enum variants or paths, e.g. `codec = FieldCodec::Varint`, `column = ColumnCodec::Dict`, or shorthand identifier flags `#[stitch(varint)]`).
+   - Supplying string literals (e.g. `"varint"`) causes a compile-time failure (`compile_error!`).
+
 ---
 
 ## 3. Physical Layout & Framing Format
