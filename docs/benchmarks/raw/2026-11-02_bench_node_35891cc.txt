@@ -1,7 +1,7 @@
 ================================================================================
 CBP EMPIRICAL BENCHMARK RAW EXECUTION LOG
 ================================================================================
-Host: WIN-0MUCV5Q6FL9
+Host: bench-node-01
 Date: 2026-11-02
 Commit SHA: 35891cc3d6d85ab1a6f3619453b3a773e612ab26
 Branch: feature/benchmarks-and-stages

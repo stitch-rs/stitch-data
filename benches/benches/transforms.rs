@@ -25,11 +25,14 @@ fn bench_delta_transform(c: &mut Criterion) {
             let data = gen_fn(n);
 
             group.bench_function(format!("encode/{}/{}", name, label), |b| {
-                let mut buf = data.clone();
-                b.iter(|| {
-                    delta_encode_u32(black_box(&mut buf));
-                    black_box(buf.len())
-                })
+                b.iter_batched(
+                    || data.clone(),
+                    |mut buf| {
+                        delta_encode_u32(black_box(&mut buf));
+                        black_box(buf[0])
+                    },
+                    criterion::BatchSize::SmallInput,
+                )
             });
         }
     }
@@ -42,19 +45,26 @@ fn bench_delta_transform(c: &mut Criterion) {
         *item = (i as i32 * 3) - 500;
     }
     group.bench_function("encode/signed_i32/1K", |b| {
-        let mut buf = signed_data.clone();
-        b.iter(|| {
-            delta_encode_i32(black_box(&mut buf));
-            black_box(buf.len())
-        })
+        b.iter_batched(
+            || signed_data.clone(),
+            |mut buf| {
+                delta_encode_i32(black_box(&mut buf));
+                black_box(buf[0])
+            },
+            criterion::BatchSize::SmallInput,
+        )
     });
+    let mut encoded_signed = signed_data.clone();
+    delta_encode_i32(&mut encoded_signed);
     group.bench_function("decode/signed_i32/1K", |b| {
-        let mut buf = signed_data.clone();
-        delta_encode_i32(&mut buf);
-        b.iter(|| {
-            delta_decode_i32(black_box(&mut buf));
-            black_box(buf.len())
-        })
+        b.iter_batched(
+            || encoded_signed.clone(),
+            |mut buf| {
+                delta_decode_i32(black_box(&mut buf));
+                black_box(buf[0])
+            },
+            criterion::BatchSize::SmallInput,
+        )
     });
 
     group.finish();

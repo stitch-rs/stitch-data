@@ -181,7 +181,7 @@ pub mod x86 {
     #[target_feature(enable = "avx2")]
     pub unsafe fn unpack_16bit_avx2(src: &[u8], dst: &mut [u32]) {
         let count = dst.len();
-        let src_ptr = src.as_ptr() as *const u16;
+        let src_ptr = src.as_ptr();
         let dst_ptr = dst.as_mut_ptr();
         let mut i = 0;
 
@@ -189,8 +189,8 @@ pub mod x86 {
         unsafe {
             // Process 16 elements (64 bytes of output) per iteration
             while i + 16 <= count {
-                let chunk0 = _mm_loadu_si128(src_ptr.add(i) as *const __m128i);
-                let chunk1 = _mm_loadu_si128(src_ptr.add(i + 8) as *const __m128i);
+                let chunk0 = _mm_loadu_si128(src_ptr.add(i * 2) as *const __m128i);
+                let chunk1 = _mm_loadu_si128(src_ptr.add((i + 8) * 2) as *const __m128i);
 
                 let v0 = _mm256_cvtepu16_epi32(chunk0);
                 let v1 = _mm256_cvtepu16_epi32(chunk1);
@@ -201,7 +201,7 @@ pub mod x86 {
             }
 
             while i + 8 <= count {
-                let chunk = _mm_loadu_si128(src_ptr.add(i) as *const __m128i);
+                let chunk = _mm_loadu_si128(src_ptr.add(i * 2) as *const __m128i);
                 let v = _mm256_cvtepu16_epi32(chunk);
                 _mm256_storeu_si256(dst_ptr.add(i) as *mut __m256i, v);
                 i += 8;

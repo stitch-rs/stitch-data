@@ -11,16 +11,26 @@ use crate::delta::{delta_decode_u32, delta_encode_u32};
 use crate::rle::RleTransformer;
 
 /// Context state carried through the transformation pipeline.
+#[repr(C, align(64))]
 pub struct TransformContext<'a> {
     /// Temporary scratch buffer for intermediate transformation stages.
     pub scratch: &'a mut [u32],
-    /// Baseline value preserved from `input[0]`.
-    pub baseline: u32,
     /// Destination byte buffer for packed bitstream output.
     pub out_buf: &'a mut [u8],
+    /// Baseline value preserved from `input[0]`.
+    pub baseline: u32,
     /// Final bytes written to `out_buf`.
     pub bytes_written: usize,
+    /// L1D padding reserve to guarantee strictly 64-byte cache line alignment.
+    pub _padding: [u8; 16],
 }
+
+impl<'a> stitch_core::Blackboard for TransformContext<'a> {}
+
+const _: () = {
+    assert!(core::mem::align_of::<TransformContext>() == 64);
+    assert!(core::mem::size_of::<TransformContext>() == 64);
+};
 
 /// Stage 1: In-place monotone sequence Delta-encoding layer.
 pub struct DeltaLayer;
@@ -239,9 +249,10 @@ impl CompressionPipeline {
 
         let mut ctx = TransformContext {
             scratch: &mut scratch[..input.len()],
-            baseline: 0,
             out_buf,
+            baseline: 0,
             bytes_written: 0,
+            _padding: [0u8; 16],
         };
 
         // Execute SMA U-Cycle: on_enter (Delta) -> execute (BitPack) -> on_exit

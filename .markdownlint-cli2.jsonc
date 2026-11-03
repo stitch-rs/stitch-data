@@ -1,11 +1,16 @@
 {
   "config": {
     "default": true,
-    "MD013": { "line_length": 80 }
+    "MD013": false,
+    "MD024": { "siblings_only": true },
+    "MD025": false,
+    "MD033": false,
+    "MD041": false
   },
   "ignores": [
-    "_legacy_csharp/**",
-    "protocol.md",
-    "target/**"
+    "target/**",
+    "**/target/**",
+    "book/book/**",
+    "*.bk"
   ]
 }

@@ -1,16 +1,16 @@
 === COMPACT BINARY PROTOCOL BENCHMARK RAW EXECUTION LOG (HARDWARE CRC32) ===
 Date: 2026-11-02
-Machine: WIN-0MUCV5Q6FL9 (Intel Core i9-11900H @ 2.50GHz, 8 Cores, 16 Threads)
+Machine: bench-node-01 (Intel Core i9-11900H @ 2.50GHz, 8 Cores, 16 Threads)
 OS: Windows 11 Pro 64-bit
 Target: Hardware CRC32 (SSE4.2 _mm_crc32_u64) + CBP-01 unpack_u32 fix
 
 === TARGET 1: PRIMITIVES ===
-   Compiling cbp-core v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp-core)
-   Compiling cbp-transforms v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp-transforms)
-   Compiling cbp v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp)
-   Compiling cbp-benches v0.1.0 (D:\Repo\compact-binary-protocol\benches)
+   Compiling cbp-core v0.1.0 (stitch-data\crates\cbp-core)
+   Compiling cbp-transforms v0.1.0 (stitch-data\crates\cbp-transforms)
+   Compiling cbp v0.1.0 (stitch-data\crates\cbp)
+   Compiling cbp-benches v0.1.0 (stitch-data\benches)
     Finished `bench` profile [optimized] target(s) in 10.94s
-     Running benches\primitives.rs (D:\Repo\compact-binary-protocol\target\release\deps\primitives-e939b01bd65f0011.exe)
+     Running benches\primitives.rs (stitch-data\target\release\deps\primitives-e939b01bd65f0011.exe)
 Benchmarking Primitives/PrefixVarint/encode/0_1B
 Benchmarking Primitives/PrefixVarint/encode/0_1B: Warming up for 3.0000 s
 Benchmarking Primitives/PrefixVarint/encode/0_1B: Collecting 100 samples in estimated 5.0000 s (5.4B iterations)
@@ -523,9 +523,9 @@ Found 12 outliers among 100 measurements (12.00%)
 
 
 === TARGET 2: FRAMING ===
-   Compiling cbp-benches v0.1.0 (D:\Repo\compact-binary-protocol\benches)
+   Compiling cbp-benches v0.1.0 (stitch-data\benches)
     Finished `bench` profile [optimized] target(s) in 9.57s
-     Running benches\framing.rs (D:\Repo\compact-binary-protocol\target\release\deps\framing-58a356972889cb45.exe)
+     Running benches\framing.rs (stitch-data\target\release\deps\framing-58a356972889cb45.exe)
 Benchmarking Framing/Pack_Unpack/pack_frame/24B
 Benchmarking Framing/Pack_Unpack/pack_frame/24B: Warming up for 3.0000 s
 Benchmarking Framing/Pack_Unpack/pack_frame/24B: Collecting 100 samples in estimated 5.0001 s (358M iterations)
@@ -747,9 +747,9 @@ Found 6 outliers among 100 measurements (6.00%)
 
 
 === TARGET 3: CROSS-SERIALIZER ===
-   Compiling cbp-benches v0.1.0 (D:\Repo\compact-binary-protocol\benches)
+   Compiling cbp-benches v0.1.0 (stitch-data\benches)
     Finished `bench` profile [optimized] target(s) in 12.45s
-     Running benches\cross_serializer.rs (D:\Repo\compact-binary-protocol\target\release\deps\cross_serializer-b554b9ba69e280b8.exe)
+     Running benches\cross_serializer.rs (stitch-data\target\release\deps\cross_serializer-b554b9ba69e280b8.exe)
 Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Raw_Memory_AoS
 Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Raw_Memory_AoS: Warming up for 3.0000 s
 Benchmarking CrossSerializer/ScenarioA_1024Intervals/encode/Raw_Memory_AoS: Collecting 100 samples in estimated 5.0003 s (53M iterations)
@@ -1164,12 +1164,12 @@ Found 1 outliers among 100 measurements (1.00%)
 
 
 === TARGET 4: PIPELINE PROFILES (-O0 to -O3) ===
-   Compiling cbp-core v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp-core)
-   Compiling cbp-transforms v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp-transforms)
-   Compiling cbp v0.1.0 (D:\Repo\compact-binary-protocol\crates\cbp)
-   Compiling cbp-benches v0.1.0 (D:\Repo\compact-binary-protocol\benches)
+   Compiling cbp-core v0.1.0 (stitch-data\crates\cbp-core)
+   Compiling cbp-transforms v0.1.0 (stitch-data\crates\cbp-transforms)
+   Compiling cbp v0.1.0 (stitch-data\crates\cbp)
+   Compiling cbp-benches v0.1.0 (stitch-data\benches)
     Finished `bench` profile [optimized] target(s) in 9.97s
-     Running benches\pipeline.rs (D:\Repo\compact-binary-protocol\target\release\deps\pipeline-21b847315c221328.exe)
+     Running benches\pipeline.rs (stitch-data\target\release\deps\pipeline-21b847315c221328.exe)
 Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=16_64B_L1Line
 Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=16_64B_L1Line: Warming up for 3.0000 s
 Benchmarking Pipeline/Monomorphic_U_Cycle/compress_u32/N=16_64B_L1Line: Collecting 100 samples in estimated 5.0001 s (76M iterations)
@@ -1381,9 +1381,9 @@ Found 1 outliers among 100 measurements (1.00%)
 
 
 === TARGET 5: TRANSFORMS (GORILLA FLOAT & SIGNED DELTA) ===
-   Compiling cbp-benches v0.1.0 (D:\Repo\compact-binary-protocol\benches)
+   Compiling cbp-benches v0.1.0 (stitch-data\benches)
     Finished `bench` profile [optimized] target(s) in 9.81s
-     Running benches\transforms.rs (D:\Repo\compact-binary-protocol\target\release\deps\transforms-b6bbf94e5efc5fad.exe)
+     Running benches\transforms.rs (stitch-data\target\release\deps\transforms-b6bbf94e5efc5fad.exe)
 Benchmarking Transforms/Delta/encode/monotone_step_1/1K
 Benchmarking Transforms/Delta/encode/monotone_step_1/1K: Warming up for 3.0000 s
 Benchmarking Transforms/Delta/encode/monotone_step_1/1K: Collecting 100 samples in estimated 5.0003 s (48M iterations)

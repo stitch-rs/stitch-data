@@ -88,6 +88,7 @@ For columnar record batches (`RecordBatchBuilder`), the internal payload transit
 ### 4.2 In-Place Random-Access Slicing (`ColumnSliceIndex`)
 
 Rather than decompressing full columns sequentially:
+
 - `ColumnSliceIndex<'a, MAX_COLUMNS>` indexes column slice boundaries in $O(K)$ time (where $K$ is column count $\le 16$).
 - `read_raw_at<T>(col_idx, row_idx)` provides zero-copy $O(1)$ random-access cell reads.
 - `read_bitpacked_u32_at(payload, row_idx, total_count)` provides branchless $O(1)$ bit extraction directly from packed bitstreams without decompression.

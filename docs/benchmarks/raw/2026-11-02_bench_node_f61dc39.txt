@@ -1,0 +1,96 @@
+================================================================================
+CBP EMPIRICAL BENCHMARK RAW EXECUTION LOG
+================================================================================
+Host: bench-node-01
+Date: 2026-11-02
+Commit SHA: f61dc398f6e1e713709b35493d547f9f0a56cde5 (HEAD)
+Branch: feature/benchmarks-and-stages
+OS: Microsoft Windows 11 Pro 64-bit
+CPU: 11th Gen Intel(R) Core(TM) i9-11900H @ 2.50GHz (8C/16T, MaxClock 2.496 GHz)
+Caches: L1d 32KB/core, L2 1.25MB/core (10MB total), L3 24MB shared
+Rust Toolchain: rustc 1.99.1 (58cf8f9c3 2026-10-13) x86_64-pc-windows-msvc (LLVM 23.1.1)
+================================================================================
+
+===============================================================================
+    COMPACT BINARY PROTOCOL (CBP) SIZE & ROUNDTRIP VERIFICATION HARNESS       
+===============================================================================
+
+>>> [1/3] Verifying Exact Roundtrip Invariants...
+  [PASS] CbpReferenceIntervalContainer roundtrip (1,024 records)
+  [PASS] CbpReferenceSnapshot roundtrip (1 record, 24 bytes raw)
+  [PASS] CbpReferenceSnapshotBatch roundtrip (64 records)
+  [PASS] #[derive(CbpRecord)] single record & framed roundtrip (PlayerSnapshot)
+  [PASS] ColumnarBlockBuilder<PlayerSnapshot, 64> batch push/flush roundtrip
+
+>>> [2/3] Verifying Zero Dynamic Heap Allocations on Hot Paths...
+  [PASS] CompressionPipeline::compress_u32: 0 heap allocations (389 bytes written)
+  [PASS] DecompressionPipeline::decompress_u32: 0 heap allocations
+  [PASS] pack_frame: 0 heap allocations
+  [PASS] unpack_frame: 0 heap allocations
+  [PASS] pack_frame_vectored: 0 heap allocations
+  [PASS] FrameReader::next_frame: 0 heap allocations (streaming multi-frame)
+  [PASS] find_magic: 0 heap allocations
+  [PASS] resync_frame: 0 heap allocations (stream recovery)
+  [PASS] CbpReferenceIntervalContainer::encode: 0 heap allocations
+  [PASS] CbpReferenceIntervalContainer::decode: 0 heap allocations
+  [PASS] PlayerSnapshot::encode_record: 0 heap allocations
+  [PASS] PlayerSnapshot::decode_record: 0 heap allocations
+  [PASS] PlayerSnapshot::pack_to_frame: 0 heap allocations
+  [PASS] PlayerSnapshot::unpack_from_frame: 0 heap allocations
+  [PASS] ColumnarBlockBuilder::push + flush: 0 heap allocations
+
+>>> [3/3] Generating Wire Density Scoreboards...
+
+===============================================================================
+  SCENARIO A: 1,024 IP INTERVALS (12,288 BYTES RAW AoS) SCOREBOARD             
+===============================================================================
+Format / Serializer                 |  Wire Size |      % Raw | Ratio vs Raw        
+------------------------------------+------------+------------+--------------------
+Raw Memory (AoS struct)             |    12288 B |     100.0% |  1.00x
+Bincode (1.3)                       |    12296 B |     100.1% |  1.00x
+MessagePack (rmp-serde)             |    12291 B |     100.0% |  1.00x
+Protobuf (prost 0.13 repeated)      |     9225 B |      75.1% |  1.33x
+Postcard (1.1)                      |     9218 B |      75.0% |  1.33x
+CBP Reference Columnar Container    |     3098 B |      25.2% |  3.97x [Delta+BitPack+CRC32]
+-------------------------------------------------------------------------------
+  CBP Container Breakdown for 1,024 Records:
+    - Element Count PrefixVarint: 2 bytes
+    - Column 1 (ip_from, Monotone Delta+BitPack): ~1,156 bytes
+    - Column 2 (ip_to, Monotone Delta+BitPack):   ~1,156 bytes
+    - Column 3 (profile_id, Bounded BitPack 6b):  ~770 bytes
+    - Stream Length Descriptors:                  ~6 bytes
+    - CBP Frame Envelope (Header + CRC32):        8 bytes
+    => TOTAL: 3098 bytes (vs Protobuf: 9225 B -> 33.6% of Protobuf size)
+
+===============================================================================
+  SCENARIO B: SINGLE GAME TELEMETRY SNAPSHOT (24 BYTES RAW AoS) SCOREBOARD    
+===============================================================================
+Format / Serializer                 |  Wire Size |   Overhead | Integrity Check          
+------------------------------------+------------+------------+-------------------------
+Raw Memory (AoS struct)             |       24 B |        0 B | None                     
+Bincode (1.3)                       |       24 B |         +0 | None                     
+Postcard (1.1)                      |       19 B |         -5 | None                     
+Protobuf (prost 0.13)               |       26 B |         +2 | None                     
+MessagePack (rmp-serde)             |       26 B |         +2 | None                     
+CBP Reference Field Packer          |       27 B |         +3 | Software Castagnoli CRC32
+-------------------------------------------------------------------------------
+  CBP Single Snapshot Breakdown:
+    - Payload: 19 bytes (player_id varint: 2B, x/y/z: 12B, health/flags/tick: 5B)
+    - CBP Frame Header (Magic + Version + Profile/Flags + PayloadLen): 4 bytes
+    - Castagnoli CRC32 Integrity Footer: 4 bytes
+    => TOTAL: 27 bytes (including full 32-bit CRC32 checksum)
+
+===============================================================================
+  SCENARIO B2: BATCH OF 64 GAME SNAPSHOTS (1,536 BYTES RAW AoS) SCOREBOARD    
+===============================================================================
+Format / Serializer                 |  Wire Size |      % Raw | Integrity Check     
+------------------------------------+------------+------------+--------------------
+Raw Memory (AoS struct)             |     1536 B |     100.0% | None                
+Bincode (1.3)                       |     1544 B |     100.5% | None                
+MessagePack (rmp-serde)             |     1668 B |     108.6% | None                
+Protobuf (prost 0.13 batch)         |     1815 B |     118.2% | None                
+Postcard (1.1)                      |     1242 B |      80.9% | None                
+CBP Reference Batch Packer          |     1251 B |      81.4% | Castagnoli CRC32    
+===============================================================================
+
+>>> ALL ROUNDTRIP AND ALLOCATION INVARIANTS VERIFIED CLEANLY.

@@ -60,6 +60,12 @@ impl<'a> ColumnarBlockWriter<'a> {
         num_columns: usize,
         dst: &'a mut [u8],
     ) -> Result<Self, StitchError> {
+        if dst.len() < 18 {
+            return Err(StitchError::UnexpectedEof {
+                required: 18,
+                available: dst.len(),
+            });
+        }
         let mut offset = 0;
         let rlen = stitch_data_core::varint::encode_prefix_varint(row_count as u64, dst);
         offset += rlen;
@@ -86,9 +92,9 @@ impl<'a> ColumnarBlockWriter<'a> {
             return Err(StitchError::PayloadDecodeError);
         }
 
-        if self.dst.len() < self.offset + 1 {
+        if self.dst.len() < self.offset + 10 {
             return Err(StitchError::UnexpectedEof {
-                required: self.offset + 1,
+                required: self.offset + 10,
                 available: self.dst.len(),
             });
         }

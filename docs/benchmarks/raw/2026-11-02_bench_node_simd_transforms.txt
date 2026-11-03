@@ -1,6 +1,6 @@
 ================================================================================
 CBP BENCHMARK SUITE EXECUTION LOG: CATEGORY 2 (HARDWARE OPTIMIZATIONS & SIMD)
-Host: WIN-0MUCV5Q6FL9
+Host: bench-node-01
 Date: 2026-11-02
 Toolchain: rustc 1.99.1 (58cf8f9c3 2026-10-13)
 CPU: 11th Gen Intel(R) Core(TM) i9-11900H @ 2.50GHz (AVX2, SSE4.2, BMI2)

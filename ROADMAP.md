@@ -1,8 +1,8 @@
-# Compact Binary Protocol (stitch-data) — Strategic Roadmap
+# Stitch Data Engine (stitch-data) — Strategic Roadmap
 
 ## Overview & Vision
 
-Compact Binary Protocol (stitch-data) is engineered under the **Scrooge Systems
+Stitch Data Engine (stitch-data) is engineered under the **Scrooge Systems
 Mindset**: mechanical sympathy, zero allocations on hot paths, 64-byte cache
 alignment, monomorphic compile-time traversal, and empirical hardware
 validation.
