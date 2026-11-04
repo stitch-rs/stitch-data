@@ -9,6 +9,8 @@ publish = false
 
 [dependencies]
 stitch-data = { workspace = true, features = ["std", "zero-copy", "derive"] }
+stitch-data-core = { workspace = true }
+machine-core = { workspace = true }
 criterion = { workspace = true, features = ["html_reports"] }
 prost = { workspace = true }
 rmp-serde = { workspace = true }

@@ -28,6 +28,8 @@ stitch-data-derive = { path = "crates/stitch-data-derive" }
 stitch-data = { path = "crates/stitch-data", default-features = false }
 
 stitch-core = { git = "https://github.com/stitch-rs/stitch-framework.git", branch = "main", default-features = false }
+machine-core = { path = "../../machine-rs/crates/machine-core", default-features = false }
+machine-rs = { path = "../../machine-rs/crates/machine", default-features = false }
 zerocopy = { version = "0.8", default-features = false, features = ["derive"] }
 criterion = { version = "0.8", default-features = false }
 prost = { version = "0.13", default-features = false, features = ["prost-derive"] }

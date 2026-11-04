@@ -32,7 +32,10 @@ pub use frame::{
     unpack_frame_unchecked,
 };
 pub use record::{ColumnCodec, FieldCodec, Record};
-pub use resync::{ResyncStats, StreamResyncParser, find_magic, find_magic_swar, resync_frame};
+pub use resync::{
+    FrameStreamIterator, FrameStreamMachine, ResyncStats, StreamResyncParser, find_magic,
+    find_magic_swar, resync_frame,
+};
 pub use schema::{
     CompatibilityResult, FieldDescriptor, SchemaCompatibilityVerifier, SchemaDefinition,
 };

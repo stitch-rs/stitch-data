@@ -8,6 +8,7 @@ repository.workspace = true
 description = "Core #![no_std] framing, bitstream, PrefixVarint, and ZigZag primitives for the Stitch Data Engine"
 
 [dependencies]
+machine-core = { workspace = true }
 zerocopy = { workspace = true, optional = true }
 
 [features]

@@ -219,6 +219,31 @@ fn bench_streaming_and_resync(c: &mut Criterion) {
         })
     });
 
+    group.bench_function("Machine_FSM/16_frames_stream_4KiB", |b| {
+        use machine_core::Machine;
+        b.iter(|| {
+            let mut machine = stitch_data_core::FrameStreamMachine::new(black_box(multi_stream));
+            let mut count = 0;
+            while let machine_core::Step::Yielded(frame) = machine.step(()) {
+                black_box(frame.payload);
+                count += 1;
+            }
+            assert_eq!(count, 16);
+        })
+    });
+
+    group.bench_function("GenIter/16_frames_stream_4KiB", |b| {
+        b.iter(|| {
+            let iter = stitch_data_core::FrameStreamIterator::new(black_box(multi_stream));
+            let mut count = 0;
+            for frame in iter {
+                black_box(frame.payload);
+                count += 1;
+            }
+            assert_eq!(count, 16);
+        })
+    });
+
     // 2. find_magic AVX2 throughput (64 KiB buffer without magic)
     let clean_buf = vec![0x11u8; 65536];
     group.throughput(Throughput::Bytes(65536));
