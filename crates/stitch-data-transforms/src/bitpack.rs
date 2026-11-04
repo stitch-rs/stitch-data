@@ -365,6 +365,14 @@ impl BitPacker {
         }
 
         // General arbitrary bit-width extraction in little-endian bit order.
+        let required_bytes = (bit_offset + bit_width as usize).div_ceil(8);
+        if required_bytes > body.len() {
+            return Err(StitchError::UnexpectedEof {
+                required: required_bytes,
+                available: body.len(),
+            });
+        }
+
         let remaining = &body[body_byte_pos..];
         let mut bytes = [0u8; 8];
         let copy_len = remaining.len().min(8);

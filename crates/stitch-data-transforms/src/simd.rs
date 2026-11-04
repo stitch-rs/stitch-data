@@ -137,15 +137,17 @@ pub mod x86 {
     /// AVX2-accelerated zero-extension unpacking of 8-bit integers to `u32`.
     ///
     /// # Safety
-    /// Caller must ensure AVX2 target feature is supported on the host CPU.
+    /// - Caller must ensure AVX2 target feature is supported on the host CPU.
+    /// - Caller must guarantee `src.len() >= dst.len()`.
     #[target_feature(enable = "avx2")]
     pub unsafe fn unpack_8bit_avx2(src: &[u8], dst: &mut [u32]) {
+        assert!(src.len() >= dst.len(), "src slice shorter than dst slice");
         let count = dst.len();
         let src_ptr = src.as_ptr();
         let dst_ptr = dst.as_mut_ptr();
         let mut i = 0;
 
-        // SAFETY: Pointer arithmetic and vector loads/stores bounded by count.
+        // SAFETY: Bounds verified above: src.len() >= count and dst.len() == count.
         unsafe {
             // Process 16 elements (64 bytes of output) per iteration
             while i + 16 <= count {
@@ -177,15 +179,17 @@ pub mod x86 {
     /// AVX2-accelerated zero-extension unpacking of 16-bit integers to `u32`.
     ///
     /// # Safety
-    /// Caller must ensure AVX2 target feature is supported on the host CPU.
+    /// - Caller must ensure AVX2 target feature is supported on the host CPU.
+    /// - Caller must guarantee `src.len() >= dst.len() * 2`.
     #[target_feature(enable = "avx2")]
     pub unsafe fn unpack_16bit_avx2(src: &[u8], dst: &mut [u32]) {
+        assert!(src.len() >= dst.len() * 2, "src slice shorter than dst * 2");
         let count = dst.len();
         let src_ptr = src.as_ptr();
         let dst_ptr = dst.as_mut_ptr();
         let mut i = 0;
 
-        // SAFETY: Pointer arithmetic and vector loads/stores bounded by count.
+        // SAFETY: Bounds verified above: src.len() >= count * 2 and dst.len() == count.
         unsafe {
             // Process 16 elements (64 bytes of output) per iteration
             while i + 16 <= count {
