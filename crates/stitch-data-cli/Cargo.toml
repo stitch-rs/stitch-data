@@ -1,0 +1,18 @@
+[package]
+name = "stitch-data-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Lightweight Data Profiling and Zero-Copy Binary Container Inspection CLI for Stitch Data"
+
+[[bin]]
+name = "stitch-data"
+path = "src/main.rs"
+
+[dependencies]
+stitch-data = { workspace = true, features = ["std"] }
+clap = { version = "4.5", features = ["derive"] }
+memmap2 = "0.9"

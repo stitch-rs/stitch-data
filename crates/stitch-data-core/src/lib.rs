@@ -6,6 +6,7 @@
 extern crate alloc;
 
 pub mod bitstream;
+pub mod container;
 pub mod crc;
 pub mod error;
 pub mod frame;
@@ -17,6 +18,9 @@ pub mod simd;
 pub mod varint;
 pub mod zigzag;
 
+pub use container::{
+    CONTAINER_MAGIC, CONTAINER_VERSION_1, ChunkDescriptor, ContainerFooter, ContainerHeader,
+};
 pub use crc::{
     crc32_castagnoli, crc32_castagnoli_finalize, crc32_castagnoli_init, crc32_castagnoli_slices,
     crc32_castagnoli_update,

@@ -6,6 +6,7 @@ members = [
     "crates/stitch-data-derive",
     "crates/stitch-data",
     "crates/stitch-data-fuzz",
+    "crates/stitch-data-cli",
     "benches",
 ]
 exclude = [

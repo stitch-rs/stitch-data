@@ -7,6 +7,7 @@ extern crate alloc;
 
 pub mod bitpack;
 pub mod columnar;
+pub mod container;
 pub mod delta;
 pub mod dict;
 pub mod float;
@@ -22,6 +23,9 @@ pub use columnar::{
     encode_dict_column, encode_f32_column, encode_i32_column, encode_raw_column, encode_rle_column,
     encode_u32_column, read_bitpacked_u32_at,
 };
+pub use container::ContainerReader;
+#[cfg(feature = "std")]
+pub use container::ContainerWriter;
 pub use delta::DeltaTransformer;
 pub use dict::DictTransformer;
 pub use float::GorillaCompressor;

@@ -6,21 +6,26 @@ pub use stitch_data_core;
 pub use stitch_data_transforms;
 
 pub use stitch_data_core::{
-    CBP_MAGIC, CBP_VERSION_1, ColumnCodec, CompatibilityResult, FieldCodec, FieldDescriptor,
-    FrameFlags, FrameHeader, FrameReader, FrameView, MAX_HEADER_SIZE, OptimizationProfile, Record,
-    ResyncStats, SchemaCompatibilityVerifier, SchemaDefinition, StitchError, StreamResyncParser,
-    VectoredFrame, bitstream, crc, error, frame, record, resync, schema, simd, varint, zigzag,
+    CBP_MAGIC, CBP_VERSION_1, CONTAINER_MAGIC, CONTAINER_VERSION_1, ChunkDescriptor, ColumnCodec,
+    CompatibilityResult, ContainerFooter, ContainerHeader, FieldCodec, FieldDescriptor, FrameFlags,
+    FrameHeader, FrameReader, FrameView, MAX_HEADER_SIZE, OptimizationProfile, Record, ResyncStats,
+    SchemaCompatibilityVerifier, SchemaDefinition, StitchError, StreamResyncParser, VectoredFrame,
+    bitstream, container, crc, error, frame, record, resync, schema, simd, varint, zigzag,
 };
 
 pub use stitch_data_transforms::{
     BitPacker, ColumnCodecTag, ColumnSlice, ColumnSliceIndex, ColumnarBlockBuilder,
-    ColumnarBlockReader, ColumnarBlockWriter, CompressionPipeline, DecompressionPipeline,
-    DeltaTransformer, DictTransformer, GorillaCompressor, RecordBatchBuilder, RleTransformer,
-    bitpack, columnar, decode_columnar_frame, decode_dict_column, decode_f32_column,
-    decode_i32_column, decode_raw_column, decode_rle_column, decode_u32_column, delta, dict,
-    encode_dict_column, encode_f32_column, encode_i32_column, encode_raw_column, encode_rle_column,
-    encode_u32_column, float, pipeline, read_bitpacked_u32_at, rle,
+    ColumnarBlockReader, ColumnarBlockWriter, CompressionPipeline, ContainerReader,
+    DecompressionPipeline, DeltaTransformer, DictTransformer, GorillaCompressor,
+    RecordBatchBuilder, RleTransformer, bitpack, columnar, container as transforms_container,
+    decode_columnar_frame, decode_dict_column, decode_f32_column, decode_i32_column,
+    decode_raw_column, decode_rle_column, decode_u32_column, delta, dict, encode_dict_column,
+    encode_f32_column, encode_i32_column, encode_raw_column, encode_rle_column, encode_u32_column,
+    float, pipeline, read_bitpacked_u32_at, rle,
 };
+
+#[cfg(feature = "std")]
+pub use stitch_data_transforms::ContainerWriter;
 
 #[cfg(feature = "derive")]
 pub use stitch_data_derive::Record;
@@ -28,6 +33,9 @@ pub use stitch_data_derive::Record;
 /// Convenient prelude module re-exporting key framing, types, and transform pipelines.
 pub mod prelude {
     pub use stitch_data_core::bitstream::{BitReader, BitWriter};
+    pub use stitch_data_core::container::{
+        CONTAINER_MAGIC, CONTAINER_VERSION_1, ChunkDescriptor, ContainerFooter, ContainerHeader,
+    };
     pub use stitch_data_core::crc::{
         crc32_castagnoli, crc32_castagnoli_finalize, crc32_castagnoli_init,
         crc32_castagnoli_slices, crc32_castagnoli_update,
@@ -54,6 +62,9 @@ pub mod prelude {
         decode_u32_column, encode_dict_column, encode_f32_column, encode_i32_column,
         encode_raw_column, encode_rle_column, encode_u32_column, read_bitpacked_u32_at,
     };
+    pub use stitch_data_transforms::container::ContainerReader;
+    #[cfg(feature = "std")]
+    pub use stitch_data_transforms::container::ContainerWriter;
     pub use stitch_data_transforms::delta::{
         DeltaTransformer, delta_decode_i32, delta_decode_u32, delta_decode_with_base_u32,
         delta_encode_i32, delta_encode_u32, delta_encode_with_base_u32,
