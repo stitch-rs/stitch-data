@@ -365,6 +365,7 @@ checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
 [[package]]
 name = "machine-core"
 version = "0.1.0"
+source = "git+https://github.com/ulquiorracode/machine-rs.git?branch=dev#0d55e6d5cfeaa12979b0d490ffd5d749c7179237"
 
 [[package]]
 name = "memchr"
