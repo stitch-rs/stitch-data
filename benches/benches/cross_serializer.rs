@@ -55,14 +55,23 @@ fn bench_cross_serializer_scenario_a_1k(c: &mut Criterion) {
         })
     });
 
-    // 2. Bincode
+    // 2. Bincode (Zero-alloc into pre-allocated buffer)
     group.bench_function("encode/Bincode", |b| {
-        b.iter(|| black_box(bincode::serialize(black_box(&intervals)).unwrap()))
+        let mut buf = Vec::with_capacity(bincode_bytes.len());
+        b.iter(|| {
+            buf.clear();
+            bincode::serialize_into(&mut buf, black_box(&intervals)).unwrap();
+            black_box(buf.len())
+        })
     });
 
-    // 3. Postcard
+    // 3. Postcard (Zero-alloc into pre-allocated slice)
     group.bench_function("encode/Postcard", |b| {
-        b.iter(|| black_box(postcard::to_allocvec(black_box(&intervals)).unwrap()))
+        let mut buf = vec![0u8; postcard_bytes.len() + 64];
+        b.iter(|| {
+            let slice = postcard::to_slice(black_box(&intervals), black_box(&mut buf)).unwrap();
+            black_box(slice.len())
+        })
     });
 
     // 4. Protobuf (prost)
@@ -220,11 +229,20 @@ fn bench_cross_serializer_scenario_b_single(c: &mut Criterion) {
     });
 
     group.bench_function("encode/Bincode", |b| {
-        b.iter(|| black_box(bincode::serialize(black_box(&snapshot)).unwrap()))
+        let mut buf = Vec::with_capacity(32);
+        b.iter(|| {
+            buf.clear();
+            bincode::serialize_into(&mut buf, black_box(&snapshot)).unwrap();
+            black_box(buf.len())
+        })
     });
 
     group.bench_function("encode/Postcard", |b| {
-        b.iter(|| black_box(postcard::to_allocvec(black_box(&snapshot)).unwrap()))
+        let mut buf = [0u8; 64];
+        b.iter(|| {
+            let slice = postcard::to_slice(black_box(&snapshot), black_box(&mut buf)).unwrap();
+            black_box(slice.len())
+        })
     });
 
     group.bench_function("encode/Protobuf_prost", |b| {

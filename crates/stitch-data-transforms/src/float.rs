@@ -313,15 +313,48 @@ mod tests {
 
     #[test]
     fn test_gorilla_f32_special_values() {
-        let original: [f32; 5] = [0.0, -0.0, f32::INFINITY, f32::NEG_INFINITY, 1.2345e-20];
-        let mut buffer = [0u8; 64];
+        let original: [f32; 8] = [
+            0.0,
+            -0.0,
+            f32::INFINITY,
+            f32::NEG_INFINITY,
+            f32::NAN,
+            f32::from_bits(0x7fc00001), // quiet NaN with payload
+            f32::MIN_POSITIVE,          // subnormal boundary
+            1.2345e-20,
+        ];
+        let mut buffer = [0u8; 128];
         let written = GorillaCompressor::compress_f32(&original, &mut buffer).unwrap();
 
-        let mut restored = [0.0f32; 5];
+        let mut restored = [0.0f32; 8];
         let read = GorillaCompressor::decompress_f32(&buffer[..written], &mut restored).unwrap();
 
         assert_eq!(read, written);
-        for i in 0..5 {
+        for i in 0..8 {
+            assert_eq!(restored[i].to_bits(), original[i].to_bits());
+        }
+    }
+
+    #[test]
+    fn test_gorilla_f64_special_values() {
+        let original: [f64; 8] = [
+            0.0,
+            -0.0,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NAN,
+            f64::from_bits(0x7ff8000000000001), // quiet NaN with payload
+            f64::MIN_POSITIVE,                  // subnormal boundary
+            1.23456789e-100,
+        ];
+        let mut buffer = [0u8; 256];
+        let written = GorillaCompressor::compress_f64(&original, &mut buffer).unwrap();
+
+        let mut restored = [0.0f64; 8];
+        let read = GorillaCompressor::decompress_f64(&buffer[..written], &mut restored).unwrap();
+
+        assert_eq!(read, written);
+        for i in 0..8 {
             assert_eq!(restored[i].to_bits(), original[i].to_bits());
         }
     }
