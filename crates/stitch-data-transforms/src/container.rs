@@ -174,6 +174,18 @@ impl<'a> ContainerReader<'a> {
         self.footer.chunk_count as usize
     }
 
+    /// Returns the byte offset within the container where the chunk directory begins.
+    #[inline]
+    pub fn directory_offset(&self) -> u64 {
+        self.footer.directory_offset
+    }
+
+    /// Returns the container footer.
+    #[inline]
+    pub fn footer(&self) -> &ContainerFooter {
+        &self.footer
+    }
+
     /// Retrieves a chunk descriptor by index.
     pub fn chunk_descriptor(&self, index: usize) -> Result<ChunkDescriptor, StitchError> {
         if index >= self.chunk_count() {
