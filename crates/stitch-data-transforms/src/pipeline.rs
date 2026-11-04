@@ -275,8 +275,13 @@ impl CompressionPipeline {
         }
     }
 
-    /// -O3 MaxDensity: evaluates RLE vs Delta+BitPack and selects minimum byte footprint.
+    /// -O3 MaxDensity: evaluates RLE, Direct BitPack, Delta+BitPack and selects minimum byte footprint.
     /// Format: `[Strategy: 1B]` + `[Payload]`
+    /// Strategies:
+    /// - `0x00`: Direct Raw POD
+    /// - `0x01`: Delta + BitPack (Balanced)
+    /// - `0x02`: Run-Length Encoding (RLE)
+    /// - `0x03`: Direct BitPack (without Delta)
     pub fn compress_max_density_u32(
         &mut self,
         input: &[u32],
@@ -316,17 +321,67 @@ impl CompressionPipeline {
             return Ok(1 + rlen);
         }
 
-        // Test Strategy 1: Delta + BitPack into out_buf[1..]
-        out_buf[0] = 0x01;
-        let delta_len = self.compress_balanced_u32(input, scratch, &mut out_buf[1..])?;
+        // Check raw bit-width (for Strategy 3: Direct BitPack)
+        let raw_bits = BitPacker::required_bit_width(input);
 
-        if let Some(rlen) = rle_res.ok().filter(|&l| l < delta_len) {
-            out_buf[0] = 0x02;
-            RleTransformer::encode_u32(input, &mut out_buf[1..])?;
-            return Ok(1 + rlen);
+        // Compute deltas in scratch to check delta bit-width (for Strategy 1: Delta+BitPack)
+        scratch[..input.len()].copy_from_slice(input);
+        let baseline = scratch[0];
+        crate::delta::delta_encode_u32(&mut scratch[..input.len()]);
+        let delta_bits = if input.len() > 1 {
+            BitPacker::required_bit_width(&scratch[1..input.len()])
+        } else {
+            1
+        };
+
+        // If raw bit-width is strictly better than delta or delta wrapped to 32 bits:
+        if raw_bits <= delta_bits && raw_bits < 32 {
+            let packed_res = BitPacker::pack_u32(input, &mut out_buf[1..]);
+            if let Ok(packed_len) = packed_res {
+                if let Some(rlen) = rle_res.ok().filter(|&l| l < packed_len) {
+                    out_buf[0] = 0x02;
+                    RleTransformer::encode_u32(input, &mut out_buf[1..])?;
+                    return Ok(1 + rlen);
+                }
+                out_buf[0] = 0x03;
+                return Ok(1 + packed_len);
+            }
         }
 
-        Ok(1 + delta_len)
+        // Try Delta + BitPack (Strategy 0x01)
+        if delta_bits < 32 && out_buf[1..].len() >= 4 {
+            out_buf[1..5].copy_from_slice(&baseline.to_le_bytes());
+            let pack_res = if input.len() > 1 {
+                BitPacker::pack_u32(&scratch[1..input.len()], &mut out_buf[5..])
+            } else {
+                Ok(0)
+            };
+
+            if let Ok(packed_len) = pack_res {
+                let delta_len = 4 + packed_len;
+                if let Some(rlen) = rle_res.ok().filter(|&l| l < delta_len) {
+                    out_buf[0] = 0x02;
+                    RleTransformer::encode_u32(input, &mut out_buf[1..])?;
+                    return Ok(1 + rlen);
+                }
+                out_buf[0] = 0x01;
+                return Ok(1 + delta_len);
+            }
+        }
+
+        // Fallback: Strategy 0x00 Direct Raw POD copy
+        let raw_len = input.len() * 4;
+        if out_buf.len() < 1 + raw_len {
+            return Err(StitchError::UnexpectedEof {
+                required: 1 + raw_len,
+                available: out_buf.len(),
+            });
+        }
+        out_buf[0] = 0x00;
+        for (i, &v) in input.iter().enumerate() {
+            out_buf[1 + i * 4..1 + (i + 1) * 4].copy_from_slice(&v.to_le_bytes());
+        }
+        Ok(1 + raw_len)
     }
 
     /// Compresses a slice of signed 32-bit integers via Delta + ZigZag + BitPack.
@@ -518,6 +573,19 @@ impl DecompressionPipeline {
 
         let strategy = src[0];
         match strategy {
+            0x00 => {
+                let required = dst.len() * 4;
+                if src[1..].len() < required {
+                    return Err(StitchError::UnexpectedEof {
+                        required: 1 + required,
+                        available: src.len(),
+                    });
+                }
+                for (i, item) in dst.iter_mut().enumerate() {
+                    *item = u32::from_le_bytes(src[1 + i * 4..1 + (i + 1) * 4].try_into().unwrap());
+                }
+                Ok(1 + required)
+            }
             0x01 => {
                 let consumed = Self::decompress_balanced_u32(&src[1..], dst)?;
                 Ok(1 + consumed)
@@ -525,6 +593,10 @@ impl DecompressionPipeline {
             0x02 => {
                 let (_elements, bytes_consumed) = RleTransformer::decode_u32_ext(&src[1..], dst)?;
                 Ok(1 + bytes_consumed)
+            }
+            0x03 => {
+                let consumed = BitPacker::unpack_u32(&src[1..], dst)?;
+                Ok(1 + consumed)
             }
             _ => Err(StitchError::PayloadDecodeError),
         }
