@@ -10,7 +10,8 @@ pub use stitch_data_core::{
     CompatibilityResult, ContainerFooter, ContainerHeader, FieldCodec, FieldDescriptor, FrameFlags,
     FrameHeader, FrameReader, FrameView, MAX_HEADER_SIZE, OptimizationProfile, Record, ResyncStats,
     SchemaCompatibilityVerifier, SchemaDefinition, StitchError, StreamResyncParser, VectoredFrame,
-    bitstream, container, crc, error, frame, record, resync, schema, simd, varint, zigzag,
+    bitstream, container, crc, error, frame, pack_frame, pack_frame_vectored, record, resync,
+    schema, simd, unpack_frame, unpack_frame_unchecked, varint, zigzag,
 };
 
 pub use stitch_data_transforms::{
@@ -44,6 +45,7 @@ pub mod prelude {
     pub use stitch_data_core::frame::{
         CBP_MAGIC, CBP_VERSION_1, FrameFlags, FrameHeader, FrameReader, FrameView, MAX_HEADER_SIZE,
         OptimizationProfile, VectoredFrame, pack_frame, pack_frame_vectored, unpack_frame,
+        unpack_frame_unchecked,
     };
     pub use stitch_data_core::record::{ColumnCodec, FieldCodec, Record};
     pub use stitch_data_core::resync::{

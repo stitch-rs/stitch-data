@@ -305,6 +305,25 @@ pub fn unpack_frame(buf: &[u8]) -> Result<(FrameHeader, &[u8]), StitchError> {
     Ok((header, payload))
 }
 
+/// Unpacks a CBP frame header and borrows the payload slice without re-verifying the CRC32 checksum.
+///
+/// Fast-path for pre-verified containers (e.g. read paths over validated databases).
+#[inline(always)]
+pub fn unpack_frame_unchecked(buf: &[u8]) -> Result<(FrameHeader, &[u8]), StitchError> {
+    let (header, header_len) = FrameHeader::parse(buf)?;
+    let expected_total = checked_frame_total_len(header_len, header.payload_len)?;
+
+    if buf.len() < expected_total {
+        return Err(StitchError::UnexpectedEof {
+            required: expected_total,
+            available: buf.len(),
+        });
+    }
+
+    let payload = &buf[header_len..header_len + header.payload_len];
+    Ok((header, payload))
+}
+
 /// A zero-allocation, scatter-gather vectored representation of a serialized CBP frame.
 ///
 /// Encodes the header into a tiny stack buffer and borrows the payload directly,

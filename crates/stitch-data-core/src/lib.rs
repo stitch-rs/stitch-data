@@ -29,6 +29,7 @@ pub use error::StitchError;
 pub use frame::{
     CBP_MAGIC, CBP_VERSION_1, FrameFlags, FrameHeader, FrameReader, FrameView, MAX_HEADER_SIZE,
     OptimizationProfile, VectoredFrame, pack_frame, pack_frame_vectored, unpack_frame,
+    unpack_frame_unchecked,
 };
 pub use record::{ColumnCodec, FieldCodec, Record};
 pub use resync::{ResyncStats, StreamResyncParser, find_magic, find_magic_swar, resync_frame};
