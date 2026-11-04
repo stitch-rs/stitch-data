@@ -260,6 +260,73 @@ impl StreamResyncParser {
     }
 }
 
+/// Streaming frame reader state machine driven by `machine_core::Machine`.
+#[derive(Debug)]
+pub struct FrameStreamMachine<'a> {
+    parser: StreamResyncParser,
+    buffer: &'a [u8],
+}
+
+impl<'a> FrameStreamMachine<'a> {
+    /// Creates a new `FrameStreamMachine` reading frames from `buffer`.
+    #[inline]
+    pub const fn new(buffer: &'a [u8]) -> Self {
+        Self {
+            parser: StreamResyncParser::new(),
+            buffer,
+        }
+    }
+
+    /// Access the accumulated resynchronization statistics.
+    #[inline]
+    pub const fn stats(&self) -> ResyncStats {
+        self.parser.stats()
+    }
+}
+
+impl<'a> machine_core::Machine for FrameStreamMachine<'a> {
+    type Yield = FrameView<'a>;
+    type Resume = ();
+    type Return = ResyncStats;
+
+    #[inline(always)]
+    fn step(&mut self, _resume: Self::Resume) -> machine_core::Step<Self::Yield, Self::Return> {
+        if self.buffer.is_empty() {
+            machine_core::Step::Done(self.parser.stats())
+        } else if let Some((consumed, frame)) = self.parser.parse_next(self.buffer) {
+            self.buffer = &self.buffer[consumed..];
+            machine_core::Step::Yielded(frame)
+        } else {
+            machine_core::Step::Done(self.parser.stats())
+        }
+    }
+}
+
+/// Streaming frame reader iterator adapter driven by `machine_core::GenIter`.
+pub struct FrameStreamIterator<'a> {
+    inner: machine_core::GenIter<FrameStreamMachine<'a>>,
+}
+
+impl<'a> FrameStreamIterator<'a> {
+    /// Creates a streaming iterator over frames in `buffer`.
+    #[inline]
+    pub fn new(buffer: &'a [u8]) -> Self {
+        use machine_core::MachineExt;
+        Self {
+            inner: FrameStreamMachine::new(buffer).into_iter(),
+        }
+    }
+}
+
+impl<'a> core::iter::Iterator for FrameStreamIterator<'a> {
+    type Item = FrameView<'a>;
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -383,6 +450,63 @@ mod tests {
         assert_eq!(stats.frames_decoded, 2);
         assert_eq!(stats.bytes_discarded, 30);
         assert_eq!(stats.resync_events, 2);
+    }
+
+    #[test]
+    fn test_frame_stream_machine_and_iterator() {
+        let payload1 = b"Machine Alpha";
+        let payload2 = b"Machine Beta";
+        let hdr = FrameHeader {
+            profile: OptimizationProfile::Realtime,
+            flags: FrameFlags::default(),
+            payload_len: payload1.len(),
+            schema_hash: None,
+        };
+
+        let mut b1 = [0u8; 64];
+        let l1 = pack_frame(&hdr, payload1, &mut b1).unwrap();
+
+        let mut b2 = [0u8; 64];
+        let l2 = pack_frame(&hdr, payload2, &mut b2).unwrap();
+
+        // Stream: Noise (15B) + Frame 1 + Frame 2
+        let mut stream = [0u8; 200];
+        let mut cur = 0;
+        stream[cur..cur + 15].fill(0x33);
+        cur += 15;
+        stream[cur..cur + l1].copy_from_slice(&b1[..l1]);
+        cur += l1;
+        stream[cur..cur + l2].copy_from_slice(&b2[..l2]);
+        cur += l2;
+
+        let total_stream = &stream[..cur];
+
+        // 1. Test FrameStreamIterator
+        let iter = FrameStreamIterator::new(total_stream);
+        let frames: std::vec::Vec<_> = iter.collect();
+        assert_eq!(frames.len(), 2);
+        assert_eq!(frames[0].payload, payload1);
+        assert_eq!(frames[1].payload, payload2);
+
+        // 2. Test direct Machine step
+        use machine_core::Machine;
+        let mut fsm = FrameStreamMachine::new(total_stream);
+        match fsm.step(()) {
+            machine_core::Step::Yielded(f1) => assert_eq!(f1.payload, payload1),
+            _ => panic!("expected frame 1"),
+        }
+        match fsm.step(()) {
+            machine_core::Step::Yielded(f2) => assert_eq!(f2.payload, payload2),
+            _ => panic!("expected frame 2"),
+        }
+        match fsm.step(()) {
+            machine_core::Step::Done(stats) => {
+                assert_eq!(stats.frames_decoded, 2);
+                assert_eq!(stats.bytes_discarded, 15);
+                assert_eq!(stats.resync_events, 1);
+            }
+            _ => panic!("expected Step::Done"),
+        }
     }
 
     #[test]
