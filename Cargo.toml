@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "crates/stitch-data-core",
+    "crates/stitch-data-layout",
     "crates/stitch-data-transforms",
     "crates/stitch-data-derive",
     "crates/stitch-data",
@@ -23,6 +24,7 @@ repository = "https://github.com/stitch-rs/stitch-data"
 
 [workspace.dependencies]
 stitch-data-core = { path = "crates/stitch-data-core", default-features = false }
+stitch-data-layout = { path = "crates/stitch-data-layout", default-features = false }
 stitch-data-transforms = { path = "crates/stitch-data-transforms", default-features = false }
 stitch-data-derive = { path = "crates/stitch-data-derive" }
 stitch-data = { path = "crates/stitch-data", default-features = false }

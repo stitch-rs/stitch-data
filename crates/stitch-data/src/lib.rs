@@ -3,7 +3,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use stitch_data_core;
+pub use stitch_data_layout;
 pub use stitch_data_transforms;
+
+pub use stitch_data_layout::{
+    CacheAligned, CacheGeometry, CachePadded, CacheSuperBlock, DefaultCacheLine, LINE_SIZE_64,
+    LINE_SIZE_128, assert_cache_friendly,
+};
 
 pub use stitch_data_core::{
     CBP_MAGIC, CBP_VERSION_1, CONTAINER_MAGIC, CONTAINER_VERSION_1, ChunkDescriptor, ColumnCodec,

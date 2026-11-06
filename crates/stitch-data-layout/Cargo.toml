@@ -1,0 +1,18 @@
+[package]
+name = "stitch-data-layout"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Zero-cost cache-line fitting, alignment geometry, and super-block layout manager for Stitch Data"
+
+[dependencies]
+stitch-data-core = { workspace = true }
+zerocopy = { workspace = true, optional = true }
+
+[features]
+default = ["std"]
+std = ["stitch-data-core/std", "alloc"]
+alloc = ["stitch-data-core/alloc"]
+zero-copy = ["dep:zerocopy"]

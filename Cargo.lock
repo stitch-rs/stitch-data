@@ -631,6 +631,7 @@ version = "0.1.0"
 dependencies = [
  "stitch-data-core",
  "stitch-data-derive",
+ "stitch-data-layout",
  "stitch-data-transforms",
 ]
 
@@ -683,6 +684,14 @@ name = "stitch-data-fuzz"
 version = "0.1.0"
 dependencies = [
  "stitch-data",
+]
+
+[[package]]
+name = "stitch-data-layout"
+version = "0.1.0"
+dependencies = [
+ "stitch-data-core",
+ "zerocopy",
 ]
 
 [[package]]
