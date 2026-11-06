@@ -12,6 +12,9 @@ pub const CONTAINER_MAGIC: [u8; 4] = *b"STDC";
 /// Container generation format version (1.0).
 pub const CONTAINER_VERSION_1: u16 = 1;
 
+/// Flag indicating that chunk directory uses 16-byte `CompactChunkDescriptor` instead of legacy 24-byte `ChunkDescriptor`.
+pub const FLAG_COMPACT_DIRECTORY: u16 = 0x0002;
+
 /// Fixed-size container file header (16 bytes).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
@@ -133,6 +136,96 @@ impl ChunkDescriptor {
     }
 }
 
+/// Ultra-dense 16-byte chunk descriptor using `odd-int::U24` and relative scaled offset.
+///
+/// Conforms to the "Scrooge" Systems Mindset:
+/// - Eliminates cache line straddling: $16 \times 4 = 64$ bytes (fits **exactly 4 descriptors per 64-byte L1D cache line**).
+/// - 33.3% smaller directory index tables compared to legacy 24-byte `ChunkDescriptor`.
+/// - Memory layout (16 bytes packed):
+///   - `first_key`: `u64` (8 bytes)
+///   - `payload_rel_offset`: `i32` (4 bytes, scaled $\times 4$, reaching up to $\pm 8\text{ GB}$)
+///   - `compressed_len`: `odd_int::U24` (3 bytes, up to $16.7\text{ MB}$)
+///   - `row_count`: `u8` (1 byte, logical row count chunk multiplier / count)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C, packed)]
+#[cfg_attr(
+    feature = "zero-copy",
+    derive(
+        zerocopy::FromBytes,
+        zerocopy::IntoBytes,
+        zerocopy::KnownLayout,
+        zerocopy::Immutable
+    )
+)]
+pub struct CompactChunkDescriptor {
+    /// Initial primary ordering key in this chunk (e.g. `ip_from`, `timestamp`).
+    pub first_key: u64,
+    /// 4-byte scaled relative displacement to chunk payload in bytes (`offset << 2`).
+    /// Reaches up to $\pm 8\text{ GB}$ within container archives.
+    pub payload_rel_offset: i32,
+    /// Exact compressed length in bytes up to $16.7\text{ MB}$ (`2^{24} - 1`).
+    pub compressed_len: odd_int::U24,
+    /// Logical row count.
+    pub row_count: u8,
+}
+
+impl CompactChunkDescriptor {
+    pub const SIZE: usize = 16;
+
+    /// Creates a new `CompactChunkDescriptor`.
+    pub fn new(
+        first_key: u64,
+        payload_rel_offset: i32,
+        compressed_len: odd_int::U24,
+        row_count: u8,
+    ) -> Self {
+        Self {
+            first_key,
+            payload_rel_offset,
+            compressed_len,
+            row_count,
+        }
+    }
+
+    /// Serializes compact descriptor to bytes.
+    pub fn write_to(&self, dst: &mut [u8]) -> Result<(), StitchError> {
+        if dst.len() < Self::SIZE {
+            return Err(StitchError::UnexpectedEof {
+                required: Self::SIZE,
+                available: dst.len(),
+            });
+        }
+        dst[0..8].copy_from_slice(&self.first_key.to_le_bytes());
+        dst[8..12].copy_from_slice(&self.payload_rel_offset.to_le_bytes());
+        dst[12..15].copy_from_slice(&self.compressed_len.to_le_bytes());
+        dst[15] = self.row_count;
+        Ok(())
+    }
+
+    /// Parses compact descriptor from bytes.
+    pub fn parse(src: &[u8]) -> Result<Self, StitchError> {
+        if src.len() < Self::SIZE {
+            return Err(StitchError::UnexpectedEof {
+                required: Self::SIZE,
+                available: src.len(),
+            });
+        }
+        let first_key = u64::from_le_bytes(src[0..8].try_into().unwrap());
+        let payload_rel_offset = i32::from_le_bytes(src[8..12].try_into().unwrap());
+        let mut len_bytes = [0u8; 3];
+        len_bytes.copy_from_slice(&src[12..15]);
+        let compressed_len = unsafe { odd_int::U24::from_le_bytes_unchecked(len_bytes) };
+        let row_count = src[15];
+
+        Ok(Self {
+            first_key,
+            payload_rel_offset,
+            compressed_len,
+            row_count,
+        })
+    }
+}
+
 /// Fixed-size container file footer (16 bytes).
 ///
 /// Written at the absolute end of the file. Provides index table offset,
@@ -229,5 +322,28 @@ mod tests {
 
         let parsed = ContainerFooter::parse(&buf).unwrap();
         assert_eq!(parsed, footer);
+    }
+
+    #[test]
+    fn test_compact_chunk_descriptor_roundtrip() {
+        assert_eq!(core::mem::size_of::<CompactChunkDescriptor>(), 16);
+
+        let desc = CompactChunkDescriptor::new(
+            16_777_216,
+            -256,
+            odd_int::U24::from_u64(1024).unwrap(),
+            128,
+        );
+        let mut buf = [0u8; 16];
+        desc.write_to(&mut buf).unwrap();
+
+        let parsed = CompactChunkDescriptor::parse(&buf).unwrap();
+        assert_eq!(parsed, desc);
+        let first_key = parsed.first_key;
+        assert_eq!(first_key, 16_777_216);
+        let payload_rel_offset = parsed.payload_rel_offset;
+        assert_eq!(payload_rel_offset, -256);
+        assert_eq!(parsed.compressed_len.to_u64(), 1024);
+        assert_eq!(parsed.row_count, 128);
     }
 }
