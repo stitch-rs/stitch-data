@@ -9,12 +9,13 @@ description = "High-density data layout, zero-allocation transformation engine a
 
 [dependencies]
 stitch-data-core = { workspace = true }
+stitch-data-layout = { workspace = true }
 stitch-data-transforms = { workspace = true }
 stitch-data-derive = { workspace = true, optional = true }
 
 [features]
 default = ["std", "derive"]
-std = ["stitch-data-core/std", "stitch-data-transforms/std"]
-alloc = ["stitch-data-core/alloc", "stitch-data-transforms/alloc"]
+std = ["stitch-data-core/std", "stitch-data-layout/std", "stitch-data-transforms/std"]
+alloc = ["stitch-data-core/alloc", "stitch-data-layout/alloc", "stitch-data-transforms/alloc"]
 zero-copy = ["stitch-data-core/zero-copy"]
 derive = ["dep:stitch-data-derive"]
