@@ -50,3 +50,8 @@ harness = false
 name = "cross_serializer"
 path = "benches/cross_serializer.rs"
 harness = false
+
+[[bench]]
+name = "layout"
+path = "benches/layout.rs"
+harness = false
