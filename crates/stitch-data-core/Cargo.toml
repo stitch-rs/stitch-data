@@ -9,6 +9,8 @@ description = "Core #![no_std] framing, bitstream, PrefixVarint, and ZigZag prim
 
 [dependencies]
 machine-core = { workspace = true }
+odd-int = { workspace = true }
+narrow-ptr = { workspace = true }
 zerocopy = { workspace = true, optional = true }
 
 [features]

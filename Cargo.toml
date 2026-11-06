@@ -27,6 +27,9 @@ stitch-data-transforms = { path = "crates/stitch-data-transforms", default-featu
 stitch-data-derive = { path = "crates/stitch-data-derive" }
 stitch-data = { path = "crates/stitch-data", default-features = false }
 
+odd-int = { git = "https://github.com/ulquiorracode/odd-int-rs.git", branch = "dev", default-features = false, features = ["zerocopy"] }
+narrow-ptr = { git = "https://github.com/ulquiorracode/narrow-ptr-rs.git", branch = "dev", default-features = false, features = ["odd-int"] }
+
 stitch-core = { git = "https://github.com/stitch-rs/stitch-framework.git", branch = "main", default-features = false }
 machine-core = { git = "https://github.com/ulquiorracode/machine-rs.git", branch = "dev", default-features = false }
 machine-rs = { git = "https://github.com/ulquiorracode/machine-rs.git", branch = "dev", default-features = false }

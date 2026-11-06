@@ -10,6 +10,8 @@ description = "Monomorphic transform pipelines (Delta, BitPack, RLE) for the Sti
 [dependencies]
 stitch-data-core = { workspace = true }
 stitch-core = { workspace = true }
+odd-int = { workspace = true }
+narrow-ptr = { workspace = true }
 
 [features]
 default = ["std"]
